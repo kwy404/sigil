@@ -6,6 +6,7 @@ Preview build of Sigil for Android phones with a 64 bit processor (arm64), which
 - A Quick Settings tile, a home screen widget, and Pause and Stop in the notification.
 - Voice requests heard by the phone's own speech recognizer: open, close and switch apps, timers, alarms, the flashlight, volume, brightness, media and messages. Sigil cleans the audio, ignores captures that are too short, clipped or noisy, asks you to repeat when it is unsure, and waits for your yes before it sends, posts or closes all apps.
 - Typed requests, with the same steps and confirmations.
+- An optional on device model (Qwen2.5 1.5B or 3B, picked by the phone memory) that understands looser requests. It downloads once over Wi-Fi from the settings, is checked against a pinned SHA-256, and then works offline. Without it, the built in commands still work.
 - A guided tour on the first launch, which you can replay at any time.
 - The app in English, Portuguese, Spanish, French, German, Italian, Japanese and Chinese, following the phone language, with a language picker.
 
@@ -14,6 +15,9 @@ Preview build of Sigil for Android phones with a 64 bit processor (arm64), which
 - The bubble needs "Display over other apps". Voice while other apps are open uses the microphone permission and is on by default; turn it off from the bubble menu.
 - Speech stays on the phone. If your phone only has a recognizer that may use the network, Sigil uses it only after you allow it in Sigil's settings, and you can always type instead.
 - Hand tracking and voice have been tried on an emulator with a recorded hand, not yet on many phones. Please report what does not work in the issues of this repository.
+
+**Coming next**
+- The redesigned app: tabs, the command pill above the tab bar and the Live sheet.
 
 **Install**
 1. Download `sigil-android.apk` below and open it. Android asks you to allow installs from your browser or file manager.
