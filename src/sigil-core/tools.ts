@@ -1,0 +1,130 @@
+import { z } from 'zod';
+
+import { DirectionSchema, GLOBAL_ACTIONS, MEDIA_ACTIONS } from '../app-profiles/schema';
+
+/**
+ * The fixed set of intents a language model may call. Each one is expanded
+ * into concrete steps by deterministic code (see flows.ts), so the model never
+ * decides which control gets tapped.
+ */
+export const INTENT_TOOLS = {
+  open_app: {
+    description: 'Open an app on the phone.',
+    args: z.strictObject({
+      app: z.string().min(1).describe('App name as the user said it, for example WhatsApp or YouTube.'),
+    }),
+  },
+  send_message: {
+    description:
+      'Write a message to one contact in a messaging app. Sigil always asks the user to confirm before sending.',
+    args: z.strictObject({
+      app: z.string().min(1).optional().describe('Messaging app. Leave empty to use the default one.'),
+      contact: z.string().min(1).describe('One contact name, exactly as the user said it.'),
+      text: z.string().min(1).describe('The message text, in the language the user used.'),
+    }),
+  },
+  search: {
+    description: 'Search for something in an app, or on the web when no app is named.',
+    args: z.strictObject({
+      app: z.string().min(1).optional(),
+      query: z.string().min(1),
+    }),
+  },
+  scroll: {
+    description: 'Scroll the current screen. down shows what is below.',
+    args: z.strictObject({ direction: DirectionSchema }),
+  },
+  navigate: {
+    description: 'A system navigation action such as back or home.',
+    args: z.strictObject({ action: z.enum(GLOBAL_ACTIONS) }),
+  },
+  tap: {
+    description: 'Tap the control with this visible label in the current app.',
+    args: z.strictObject({ label: z.string().min(1) }),
+  },
+  type_text: {
+    description: 'Type text into the field that has focus.',
+    args: z.strictObject({ text: z.string().min(1) }),
+  },
+  media: {
+    description: 'Control the media that is playing.',
+    args: z.strictObject({ action: z.enum(MEDIA_ACTIONS) }),
+  },
+  create_post: {
+    description:
+      'Start a new post with a caption. The user picks the photo or video, and Sigil asks for confirmation before sharing.',
+    args: z.strictObject({
+      app: z.string().min(1),
+      caption: z.string().min(1),
+    }),
+  },
+  clarify: {
+    description: 'Ask the user one short question when the request is ambiguous or incomplete.',
+    args: z.strictObject({ question: z.string().min(1) }),
+  },
+} as const;
+
+export type ToolName = keyof typeof INTENT_TOOLS;
+
+export const TOOL_NAMES = Object.keys(INTENT_TOOLS) as ToolName[];
+
+export type IntentArgs<K extends ToolName> = z.infer<(typeof INTENT_TOOLS)[K]['args']>;
+
+/** A validated call to one of the intent tools. */
+export type Intent = { [K in ToolName]: { tool: K; args: IntentArgs<K> } }[ToolName];
+
+/** Tool definition in the shape most chat templates expect (OpenAI style function tools). */
+export interface ToolDefinition {
+  type: 'function';
+  function: {
+    name: ToolName;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+let cachedDefinitions: ToolDefinition[] | null = null;
+
+export function toolDefinitions(): ToolDefinition[] {
+  cachedDefinitions ??= TOOL_NAMES.map((name) => {
+    const { $schema: _ignored, ...parameters } = z.toJSONSchema(INTENT_TOOLS[name].args) as Record<string, unknown>;
+    return {
+      type: 'function' as const,
+      function: { name, description: INTENT_TOOLS[name].description, parameters },
+    };
+  });
+  return cachedDefinitions;
+}
+
+/** A tool call as a model returns it. arguments may be an object or a JSON string. */
+export interface RawToolCall {
+  name: string;
+  arguments: unknown;
+}
+
+export type ToolCallResult = { ok: true; intent: Intent } | { ok: false; error: string };
+
+export function isToolName(name: string): name is ToolName {
+  return Object.prototype.hasOwnProperty.call(INTENT_TOOLS, name);
+}
+
+/** Validates a raw tool call against the fixed tool set. */
+export function parseToolCall(call: RawToolCall): ToolCallResult {
+  if (!isToolName(call.name)) {
+    return { ok: false, error: `Unknown tool "${call.name}".` };
+  }
+  let args = call.arguments;
+  if (typeof args === 'string') {
+    try {
+      args = JSON.parse(args);
+    } catch {
+      return { ok: false, error: `Arguments of ${call.name} are not valid JSON.` };
+    }
+  }
+  const parsed = INTENT_TOOLS[call.name].args.safeParse(args ?? {});
+  if (!parsed.success) {
+    const detail = parsed.error.issues.map((i) => `${i.path.join('.') || 'arguments'}: ${i.message}`).join('; ');
+    return { ok: false, error: `Invalid arguments for ${call.name}: ${detail}` };
+  }
+  return { ok: true, intent: { tool: call.name, args: parsed.data } as Intent };
+}
