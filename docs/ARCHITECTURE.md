@@ -130,6 +130,7 @@ Platform rules that shape the design:
 - MediaPipe Hand Landmarker, `hand_landmarker.task`, the float16 build, version 1, published by Google under the Apache License 2.0.
 - It is not committed. The Gradle task `downloadHandLandmarker` of the sigil-control module runs before each build of the module, downloads the file once from `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task` (the URL of the official MediaPipe samples) into `modules/sigil-control/android/src/main/assets`, which git ignores, and checks its SHA-256 against the value pinned in `modules/sigil-control/android/build.gradle`: `fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1`. A different file is deleted and fails the build.
 - The APK bundles the file, so the phone never downloads it. When the asset is missing, `HandLandmarkPipelines.create` returns an idle pipeline: the app starts, but nothing is tracked.
+- MediaPipe Tasks Vision 0.10.21 ships its native library for arm64-v8a, armeabi-v7a and x86, but not x86_64. Phones get the tracker. On an x86_64 emulator the pipeline reports the missing library and Sigil keeps running without tracking, which is why the smoke test drives the cursor with the demo hand.
 
 ## Google Play policy
 
