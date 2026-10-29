@@ -13,6 +13,8 @@ const q = (text: string) => `"${text}"`;
  */
 export const en = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'English',
     title: 'Language',
@@ -175,6 +177,16 @@ export const en = {
     },
     source: { rules: 'from rules', model: 'from model' },
     afterYes: 'only after your yes',
+    run: 'Run',
+    stop: 'Stop',
+    yes: 'Yes',
+    no: 'No',
+    result: {
+      completed: 'Done.',
+      failed: (step: string) => `Stopped at: ${step}`,
+      cancelled: 'Cancelled. Nothing more was done.',
+      refused: 'Sigil did not run this plan.',
+    },
   },
   plan: {
     open: (app: string) => `Open ${app}`,
@@ -301,18 +313,17 @@ export const en = {
     post: (app: string, caption: string) => `Share this post on ${app} with the caption ${q(caption)}?`,
     tap: (target: string) => `Tap ${target}?`,
   },
+  androidOnly: {
+    close: 'iOS does not let apps close other apps. Swipe it up in the app switcher.',
+    timer: 'iOS does not let apps start a timer in the Clock app. Ask Siri or use a shortcut.',
+    alarm: 'iOS does not let apps set an alarm in the Clock app. Ask Siri or use a shortcut.',
+    flashlight: 'Sigil cannot control the flashlight on iOS yet. Use the Control Center.',
+    chat: 'On iOS, Sigil can open the app but cannot find a chat inside it.',
+    open: 'On iOS, Sigil can only open apps that have a public link.',
+  } satisfies Record<AndroidOnlyFeature, string>,
   notices: {
-    which_app: (options: readonly string[]) => `Which one: ${options.join(', ')}?`,
+    which_app: (options: string) => `Which one: ${options}?`,
     not_installed: (app: string) => `${app} is not installed on this phone.`,
-    android_only: (feature: AndroidOnlyFeature) =>
-      ({
-        close: 'iOS does not let apps close other apps. Swipe it up in the app switcher.',
-        timer: 'iOS does not let apps start a timer in the Clock app. Ask Siri or use a shortcut.',
-        alarm: 'iOS does not let apps set an alarm in the Clock app. Ask Siri or use a shortcut.',
-        flashlight: 'Sigil cannot control the flashlight on iOS yet. Use the Control Center.',
-        chat: 'On iOS, Sigil can open the app but cannot find a chat inside it.',
-        open: 'On iOS, Sigil can only open apps that have a public link.',
-      })[feature],
     no_app_in_front: () => `Sigil does not know which app is on screen. Say its name, as in ${q('close YouTube')}.`,
     cannot_open_place: (place: string, app: string) => `Sigil cannot open ${place} in ${app} yet.`,
     nothing_heard: () => 'Nothing was heard.',
@@ -329,7 +340,7 @@ export const en = {
     cannot_post: (app: string) => `Sigil cannot post on ${app} yet.`,
     cannot_like: (app: string) => `Sigil cannot like in ${app} yet.`,
     like_needs_app: () => 'Open the post or video first, or say which app it is in.',
-  } satisfies Record<Exclude<NoticeCode, 'question'>, (...args: never[]) => string>,
+  } satisfies Record<Exclude<NoticeCode, 'question' | 'android_only'>, (...args: never[]) => string>,
   system: {
     title: 'System control',
     modeLabels: {

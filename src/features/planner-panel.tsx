@@ -3,16 +3,27 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { createSpeechToText } from '../adapters/voice';
 import type { ProfileRegistry } from '../app-profiles';
-import { describeNotice, describePlan, describeStep, useDescribeContext, useI18n } from '../i18n';
-import { ActionPlanner, type PlanOutcome } from '../sigil-core';
+import {
+  describeConfirmation,
+  describeFailure,
+  describeNotice,
+  describePlan,
+  describeStep,
+  useDescribeContext,
+  useI18n,
+  type DescribeContext,
+} from '../i18n';
+import type { ExecutionResult, Plan, PlanOutcome, SigilInterface, StepStatus } from '../sigil-core';
 import { Button, Card, Chip, textStyles } from '../ui/primitives';
-import { tokens, type Tone } from '../ui/tokens';
+import { tokens, toneColor, type Tone } from '../ui/tokens';
+import { usePlanRunner } from './use-plan-runner';
 
 function statusTone(outcome: PlanOutcome): Tone {
   switch (outcome.status) {
     case 'planned':
       return 'success';
     case 'clarify':
+    case 'choose':
       return 'accent';
     case 'blocked':
       return 'danger';
@@ -21,52 +32,72 @@ function statusTone(outcome: PlanOutcome): Tone {
   }
 }
 
+const STEP_TONES: Record<StepStatus, Tone> = { running: 'accent', done: 'success', failed: 'danger', cancelled: 'neutral' };
+
+/** One line on how a run ended, in the app language. */
+function resultText(result: ExecutionResult, plan: Plan, ctx: DescribeContext): string {
+  const { m } = ctx;
+  if (result.status === 'completed') {
+    return m.planner.result.completed;
+  }
+  const step = plan.steps[result.completedSteps];
+  const reason = describeFailure(result, step, ctx);
+  if (reason) {
+    return reason;
+  }
+  if (result.permission) {
+    return result.permission === 'write_settings' ? m.system.access.brightness : m.system.access.media;
+  }
+  if (result.status === 'cancelled') {
+    return m.planner.result.cancelled;
+  }
+  if (result.status === 'refused') {
+    return m.planner.result.refused;
+  }
+  return m.planner.result.failed(step ? describeStep(step, ctx, plan, result.completedSteps) : '');
+}
+
 /**
- * Turns a request into a plan with the rule based fallback (no model is
- * installed yet) and shows the steps in the app language. Plans are only
- * displayed here, not run. The examples and the mock speech follow the
- * language, and requests are planned with its locale.
+ * Turns a request into a plan with the rule based fallback, shows the steps in
+ * the app language and runs them on request. A name that fits several apps
+ * shows the options; every send, post or close all waits for a yes on screen.
  */
-export function PlannerPanel({ registry }: { registry: ProfileRegistry }) {
+export function PlannerPanel({ registry, ui }: { registry: ProfileRegistry; ui: SigilInterface }) {
   const { messages: m, speechLocale } = useI18n();
   const ctx = useDescribeContext(registry);
-  const planner = useMemo(() => new ActionPlanner({ profiles: registry }), [registry]);
+  const runner = usePlanRunner(registry, ui, speechLocale);
   const speech = useMemo(() => createSpeechToText(m.planner.presets), [m]);
-  const [request, setRequest] = useState<string | null>(null);
-  const [outcome, setOutcome] = useState<PlanOutcome | null>(null);
   const [listening, setListening] = useState(false);
-
-  const plan = async (text: string) => {
-    setRequest(text);
-    setOutcome(await planner.plan({ text, locale: speechLocale }));
-  };
+  const { outcome, events, result, confirmation, running } = runner;
 
   const listen = async () => {
     setListening(true);
-    setOutcome(null);
     try {
-      const transcript = await speech.listen({ locale: speechLocale, onPartial: setRequest });
-      await plan(transcript.text);
+      const transcript = await speech.listen({ locale: speechLocale });
+      await runner.plan(transcript.text);
     } finally {
       setListening(false);
     }
   };
 
+  const statusOf = (index: number) => events.find((event) => event.index === index)?.status;
+
   return (
     <Card title={m.planner.title} caption={m.planner.caption}>
-      <Button label={listening ? m.planner.listening : m.planner.listen} onPress={listen} disabled={listening} />
+      <Button label={listening ? m.planner.listening : m.planner.listen} onPress={listen} disabled={listening || running} />
       <View style={styles.presets}>
         {m.planner.presets.map((text) => (
           <Pressable
             key={text}
             accessibilityRole="button"
-            onPress={() => plan(text)}
+            disabled={running}
+            onPress={() => runner.plan(text)}
             style={({ pressed }) => [styles.preset, pressed ? styles.presetPressed : null]}>
             <Text style={styles.presetText}>{text}</Text>
           </Pressable>
         ))}
       </View>
-      {request ? <Text style={textStyles.body}>{m.quote(request)}</Text> : null}
+      {runner.request ? <Text style={textStyles.body}>{m.quote(runner.request)}</Text> : null}
       {outcome ? (
         <View style={styles.outcome}>
           <View style={styles.outcomeHeader}>
@@ -79,9 +110,10 @@ export function PlannerPanel({ registry }: { registry: ProfileRegistry }) {
               {outcome.plan.steps.map((step, index) => {
                 const asks = step.kind === 'confirm';
                 const commits = step.kind === 'tap' && step.commit;
+                const status = statusOf(index);
                 return (
                   <View key={`${index}-${step.kind}`} style={styles.step}>
-                    <Text style={styles.stepIndex}>{index + 1}</Text>
+                    <Text style={[styles.stepIndex, status ? { color: toneColor(STEP_TONES[status]) } : null]}>{index + 1}</Text>
                     <Text style={[styles.stepText, asks ? styles.ask : null, commits ? styles.commit : null]}>
                       {describeStep(step, ctx, outcome.plan, index)}
                       {commits ? `  (${m.planner.afterYes})` : ''}
@@ -89,6 +121,36 @@ export function PlannerPanel({ registry }: { registry: ProfileRegistry }) {
                   </View>
                 );
               })}
+              {confirmation ? (
+                <View style={styles.confirm} accessibilityLiveRegion="polite">
+                  <Text style={styles.confirmText}>{describeConfirmation(outcome.plan, confirmation.index, ctx)}</Text>
+                  <View style={styles.actions}>
+                    <Button label={m.planner.yes} tone="success" onPress={() => confirmation.answer(true)} />
+                    <Button label={m.planner.no} tone="danger" onPress={() => confirmation.answer(false)} />
+                  </View>
+                </View>
+              ) : null}
+              <View style={styles.actions}>
+                {running ? (
+                  <Button label={m.planner.stop} tone="danger" onPress={runner.stop} />
+                ) : (
+                  <Button label={m.planner.run} onPress={runner.run} />
+                )}
+              </View>
+              {result ? (
+                <Text style={textStyles.body} accessibilityLiveRegion="polite">
+                  {resultText(result, outcome.plan, ctx)}
+                </Text>
+              ) : null}
+            </>
+          ) : outcome.status === 'choose' ? (
+            <>
+              <Text style={textStyles.body}>{describeNotice(outcome.notice, ctx)}</Text>
+              <View style={styles.actions}>
+                {outcome.options.map((option) => (
+                  <Button key={option.app} label={option.label} onPress={() => runner.choose(option)} />
+                ))}
+              </View>
             </>
           ) : (
             <Text style={textStyles.body}>{outcome.status === 'clarify' ? outcome.question : describeNotice(outcome.notice, ctx)}</Text>
@@ -117,4 +179,13 @@ const styles = StyleSheet.create({
   stepText: { color: tokens.color.text, fontSize: 13, flex: 1 },
   ask: { color: tokens.color.warning, fontWeight: '600' },
   commit: { color: tokens.color.accent },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space.sm },
+  confirm: {
+    gap: tokens.space.sm,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.color.warning,
+    padding: tokens.space.md,
+  },
+  confirmText: { color: tokens.color.text, fontSize: 14, fontWeight: '600' },
 });

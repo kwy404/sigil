@@ -252,11 +252,11 @@ export function describeNotice(notice: Notice, ctx: DescribeContext): string {
     case 'like_needs_app':
       return m.notices.like_needs_app();
     case 'which_app':
-      return m.notices.which_app(notice.options.map((option) => option.label));
+      return m.notices.which_app(notice.options.map((option) => option.label).join(m.listSeparator));
     case 'not_installed':
       return m.notices.not_installed(notice.app);
     case 'android_only':
-      return m.notices.android_only(notice.feature);
+      return m.androidOnly[notice.feature];
     case 'no_app_in_front':
       return m.notices.no_app_in_front();
     case 'cannot_open_place':

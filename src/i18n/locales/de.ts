@@ -4,6 +4,8 @@ const q = (text: string) => `„${text}“`;
 
 export const de: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'Deutsch',
     title: 'Sprache',
@@ -166,6 +168,16 @@ export const de: Messages = {
     },
     source: { rules: 'aus den Regeln', model: 'vom Modell' },
     afterYes: 'erst nach deinem Ja',
+    run: 'Ausführen',
+    stop: 'Anhalten',
+    yes: 'Ja',
+    no: 'Nein',
+    result: {
+      completed: 'Erledigt.',
+      failed: (step) => `Angehalten bei: ${step}`,
+      cancelled: 'Abgebrochen. Sonst wurde nichts getan.',
+      refused: 'Sigil hat diesen Plan nicht ausgeführt.',
+    },
   },
   plan: {
     open: (app) => `${app} öffnen`,
@@ -292,18 +304,17 @@ export const de: Messages = {
     post: (app, caption) => `Diesen Beitrag auf ${app} mit der Beschreibung ${q(caption)} teilen?`,
     tap: (target) => `Auf ${target} tippen?`,
   },
+  androidOnly: {
+    close: 'iOS erlaubt Apps nicht, andere Apps zu schließen. Wische die App im App-Umschalter nach oben.',
+    timer: 'iOS erlaubt Apps nicht, in der Uhr-App einen Timer zu starten. Frag Siri oder nutze einen Kurzbefehl.',
+    alarm: 'iOS erlaubt Apps nicht, in der Uhr-App einen Wecker zu stellen. Frag Siri oder nutze einen Kurzbefehl.',
+    flashlight: 'Sigil kann die Taschenlampe unter iOS noch nicht steuern. Nutze das Kontrollzentrum.',
+    chat: 'Unter iOS öffnet Sigil die App, findet darin aber keinen Chat.',
+    open: 'Unter iOS öffnet Sigil nur Apps mit einem öffentlichen Link.',
+  },
   notices: {
-    which_app: (options) => `Welche: ${options.join(', ')}?`,
+    which_app: (options) => `Welche: ${options}?`,
     not_installed: (app) => `Die App ${app} ist auf diesem Telefon nicht installiert.`,
-    android_only: (feature) =>
-      ({
-        close: 'iOS erlaubt Apps nicht, andere Apps zu schließen. Wische die App im App-Umschalter nach oben.',
-        timer: 'iOS erlaubt Apps nicht, in der Uhr-App einen Timer zu starten. Frag Siri oder nutze einen Kurzbefehl.',
-        alarm: 'iOS erlaubt Apps nicht, in der Uhr-App einen Wecker zu stellen. Frag Siri oder nutze einen Kurzbefehl.',
-        flashlight: 'Sigil kann die Taschenlampe unter iOS noch nicht steuern. Nutze das Kontrollzentrum.',
-        chat: 'Unter iOS öffnet Sigil die App, findet darin aber keinen Chat.',
-        open: 'Unter iOS öffnet Sigil nur Apps mit einem öffentlichen Link.',
-      })[feature],
     no_app_in_front: () => `Sigil weiß nicht, welche App gerade zu sehen ist. Sag ihren Namen, etwa ${q('schließe YouTube')}.`,
     cannot_open_place: (place, app) => `Sigil kann ${place} in ${app} noch nicht öffnen.`,
     nothing_heard: () => 'Es war nichts zu hören.',

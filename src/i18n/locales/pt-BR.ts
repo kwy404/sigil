@@ -4,6 +4,8 @@ const q = (text: string) => `“${text}”`;
 
 export const ptBR: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'Português (Brasil)',
     title: 'Idioma',
@@ -166,6 +168,16 @@ export const ptBR: Messages = {
     },
     source: { rules: 'pelas regras', model: 'pelo modelo' },
     afterYes: 'só depois do seu sim',
+    run: 'Executar',
+    stop: 'Parar',
+    yes: 'Sim',
+    no: 'Não',
+    result: {
+      completed: 'Pronto.',
+      failed: (step) => `Parou em: ${step}`,
+      cancelled: 'Cancelado. Nada mais foi feito.',
+      refused: 'O Sigil não executou este plano.',
+    },
   },
   plan: {
     open: (app) => `Abrir ${app}`,
@@ -291,18 +303,17 @@ export const ptBR: Messages = {
     post: (app, caption) => `Compartilhar esta publicação no ${app} com a legenda ${q(caption)}?`,
     tap: (target) => `Tocar em ${target}?`,
   },
+  androidOnly: {
+    close: 'O iOS não deixa um app fechar outros apps. Deslize o app para cima no alternador de apps.',
+    timer: 'O iOS não deixa um app iniciar um timer no app Relógio. Peça à Siri ou use um atalho.',
+    alarm: 'O iOS não deixa um app criar um alarme no app Relógio. Peça à Siri ou use um atalho.',
+    flashlight: 'O Sigil ainda não controla a lanterna no iOS. Use a Central de Controle.',
+    chat: 'No iOS, o Sigil abre o app, mas não consegue achar uma conversa dentro dele.',
+    open: 'No iOS, o Sigil só abre apps que têm um link público.',
+  },
   notices: {
-    which_app: (options) => `Qual deles: ${options.join(', ')}?`,
+    which_app: (options) => `Qual deles: ${options}?`,
     not_installed: (app) => `O app ${app} não está instalado neste celular.`,
-    android_only: (feature) =>
-      ({
-        close: 'O iOS não deixa um app fechar outros apps. Deslize o app para cima no alternador de apps.',
-        timer: 'O iOS não deixa um app iniciar um timer no app Relógio. Peça à Siri ou use um atalho.',
-        alarm: 'O iOS não deixa um app criar um alarme no app Relógio. Peça à Siri ou use um atalho.',
-        flashlight: 'O Sigil ainda não controla a lanterna no iOS. Use a Central de Controle.',
-        chat: 'No iOS, o Sigil abre o app, mas não consegue achar uma conversa dentro dele.',
-        open: 'No iOS, o Sigil só abre apps que têm um link público.',
-      })[feature],
     no_app_in_front: () => `O Sigil não sabe qual app está na tela. Diga o nome dele, como em ${q('fecha o YouTube')}.`,
     cannot_open_place: (place, app) => `O Sigil ainda não consegue abrir ${place} no ${app}.`,
     nothing_heard: () => 'Não ouvi nada.',

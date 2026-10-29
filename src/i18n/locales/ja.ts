@@ -4,6 +4,8 @@ const q = (text: string) => `「${text}」`;
 
 export const ja: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: '、',
   language: {
     name: '日本語',
     title: '言語',
@@ -166,6 +168,16 @@ export const ja: Messages = {
     },
     source: { rules: 'ルールから', model: 'モデルから' },
     afterYes: 'あなたの「はい」のあとだけ',
+    run: '実行',
+    stop: '停止',
+    yes: 'はい',
+    no: 'いいえ',
+    result: {
+      completed: '完了しました。',
+      failed: (step) => `ここで止まりました：${step}`,
+      cancelled: 'キャンセルしました。これ以上は何もしていません。',
+      refused: 'Sigil はこのプランを実行しませんでした。',
+    },
   },
   plan: {
     open: (app) => `${app} を開く`,
@@ -291,18 +303,17 @@ export const ja: Messages = {
     post: (app, caption) => `この投稿をキャプション ${q(caption)} で ${app} にシェアしますか？`,
     tap: (target) => `${target} をタップしますか？`,
   },
+  androidOnly: {
+    close: 'iOS では、アプリがほかのアプリを閉じることはできません。アプリスイッチャーで上にスワイプしてください。',
+    timer: 'iOS では、アプリが時計アプリのタイマーを開始することはできません。Siri かショートカットを使ってください。',
+    alarm: 'iOS では、アプリが時計アプリのアラームを設定することはできません。Siri かショートカットを使ってください。',
+    flashlight: 'Sigil はまだ iOS でライトを操作できません。コントロールセンターを使ってください。',
+    chat: 'iOS では、Sigil はアプリを開けますが、その中のチャットは探せません。',
+    open: 'iOS では、Sigil は公開リンクのあるアプリだけを開けます。',
+  },
   notices: {
-    which_app: (options) => `どれにしますか：${options.join('、')}`,
+    which_app: (options) => `どれにしますか：${options}`,
     not_installed: (app) => `${app} はこのスマートフォンにインストールされていません。`,
-    android_only: (feature) =>
-      ({
-        close: 'iOS では、アプリがほかのアプリを閉じることはできません。アプリスイッチャーで上にスワイプしてください。',
-        timer: 'iOS では、アプリが時計アプリのタイマーを開始することはできません。Siri かショートカットを使ってください。',
-        alarm: 'iOS では、アプリが時計アプリのアラームを設定することはできません。Siri かショートカットを使ってください。',
-        flashlight: 'Sigil はまだ iOS でライトを操作できません。コントロールセンターを使ってください。',
-        chat: 'iOS では、Sigil はアプリを開けますが、その中のチャットは探せません。',
-        open: 'iOS では、Sigil は公開リンクのあるアプリだけを開けます。',
-      })[feature],
     no_app_in_front: () => `Sigil は画面のアプリがわかりません。${q('YouTube を閉じて')}のように名前を言ってください。`,
     cannot_open_place: (place, app) => `Sigil はまだ ${app} の${place}を開けません。`,
     nothing_heard: () => '何も聞こえませんでした。',

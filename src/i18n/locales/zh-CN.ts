@@ -4,6 +4,8 @@ const q = (text: string) => `“${text}”`;
 
 export const zhCN: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: '、',
   language: {
     name: '简体中文',
     title: '语言',
@@ -156,6 +158,16 @@ export const zhCN: Messages = {
     },
     source: { rules: '来自规则', model: '来自模型' },
     afterYes: '要等你确认后才执行',
+    run: '执行',
+    stop: '停止',
+    yes: '是',
+    no: '否',
+    result: {
+      completed: '完成。',
+      failed: (step) => `停在这一步：${step}`,
+      cancelled: '已取消，没有再做任何操作。',
+      refused: 'Sigil 没有执行这个计划。',
+    },
   },
   plan: {
     open: (app) => `打开${app}`,
@@ -281,18 +293,17 @@ export const zhCN: Messages = {
     post: (app, caption) => `要把这条帖子以配文${q(caption)}分享到${app}吗？`,
     tap: (target) => `要点按${target}吗？`,
   },
+  androidOnly: {
+    close: 'iOS 不允许应用关闭其他应用。请在应用切换器中向上滑动来关闭。',
+    timer: 'iOS 不允许应用在时钟应用中开始计时。请使用 Siri 或快捷指令。',
+    alarm: 'iOS 不允许应用在时钟应用中设置闹钟。请使用 Siri 或快捷指令。',
+    flashlight: 'Sigil 还不能在 iOS 上控制手电筒。请使用控制中心。',
+    chat: '在 iOS 上，Sigil 可以打开应用，但找不到其中的聊天。',
+    open: '在 iOS 上，Sigil 只能打开有公开链接的应用。',
+  },
   notices: {
-    which_app: (options) => `是哪一个：${options.join('、')}？`,
+    which_app: (options) => `是哪一个：${options}？`,
     not_installed: (app) => `这部手机没有安装${app}。`,
-    android_only: (feature) =>
-      ({
-        close: 'iOS 不允许应用关闭其他应用。请在应用切换器中向上滑动来关闭。',
-        timer: 'iOS 不允许应用在时钟应用中开始计时。请使用 Siri 或快捷指令。',
-        alarm: 'iOS 不允许应用在时钟应用中设置闹钟。请使用 Siri 或快捷指令。',
-        flashlight: 'Sigil 还不能在 iOS 上控制手电筒。请使用控制中心。',
-        chat: '在 iOS 上，Sigil 可以打开应用，但找不到其中的聊天。',
-        open: '在 iOS 上，Sigil 只能打开有公开链接的应用。',
-      })[feature],
     no_app_in_front: () => `Sigil 不知道屏幕上是哪个应用。请说出它的名字，例如${q('关闭 YouTube')}。`,
     cannot_open_place: (place, app) => `Sigil 还不能在${app}中打开${place}。`,
     nothing_heard: () => '什么也没听到。',

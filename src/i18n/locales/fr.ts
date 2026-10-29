@@ -6,6 +6,8 @@ const q = (text: string) => `«${NB}${text}${NB}»`;
 
 export const fr: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'Français',
     title: 'Langue',
@@ -168,6 +170,16 @@ export const fr: Messages = {
     },
     source: { rules: 'par les règles', model: 'par le modèle' },
     afterYes: 'seulement après votre oui',
+    run: 'Exécuter',
+    stop: 'Arrêter',
+    yes: 'Oui',
+    no: 'Non',
+    result: {
+      completed: 'Terminé.',
+      failed: (step) => `Arrêté à l’étape${NB}: ${step}`,
+      cancelled: 'Annulé. Rien d’autre n’a été fait.',
+      refused: 'Sigil n’a pas exécuté ce plan.',
+    },
   },
   plan: {
     open: (app) => `Ouvrir ${app}`,
@@ -294,18 +306,17 @@ export const fr: Messages = {
     post: (app, caption) => `Partager cette publication sur ${app} avec la légende ${q(caption)}${NB}?`,
     tap: (target) => `Toucher ${target}${NB}?`,
   },
+  androidOnly: {
+    close: 'iOS ne permet pas à une application d’en fermer d’autres. Balayez-la vers le haut dans le sélecteur d’applications.',
+    timer: 'iOS ne permet pas aux applications de lancer un minuteur dans l’app Horloge. Demandez à Siri ou utilisez un raccourci.',
+    alarm: 'iOS ne permet pas aux applications de régler une alarme dans l’app Horloge. Demandez à Siri ou utilisez un raccourci.',
+    flashlight: 'Sigil ne contrôle pas encore la lampe torche sur iOS. Utilisez le centre de contrôle.',
+    chat: 'Sur iOS, Sigil ouvre l’application mais ne peut pas y trouver une conversation.',
+    open: 'Sur iOS, Sigil n’ouvre que les applications qui ont un lien public.',
+  },
   notices: {
-    which_app: (options) => `Laquelle${NB}: ${options.join(', ')}${NB}?`,
+    which_app: (options) => `Laquelle${NB}: ${options}${NB}?`,
     not_installed: (app) => `L’application ${app} n’est pas installée sur ce téléphone.`,
-    android_only: (feature) =>
-      ({
-        close: 'iOS ne permet pas à une application d’en fermer d’autres. Balayez-la vers le haut dans le sélecteur d’applications.',
-        timer: 'iOS ne permet pas aux applications de lancer un minuteur dans l’app Horloge. Demandez à Siri ou utilisez un raccourci.',
-        alarm: 'iOS ne permet pas aux applications de régler une alarme dans l’app Horloge. Demandez à Siri ou utilisez un raccourci.',
-        flashlight: 'Sigil ne contrôle pas encore la lampe torche sur iOS. Utilisez le centre de contrôle.',
-        chat: 'Sur iOS, Sigil ouvre l’application mais ne peut pas y trouver une conversation.',
-        open: 'Sur iOS, Sigil n’ouvre que les applications qui ont un lien public.',
-      })[feature],
     no_app_in_front: () => `Sigil ne sait pas quelle application est à l’écran. Dites son nom, par exemple ${q('ferme YouTube')}.`,
     cannot_open_place: (place, app) => `Sigil ne sait pas encore ouvrir ${place} dans ${app}.`,
     nothing_heard: () => 'Rien n’a été entendu.',

@@ -4,6 +4,8 @@ const q = (text: string) => `«${text}»`;
 
 export const es: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'Español',
     title: 'Idioma',
@@ -166,6 +168,16 @@ export const es: Messages = {
     },
     source: { rules: 'por reglas', model: 'por el modelo' },
     afterYes: 'solo después de tu sí',
+    run: 'Ejecutar',
+    stop: 'Detener',
+    yes: 'Sí',
+    no: 'No',
+    result: {
+      completed: 'Hecho.',
+      failed: (step) => `Se detuvo en: ${step}`,
+      cancelled: 'Cancelado. No se hizo nada más.',
+      refused: 'Sigil no ejecutó este plan.',
+    },
   },
   plan: {
     open: (app) => `Abrir ${app}`,
@@ -291,18 +303,17 @@ export const es: Messages = {
     post: (app, caption) => `¿Compartir esta publicación en ${app} con el texto ${q(caption)}?`,
     tap: (target) => `¿Tocar ${target}?`,
   },
+  androidOnly: {
+    close: 'iOS no deja que una app cierre otras apps. Desliza la app hacia arriba en el selector de apps.',
+    timer: 'iOS no deja que una app inicie un temporizador en la app Reloj. Pídeselo a Siri o usa un atajo.',
+    alarm: 'iOS no deja que una app ponga una alarma en la app Reloj. Pídeselo a Siri o usa un atajo.',
+    flashlight: 'Sigil todavía no controla la linterna en iOS. Usa el Centro de control.',
+    chat: 'En iOS, Sigil abre la app, pero no puede encontrar un chat dentro de ella.',
+    open: 'En iOS, Sigil solo abre apps que tienen un enlace público.',
+  },
   notices: {
-    which_app: (options) => `¿Cuál: ${options.join(', ')}?`,
+    which_app: (options) => `¿Cuál: ${options}?`,
     not_installed: (app) => `La app ${app} no está instalada en este teléfono.`,
-    android_only: (feature) =>
-      ({
-        close: 'iOS no deja que una app cierre otras apps. Desliza la app hacia arriba en el selector de apps.',
-        timer: 'iOS no deja que una app inicie un temporizador en la app Reloj. Pídeselo a Siri o usa un atajo.',
-        alarm: 'iOS no deja que una app ponga una alarma en la app Reloj. Pídeselo a Siri o usa un atajo.',
-        flashlight: 'Sigil todavía no controla la linterna en iOS. Usa el Centro de control.',
-        chat: 'En iOS, Sigil abre la app, pero no puede encontrar un chat dentro de ella.',
-        open: 'En iOS, Sigil solo abre apps que tienen un enlace público.',
-      })[feature],
     no_app_in_front: () => `Sigil no sabe qué app está en pantalla. Di su nombre, como en ${q('cierra YouTube')}.`,
     cannot_open_place: (place, app) => `Sigil todavía no puede abrir ${place} en ${app}.`,
     nothing_heard: () => 'No se oyó nada.',

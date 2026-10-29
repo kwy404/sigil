@@ -4,6 +4,8 @@ const q = (text: string) => `«${text}»`;
 
 export const it: Messages = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'Italiano',
     title: 'Lingua',
@@ -166,6 +168,16 @@ export const it: Messages = {
     },
     source: { rules: 'dalle regole', model: 'dal modello' },
     afterYes: 'solo dopo il tuo sì',
+    run: 'Esegui',
+    stop: 'Ferma',
+    yes: 'Sì',
+    no: 'No',
+    result: {
+      completed: 'Fatto.',
+      failed: (step) => `Fermato a: ${step}`,
+      cancelled: 'Annullato. Non è stato fatto altro.',
+      refused: 'Sigil non ha eseguito questo piano.',
+    },
   },
   plan: {
     open: (app) => `Apri ${app}`,
@@ -291,18 +303,17 @@ export const it: Messages = {
     post: (app, caption) => `Condividere questo post su ${app} con la didascalia ${q(caption)}?`,
     tap: (target) => `Toccare ${target}?`,
   },
+  androidOnly: {
+    close: 'iOS non permette a un’app di chiudere altre app. Scorri l’app verso l’alto nel selettore delle app.',
+    timer: 'iOS non permette alle app di avviare un timer nell’app Orologio. Chiedi a Siri o usa un comando rapido.',
+    alarm: 'iOS non permette alle app di impostare una sveglia nell’app Orologio. Chiedi a Siri o usa un comando rapido.',
+    flashlight: 'Sigil non controlla ancora la torcia su iOS. Usa il Centro di Controllo.',
+    chat: 'Su iOS, Sigil apre l’app ma non riesce a trovare una chat al suo interno.',
+    open: 'Su iOS, Sigil apre solo le app che hanno un link pubblico.',
+  },
   notices: {
-    which_app: (options) => `Quale: ${options.join(', ')}?`,
+    which_app: (options) => `Quale: ${options}?`,
     not_installed: (app) => `L’app ${app} non è installata su questo telefono.`,
-    android_only: (feature) =>
-      ({
-        close: 'iOS non permette a un’app di chiudere altre app. Scorri l’app verso l’alto nel selettore delle app.',
-        timer: 'iOS non permette alle app di avviare un timer nell’app Orologio. Chiedi a Siri o usa un comando rapido.',
-        alarm: 'iOS non permette alle app di impostare una sveglia nell’app Orologio. Chiedi a Siri o usa un comando rapido.',
-        flashlight: 'Sigil non controlla ancora la torcia su iOS. Usa il Centro di Controllo.',
-        chat: 'Su iOS, Sigil apre l’app ma non riesce a trovare una chat al suo interno.',
-        open: 'Su iOS, Sigil apre solo le app che hanno un link pubblico.',
-      })[feature],
     no_app_in_front: () => `Sigil non sa quale app è sullo schermo. Dimmi il suo nome, per esempio ${q('chiudi YouTube')}.`,
     cannot_open_place: (place, app) => `Sigil non sa ancora aprire ${place} in ${app}.`,
     nothing_heard: () => 'Non ho sentito niente.',
