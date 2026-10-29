@@ -7,6 +7,7 @@ import { gestureKey } from '../gesture-engine/gestures';
 import { sampleRecordings, type HandRecording } from '../gesture-engine/samples';
 import { flattenLandmarks } from '../gesture-engine/landmarks';
 import { HandControl, type NativeHandFrame } from '../hand-control/controller';
+import { appNameResolver, MESSAGES, numberFormatter, type AppLanguage, type DescribeContext } from '../i18n';
 import { readSettings, updateSettings } from '../settings/store';
 import { ActionPlanner } from '../sigil-core/planner';
 import { PlanExecutor, type SigilInterface } from '../sigil-core/executor';
@@ -14,6 +15,7 @@ import { foregroundApp, getSystemControl, installedApps, planPlatform, requestCo
 import { getNativeControl, type NativeControl } from '../system-control/native';
 import type { SigilUi } from '../system-control/dispatch';
 import { VoiceSession, type VoiceState } from '../voice/session';
+import { endsRequest, PANEL_LINGER_MS, voicePanel, type PanelContent } from './voice-panel';
 
 export interface SigilState {
   /** The camera service runs: tracking, cursor and bubble. */
@@ -74,6 +76,8 @@ export interface SigilHost {
   openTutorial(): void;
   /** BCP 47 locale of the app language. */
   locale(): string;
+  /** The app language, for the texts of the voice panel over other apps. */
+  language(): AppLanguage;
 }
 
 /** A recognizer that is not on the phone needs the user's consent, kept in the settings file. */
@@ -99,10 +103,6 @@ const DEMO_SAMPLES = ['point', 'pinch', 'circle-cw', 'pinch-hold', 'open-palm'];
 const FRAME_MS = 33;
 
 /**
- * Everything that keeps working while other apps are in front: live hand
- * control, the floating bubble, the cursor and voice requests. One instance
- * lives for the whole app; screens read its state and call its actions.
-/**
  * React Native pauses JavaScript timers while Sigil's screen is in the
  * background, unless a headless task runs. Plan steps, voice questions and
  * the demo hand wait on timers, so the native module keeps this task while the
@@ -119,6 +119,10 @@ if (Platform.OS === 'android') {
   );
 }
 
+/**
+ * Everything that keeps working while other apps are in front: live hand
+ * control, the floating bubble, the cursor and voice requests. One instance
+ * lives for the whole app; screens read its state and call its actions.
  */
 export class Sigil {
   readonly profiles = ProfileRegistry.withBuiltins();
@@ -131,6 +135,9 @@ export class Sigil {
   private readonly listeners = new Set<(state: SigilState) => void>();
   private readonly subscriptions: { remove(): void }[] = [];
   private demoTimer: ReturnType<typeof setInterval> | null = null;
+  /** What the voice panel over other apps shows, and the timer that hides it after a request. */
+  private panel: PanelContent | null = null;
+  private panelTimer: ReturnType<typeof setTimeout> | null = null;
   private state: SigilState;
 
   constructor(private readonly host: SigilHost) {
@@ -165,14 +172,15 @@ export class Sigil {
     });
     this.hands = this.native ? this.createHands(this.native) : null;
     if (this.native) this.listen(this.native);
+    if (this.state.running) this.keepAlive(true);
     let wasBusy = false;
     this.subscriptions.push({
       remove: this.voice.subscribe((voice) => {
         this.syncBubble(voice);
+        this.syncPanel(voice);
         // A request ended: remember what it was and how it went.
         const busy = this.voice.busy;
         if (wasBusy && !busy) {
-    if (this.state.running) this.keepAlive(true);
           const command = commandOutcome(voice, false);
           if (command) this.set({ lastCommand: command });
         }
@@ -191,20 +199,12 @@ export class Sigil {
   }
 
   private set(change: Partial<SigilState>): void {
+    const wasRunning = this.state.running;
     this.state = { ...this.state, ...change };
+    if (this.state.running !== wasRunning) this.keepAlive(this.state.running);
     this.listeners.forEach((listener) => listener(this.state));
   }
 
-  private createHands(native: NativeControl): HandControl {
-    const ui: SigilUi = {
-      sphere: (action) => {
-        if (action === 'close') return;
-    const wasRunning = this.state.running;
-        if (AppState.currentState === 'active') this.host.openSphere();
-    if (this.state.running !== wasRunning) this.keepAlive(this.state.running);
-        else void native.openApp(native.getStatus().packageName, 'sigil://control/sphere', null);
-      },
-      listen: () => void this.voice.start(),
   /** Keeps JavaScript timers alive in the background while the camera service runs (see KEEP_ALIVE_TASK). */
   private keepAlive(on: boolean): void {
     if (!this.native || Platform.OS !== 'android') return;
@@ -215,6 +215,14 @@ export class Sigil {
     }
   }
 
+  private createHands(native: NativeControl): HandControl {
+    const ui: SigilUi = {
+      sphere: (action) => {
+        if (action === 'close') return;
+        if (AppState.currentState === 'active') this.host.openSphere();
+        else void native.openApp(native.getStatus().packageName, 'sigil://control/sphere', null);
+      },
+      listen: () => void this.voice.start(),
       cursor: (action) => {
         if (action === 'toggle') native.hideCursor();
       },
@@ -246,6 +254,8 @@ export class Sigil {
         if (!event.running) this.stopDemoTimer();
       }),
       native.addListener('onControlAction', (event) => this.onControlAction(event.action)),
+      // Sigil's screen shows the voice state; the panel takes over when another app comes in front.
+      AppState.addEventListener('change', () => this.syncPanel(this.voice.current)),
     );
   }
 
@@ -257,6 +267,45 @@ export class Sigil {
     if (visible !== this.state.handVisible || hand !== this.state.hand || last !== this.state.lastGesture) {
       this.set({ handVisible: visible, hand, lastGesture: last });
       this.syncBubble(this.voice.current);
+    }
+  }
+
+  /** Texts in the app language, outside React. */
+  private describeContext(): DescribeContext {
+    const language = this.host.language();
+    const m = MESSAGES[language];
+    return { m, format: numberFormatter(language), appName: appNameResolver(this.profiles, m) };
+  }
+
+  /**
+   * The voice panel at the top of the screen, for requests made while another
+   * app is in front: what Sigil heard, its question with the microphone level,
+   * and how the request ended. Sigil's own screen shows the voice state itself.
+   */
+  private syncPanel(voice: VoiceState): void {
+    const native = this.native;
+    if (!native || Platform.OS !== 'android') return;
+    if (this.panelTimer) clearTimeout(this.panelTimer);
+    this.panelTimer = null;
+    const busy = this.voice.busy;
+    const content = AppState.currentState === 'active' ? null : voicePanel(voice, busy, this.describeContext());
+    const shown = this.panel;
+    this.panel = content;
+    if (!content) {
+      if (shown) native.hidePrompt();
+      return;
+    }
+    if (shown && shown.title === content.title && shown.message === content.message && shown.tone === content.tone) {
+      if (shown.level !== content.level) native.setPromptLevel(content.level);
+    } else {
+      native.showPrompt(content.title, content.message, content.level, content.tone);
+    }
+    if (endsRequest(voice, busy)) {
+      this.panelTimer = setTimeout(() => {
+        this.panelTimer = null;
+        this.panel = null;
+        native.hidePrompt();
+      }, PANEL_LINGER_MS);
     }
   }
 
@@ -355,6 +404,7 @@ export class Sigil {
 
   dispose(): void {
     this.stopDemoTimer();
+    if (this.panelTimer) clearTimeout(this.panelTimer);
     this.subscriptions.forEach((subscription) => subscription.remove());
     this.subscriptions.length = 0;
   }

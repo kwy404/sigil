@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useMemo, useSyncExternalStore } from 'react';
 import { AppState, PermissionsAndroid, Platform } from 'react-native';
 
-import { resolveLanguage, speechLocaleFor, type DeviceLocale } from '../i18n/languages';
+import { resolveLanguage, speechLocaleFor, type AppLanguage, type DeviceLocale } from '../i18n/languages';
 import { loadLanguageChoice } from '../i18n/storage';
 import { Sigil } from '../runtime/sigil';
 import { foregroundApp, getSystemControl, readLevels, requestControlPermissions } from '../system-control';
@@ -22,17 +22,25 @@ export function setSessionHandlers(next: Partial<typeof handlers>): void {
   Object.assign(handlers, next);
 }
 
-/** BCP 47 locale of the app language, outside React: the saved choice, or the phone language. */
-function appLocale(): string {
-  const locales: DeviceLocale[] = getLocales().map((locale) => ({
+function deviceLocales(): DeviceLocale[] {
+  return getLocales().map((locale) => ({
     languageTag: locale.languageTag,
     languageCode: locale.languageCode ?? null,
     regionCode: locale.regionCode ?? null,
     languageScriptCode: locale.languageScriptCode ?? null,
   }));
+}
+
+/** The app language outside React: the saved choice, or the phone language. */
+function appLanguage(locales: DeviceLocale[] = deviceLocales()): AppLanguage {
   const choice = loadLanguageChoice();
-  const language = choice === 'system' ? resolveLanguage(locales) : choice;
-  return speechLocaleFor(language, locales);
+  return choice === 'system' ? resolveLanguage(locales) : choice;
+}
+
+/** BCP 47 locale of the app language, for speech and the planner. */
+function appLocale(): string {
+  const locales = deviceLocales();
+  return speechLocaleFor(appLanguage(locales), locales);
 }
 
 let sigil: Sigil | null = null;
@@ -43,6 +51,7 @@ export function getSigil(): Sigil {
     openSphere: () => handlers.openSphere(),
     openTutorial: () => handlers.openTutorial(),
     locale: appLocale,
+    language: () => appLanguage(),
   });
   return sigil;
 }
