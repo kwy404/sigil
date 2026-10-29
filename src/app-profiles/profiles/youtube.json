@@ -16,6 +16,20 @@
     "search": {
       "resourceId": ["com.google.android.youtube:id/menu_item_view"],
       "contentDescription": ["Search", "Pesquisar"]
+    },
+    "like": {
+      "contentDescription": [
+        "like this video",
+        "Like",
+        "Marcar como gostei",
+        "Gostei",
+        "Me gusta",
+        "J'aime",
+        "Mag ich",
+        "Mi piace",
+        "高く評価",
+        "顶"
+      ]
     }
   },
   "links": {

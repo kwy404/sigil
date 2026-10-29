@@ -13,11 +13,14 @@ export {
   type Clock,
   type ConfirmationRequest,
   type ConfirmHandler,
+  type ControlResult,
   type DeviceController,
   type ExecutionResult,
   type ExecutorOptions,
   type NodeBounds,
   type NodeQuery,
+  type SigilInterface,
+  type SpecialAccess,
   type StepEvent,
   type StepStatus,
   type UiNode,
@@ -33,7 +36,20 @@ export {
   type VoiceRequest,
 } from './planner';
 export { cleanRequest, parseRequest, type RuleMatch } from './rules';
-export { describeStep, describeTarget, type ConfirmReason, type PlanStep, type StepKind, type StepTarget } from './steps';
+export {
+  describeBrightness,
+  describeStep,
+  describeTarget,
+  describeVolume,
+  type BrightnessAction,
+  type BrightnessCommand,
+  type ConfirmReason,
+  type PlanStep,
+  type StepKind,
+  type StepTarget,
+  type VolumeAction,
+  type VolumeCommand,
+} from './steps';
 export {
   INTENT_TOOLS,
   isToolName,

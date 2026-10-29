@@ -1,6 +1,13 @@
 import { z } from 'zod';
 
-import { DirectionSchema, GLOBAL_ACTIONS, MEDIA_ACTIONS } from '../app-profiles/schema';
+import { DirectionSchema, GLOBAL_ACTIONS, MEDIA_ACTIONS, SYSTEM_PANELS, VOLUME_STREAMS } from '../app-profiles/schema';
+
+const PercentSchema = z.number().int().min(0).max(100);
+
+/** level comes with set and only with set. */
+function levelMatchesAction(args: { action: string; level?: number }): boolean {
+  return (args.action === 'set') === (args.level !== undefined);
+}
 
 /**
  * The fixed set of intents a language model may call. Each one is expanded
@@ -35,7 +42,7 @@ export const INTENT_TOOLS = {
     args: z.strictObject({ direction: DirectionSchema }),
   },
   navigate: {
-    description: 'A system navigation action such as back or home.',
+    description: 'A system navigation action such as back, home, the notifications or the power menu.',
     args: z.strictObject({ action: z.enum(GLOBAL_ACTIONS) }),
   },
   tap: {
@@ -47,8 +54,54 @@ export const INTENT_TOOLS = {
     args: z.strictObject({ text: z.string().min(1) }),
   },
   media: {
-    description: 'Control the media that is playing.',
+    description: 'Control the media that is playing in any app: play, pause, next or previous.',
     args: z.strictObject({ action: z.enum(MEDIA_ACTIONS) }),
+  },
+  seek: {
+    description: 'Skip forward or back in the media that is playing.',
+    args: z.strictObject({
+      direction: z.enum(['forward', 'back']),
+      seconds: z.number().int().min(1).max(3600),
+    }),
+  },
+  playback_speed: {
+    description: 'Set the playback speed of the media that is playing. 1 is the normal speed.',
+    args: z.strictObject({ rate: z.number().min(0.25).max(4) }),
+  },
+  like: {
+    description: 'Like the post or video on screen, once.',
+    args: z.strictObject({
+      app: z.string().min(1).optional().describe('App that shows the post or video. Leave empty for the app on screen.'),
+    }),
+  },
+  volume: {
+    description:
+      'Change the volume. stream defaults to media; use ring or alarm only when the user names them. level is a percent and only goes with set.',
+    args: z
+      .strictObject({
+        action: z.enum(['up', 'down', 'set', 'mute', 'unmute']),
+        level: PercentSchema.optional(),
+        stream: z.enum(VOLUME_STREAMS).optional(),
+      })
+      .refine(levelMatchesAction, { message: 'level goes with set, and set needs a level.', path: ['level'] }),
+  },
+  brightness: {
+    description: 'Change the screen brightness. level is a percent and only goes with set.',
+    args: z
+      .strictObject({
+        action: z.enum(['up', 'down', 'set']),
+        level: PercentSchema.optional(),
+      })
+      .refine(levelMatchesAction, { message: 'level goes with set, and set needs a level.', path: ['level'] }),
+  },
+  settings_panel: {
+    description:
+      'Open the system panel for Wi-Fi, Bluetooth or Do Not Disturb. Android does not let apps switch them, so the user flips the switch there.',
+    args: z.strictObject({ panel: z.enum(SYSTEM_PANELS) }),
+  },
+  control_sphere: {
+    description: "Open or close the Control Sphere, Sigil's own hub.",
+    args: z.strictObject({ action: z.enum(['open', 'close']) }),
   },
   create_post: {
     description:

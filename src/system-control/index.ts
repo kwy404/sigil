@@ -4,8 +4,20 @@ import type { DeviceController } from '../sigil-core/executor';
 import { AndroidDeviceController, InAppDeviceController } from './devices';
 import { getNativeControl, type NativeControl } from './native';
 
-export { AndroidDeviceController, InAppDeviceController, toUiNode } from './devices';
-export { dispatchProfileAction, type DispatchContext, type GestureTarget, type SigilUi } from './dispatch';
+export {
+  AndroidDeviceController,
+  InAppDeviceController,
+  toControlResult,
+  toUiNode,
+  VOICE_BRIGHTNESS_STEP,
+} from './devices';
+export {
+  dispatchProfileAction,
+  GESTURE_BRIGHTNESS_STEP,
+  type DispatchContext,
+  type GestureTarget,
+  type SigilUi,
+} from './dispatch';
 export { getNativeControl, type NativeControl } from './native';
 
 /**

@@ -6,13 +6,17 @@ import {
   nodeMatches,
   PlanExecutor,
   type AppLaunch,
+  type BrightnessCommand,
   type Clock,
   type ConfirmationRequest,
+  type ControlResult,
   type DeviceController,
   type NodeQuery,
   type Plan,
+  type PlanStep,
   type StepEvent,
   type UiNode,
+  type VolumeCommand,
 } from '..';
 
 const profiles = ProfileRegistry.withBuiltins();
@@ -127,6 +131,36 @@ class FakeWhatsApp implements DeviceController {
   }
 
   async media(): Promise<boolean> {
+    return true;
+  }
+
+  canWriteSettings = true;
+
+  async seek(seconds: number): Promise<ControlResult> {
+    this.log.push(`seek ${seconds}`);
+    return { ok: true };
+  }
+
+  async setSpeed(rate: number): Promise<ControlResult> {
+    this.log.push(`speed ${rate}`);
+    return { ok: true };
+  }
+
+  async volume(command: VolumeCommand): Promise<ControlResult> {
+    this.log.push(`volume ${command.stream} ${command.action}${command.level !== undefined ? ` ${command.level}` : ''}`);
+    return { ok: true };
+  }
+
+  async brightness(command: BrightnessCommand): Promise<ControlResult> {
+    if (!this.canWriteSettings) {
+      return { ok: false, reason: 'needs_permission', permission: 'write_settings' };
+    }
+    this.log.push(`brightness ${command.action}${command.level !== undefined ? ` ${command.level}` : ''}`);
+    return { ok: true };
+  }
+
+  async openPanel(panel: string): Promise<boolean> {
+    this.log.push(`panel ${panel}`);
     return true;
   }
 }
@@ -248,6 +282,72 @@ describe('PlanExecutor', () => {
     const { run } = executor(device, async () => true);
     expect((await run.run(outcome.plan)).status).toBe('completed');
     expect(scrolls).toBe(2);
+  });
+});
+
+function planOf(steps: PlanStep[]): Plan {
+  return {
+    request: 'test',
+    intent: { tool: 'scroll', args: { direction: 'down' } },
+    source: 'rules',
+    summary: 'test',
+    steps,
+    needsConfirmation: false,
+  };
+}
+
+describe('PlanExecutor with system controls', () => {
+  it('runs volume, brightness, seek, speed and panel steps without asking', async () => {
+    const device = new FakeWhatsApp();
+    let asked = 0;
+    const { run } = executor(device, async () => {
+      asked++;
+      return true;
+    });
+    const result = await run.run(
+      planOf([
+        { kind: 'volume', stream: 'media', action: 'set', level: 30 },
+        { kind: 'volume', stream: 'alarm', action: 'down' },
+        { kind: 'brightness', action: 'up' },
+        { kind: 'seek', seconds: -10 },
+        { kind: 'speed', rate: 1.5 },
+        { kind: 'panel', panel: 'wifi' },
+      ]),
+    );
+    expect(result).toEqual({ status: 'completed', completedSteps: 6 });
+    expect(asked).toBe(0);
+    expect(device.log).toEqual([
+      'volume media set 30',
+      'volume alarm down',
+      'brightness up',
+      'seek -10',
+      'speed 1.5',
+      'panel wifi',
+    ]);
+  });
+
+  it('names the special access a step was missing', async () => {
+    const device = new FakeWhatsApp();
+    device.canWriteSettings = false;
+    const { run, events } = executor(device, async () => true);
+    const result = await run.run(planOf([{ kind: 'brightness', action: 'set', level: 70 }]));
+    expect(result).toMatchObject({ status: 'failed', completedSteps: 0, permission: 'write_settings' });
+    expect(events[events.length - 1]).toMatchObject({ status: 'failed', permission: 'write_settings' });
+  });
+
+  it('opens the Control Sphere through Sigil interface and fails without one', async () => {
+    const opened: string[] = [];
+    const withUi = new PlanExecutor({
+      device: new FakeWhatsApp(),
+      profiles,
+      confirm: async () => true,
+      clock: new FakeClock(),
+      ui: { sphere: (action) => opened.push(action) },
+    });
+    expect((await withUi.run(planOf([{ kind: 'sphere', action: 'open' }]))).status).toBe('completed');
+    expect(opened).toEqual(['open']);
+    const { run } = executor(new FakeWhatsApp(), async () => true);
+    expect((await run.run(planOf([{ kind: 'sphere', action: 'open' }]))).status).toBe('failed');
   });
 });
 

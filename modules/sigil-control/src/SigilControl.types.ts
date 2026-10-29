@@ -8,6 +8,10 @@ export interface SigilControlStatus {
   cameraServiceRunning: boolean;
   /** Package of the app in front, as last reported by the accessibility service. */
   foregroundPackage: string | null;
+  /** "Modify system settings", needed to change the screen brightness. */
+  writeSettings: boolean;
+  /** Sigil's media listener is enabled, so it can seek and change the speed of the player in front. */
+  mediaAccess: boolean;
   sdkInt: number;
 }
 
@@ -43,7 +47,43 @@ export type GlobalActionName =
   | 'notifications'
   | 'quick_settings'
   | 'lock_screen'
-  | 'screenshot';
+  | 'screenshot'
+  | 'power_menu';
+
+export type MediaKeyName = 'play_pause' | 'play' | 'pause' | 'next' | 'previous';
+
+export type VolumeStreamName = 'media' | 'ring' | 'alarm';
+
+export type VolumeChange = 'up' | 'down' | 'set' | 'mute' | 'unmute';
+
+export type BrightnessChange = 'up' | 'down' | 'set';
+
+export type SettingsPanelName = 'wifi' | 'bluetooth' | 'do_not_disturb' | 'display';
+
+/**
+ * Outcome of a system control: done, the special access that is missing
+ * (write_settings or media_access), unsupported on this Android version, or
+ * failed.
+ */
+export type ControlOutcome = 'done' | 'write_settings' | 'media_access' | 'unsupported' | 'failed';
+
+export interface VolumeLevel {
+  /** Position from 0 to 1 between the lowest and the highest index of the stream. */
+  level: number;
+  index: number;
+  min: number;
+  max: number;
+  muted: boolean;
+}
+
+export interface BrightnessLevel {
+  /** Position of the system brightness slider, from 0 to 1. */
+  level: number;
+  /** Adaptive brightness is on. Sigil turns it off when it sets the brightness. */
+  automatic: boolean;
+  /** Sigil holds "Modify system settings". */
+  writable: boolean;
+}
 
 export type SigilControlEvents = {
   onServiceStateChanged: (event: { enabled: boolean }) => void;

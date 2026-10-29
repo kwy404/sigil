@@ -27,6 +27,10 @@
       "text": ["Share", "Compartilhar"],
       "contentDescription": ["Share", "Compartilhar"],
       "commit": true
+    },
+    "like": {
+      "resourceId": ["com.instagram.android:id/row_feed_button_like"],
+      "contentDescription": ["Like", "Curtir", "Me gusta", "J'aime", "Gefällt mir", "Mi piace", "いいね！", "赞"]
     }
   },
   "links": {

@@ -8,4 +8,5 @@
   <string name="sigil_camera_notification_text">The front camera is on for gesture control.</string>
   <string name="sigil_camera_notification_text_voice">The front camera and the microphone are on for gestures and voice.</string>
   <string name="sigil_stop">Stop</string>
+  <string name="sigil_media_access_label">Sigil media control</string>
 </resources>

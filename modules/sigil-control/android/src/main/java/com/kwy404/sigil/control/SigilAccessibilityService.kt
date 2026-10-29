@@ -92,6 +92,7 @@ class SigilAccessibilityService : AccessibilityService() {
       "quick_settings" -> GLOBAL_ACTION_QUICK_SETTINGS
       "lock_screen" -> if (Build.VERSION.SDK_INT >= 28) GLOBAL_ACTION_LOCK_SCREEN else return false
       "screenshot" -> if (Build.VERSION.SDK_INT >= 28) GLOBAL_ACTION_TAKE_SCREENSHOT else return false
+      "power_menu" -> GLOBAL_ACTION_POWER_DIALOG
       else -> return false
     }
     return performGlobalAction(action)

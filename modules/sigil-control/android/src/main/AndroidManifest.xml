@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
 
   <!-- Hand tracking with the front camera, also while another app is in front. -->
   <uses-permission android:name="android.permission.CAMERA" />
@@ -11,6 +12,12 @@
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <!-- Fallback cursor window while the accessibility service is off. -->
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+  <!--
+    Screen brightness. A special access the user grants in Settings ("Modify
+    system settings") after Sigil explains why; until then Sigil opens the
+    display settings instead.
+  -->
+  <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
 
   <uses-feature android:name="android.hardware.camera.front" android:required="false" />
 
@@ -41,5 +48,20 @@
       android:name="com.kwy404.sigil.control.SigilCameraService"
       android:exported="false"
       android:foregroundServiceType="camera|microphone" />
+
+    <!--
+      Media access: Android shares the active media sessions only with enabled
+      notification listeners. Sigil uses it to seek and change the playback
+      speed of the player in front, and never reads notifications.
+    -->
+    <service
+      android:name="com.kwy404.sigil.control.SigilMediaListener"
+      android:exported="true"
+      android:label="@string/sigil_media_access_label"
+      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService" />
+      </intent-filter>
+    </service>
   </application>
 </manifest>

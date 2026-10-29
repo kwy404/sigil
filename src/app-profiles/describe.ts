@@ -1,6 +1,6 @@
-import type { ProfileAction } from './schema';
+import type { GlobalAction, MediaAction, ProfileAction } from './schema';
 
-const GLOBAL_LABELS: Record<string, string> = {
+const GLOBAL_LABELS: Record<GlobalAction, string> = {
   back: 'Back',
   home: 'Home',
   recents: 'Recent apps',
@@ -8,15 +8,21 @@ const GLOBAL_LABELS: Record<string, string> = {
   quick_settings: 'Quick settings',
   lock_screen: 'Lock screen',
   screenshot: 'Screenshot',
+  power_menu: 'Power menu',
 };
 
-const MEDIA_LABELS: Record<string, string> = {
+const MEDIA_LABELS: Record<MediaAction, string> = {
   play_pause: 'Play or pause',
+  play: 'Play',
+  pause: 'Pause',
   next: 'Next track',
   previous: 'Previous track',
 };
 
-/** Short label for an action, for lists and the cursor hint. */
+/**
+ * Short English label for an action, for logs and tests. The screens use the
+ * translated labels of src/i18n.
+ */
 export function describeAction(action: ProfileAction): string {
   switch (action.type) {
     case 'tap':
@@ -32,11 +38,13 @@ export function describeAction(action: ProfileAction): string {
     case 'swipe':
       return `Swipe ${action.direction}${action.origin === 'cursor' ? ' from cursor' : ''}`;
     case 'global':
-      return GLOBAL_LABELS[action.action] ?? action.action;
+      return GLOBAL_LABELS[action.action];
     case 'media':
-      return MEDIA_LABELS[action.action] ?? action.action;
+      return MEDIA_LABELS[action.action];
     case 'volume':
       return `Volume ${action.direction}`;
+    case 'brightness':
+      return `Brightness ${action.direction}`;
     case 'open_app':
       return `Open ${action.app}`;
     case 'sphere':

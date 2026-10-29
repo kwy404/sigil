@@ -3,7 +3,7 @@ import { describe, expect, it } from '@jest/globals';
 import { ProfileRegistry } from '../../app-profiles';
 import { dispatchProfileAction, type GestureTarget, type SigilUi } from '../dispatch';
 
-function fakeTarget(log: string[]): GestureTarget {
+function fakeTarget(log: string[], brightness: 'done' | 'write_settings' = 'done'): GestureTarget {
   const record =
     (name: string) =>
     async (...args: unknown[]) => {
@@ -19,6 +19,10 @@ function fakeTarget(log: string[]): GestureTarget {
     globalAction: record('globalAction'),
     mediaKey: record('mediaKey'),
     adjustVolume: record('adjustVolume'),
+    changeBrightness: async (change, level) => {
+      log.push(`changeBrightness ${change} ${level}`);
+      return brightness;
+    },
     openApp: record('openApp'),
   };
 }
@@ -29,6 +33,7 @@ function fakeUi(log: string[]): SigilUi {
     listen: () => log.push('listen'),
     cursor: (action) => log.push(`cursor ${action}`),
     pause: () => log.push('pause'),
+    needsAccess: (access) => log.push(`needsAccess ${access}`),
   };
 }
 
@@ -72,6 +77,19 @@ describe('dispatchProfileAction', () => {
       'openApp com.google.android.youtube null null',
       'scroll down',
     ]);
+  });
+
+  it('changes the brightness in small steps and asks for the access when it is missing', async () => {
+    const log: string[] = [];
+    expect(await dispatchProfileAction({ type: 'brightness', direction: 'up' }, fakeTarget(log), ctx, fakeUi(log))).toBe(true);
+    const denied = await dispatchProfileAction(
+      { type: 'brightness', direction: 'down' },
+      fakeTarget(log, 'write_settings'),
+      ctx,
+      fakeUi(log),
+    );
+    expect(denied).toBe(false);
+    expect(log).toEqual(['changeBrightness up 6', 'changeBrightness down 6', 'needsAccess write_settings']);
   });
 
   it('routes Sigil actions to its own interface', async () => {

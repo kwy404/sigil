@@ -16,9 +16,21 @@ export const GLOBAL_ACTIONS = [
   'quick_settings',
   'lock_screen',
   'screenshot',
+  'power_menu',
 ] as const;
 
-export const MEDIA_ACTIONS = ['play_pause', 'next', 'previous'] as const;
+/** Media keys, delivered to the player that holds the media session in any app. */
+export const MEDIA_ACTIONS = ['play_pause', 'play', 'pause', 'next', 'previous'] as const;
+
+/** Audio streams Sigil may change. media is the default; ring and alarm only when the user names them. */
+export const VOLUME_STREAMS = ['media', 'ring', 'alarm'] as const;
+
+/**
+ * System panels Sigil opens instead of switching the setting itself: since
+ * Android 10 apps cannot turn Wi-Fi on or off, and Bluetooth and Do Not
+ * Disturb are left to the user's own switch as well.
+ */
+export const SYSTEM_PANELS = ['wifi', 'bluetooth', 'do_not_disturb'] as const;
 
 export const GestureKeySchema = z.enum(GESTURE_KEYS);
 
@@ -52,6 +64,9 @@ export const ProfileActionSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('global'), action: z.enum(GLOBAL_ACTIONS) }).describe('A system navigation action.'),
   z.strictObject({ type: z.literal('media'), action: z.enum(MEDIA_ACTIONS) }).describe('A media key.'),
   z.strictObject({ type: z.literal('volume'), direction: z.enum(['up', 'down']) }).describe('Media volume.'),
+  z
+    .strictObject({ type: z.literal('brightness'), direction: z.enum(['up', 'down']) })
+    .describe('Screen brightness. On Android it needs the permission to modify system settings.'),
   z.strictObject({ type: z.literal('open_app'), app: z.string().min(1) }).describe('Open another app by profile id or package.'),
   z.strictObject({ type: z.literal('sphere'), action: z.enum(['toggle', 'open', 'close']) }).describe('The Control Sphere hub.'),
   z.strictObject({ type: z.literal('voice'), action: z.literal('listen') }).describe('Start listening for a voice request.'),
@@ -109,3 +124,5 @@ export type Selector = z.infer<typeof SelectorSchema>;
 export type ProfileLinks = z.infer<typeof LinksSchema>;
 export type GlobalAction = (typeof GLOBAL_ACTIONS)[number];
 export type MediaAction = (typeof MEDIA_ACTIONS)[number];
+export type VolumeStream = (typeof VOLUME_STREAMS)[number];
+export type SystemPanel = (typeof SYSTEM_PANELS)[number];

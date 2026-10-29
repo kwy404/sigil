@@ -1,7 +1,7 @@
-import type { ProfileRegistry } from '../app-profiles/registry';
+import { GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles/registry';
 import type { AppProfile } from '../app-profiles/schema';
 import { isSensitiveLabel, namesSeveralPeople } from './confirmation';
-import type { PlanStep, StepTarget } from './steps';
+import { describeStep, type PlanStep, type StepTarget } from './steps';
 import type { Intent } from './tools';
 
 export interface FlowContext {
@@ -168,12 +168,66 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
         summary: `Type "${intent.args.text}"`,
       };
 
-    case 'media':
+    case 'media': {
+      const step: PlanStep = { kind: 'media', action: intent.args.action };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'seek': {
+      const seconds = intent.args.direction === 'back' ? -intent.args.seconds : intent.args.seconds;
+      const step: PlanStep = { kind: 'seek', seconds };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'playback_speed': {
+      const step: PlanStep = { kind: 'speed', rate: intent.args.rate };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'volume': {
+      const { action, level, stream } = intent.args;
+      const step: PlanStep = { kind: 'volume', stream: stream ?? 'media', action, ...(level !== undefined ? { level } : {}) };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'brightness': {
+      const { action, level } = intent.args;
+      const step: PlanStep = { kind: 'brightness', action, ...(level !== undefined ? { level } : {}) };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'settings_panel': {
+      const step: PlanStep = { kind: 'panel', panel: intent.args.panel };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'control_sphere': {
+      const step: PlanStep = { kind: 'sphere', action: intent.args.action };
+      return { ok: true, steps: [step], summary: describeStep(step) };
+    }
+
+    case 'like': {
+      // A like acts on what is on screen, so it never opens an app on its own.
+      const named = intent.args.app ? profiles.findApp(intent.args.app) : undefined;
+      if (intent.args.app && !named) {
+        return unknownApp(intent.args.app);
+      }
+      const app = named ?? profiles.forPackage(ctx.foregroundPackage);
+      if (app.id === GENERAL_PROFILE_ID) {
+        return { ok: false, reason: 'unsupported', message: 'Open the post or video first, or say which app it is in.' };
+      }
+      if (!has(app, 'like')) {
+        return { ok: false, reason: 'unsupported', message: `Sigil cannot like in ${app.name} yet.` };
+      }
       return {
         ok: true,
-        steps: [{ kind: 'media', action: intent.args.action }],
-        summary: intent.args.action === 'play_pause' ? 'Play or pause' : `${intent.args.action === 'next' ? 'Next' : 'Previous'} track`,
+        steps: [
+          { kind: 'find', target: selectorTarget(app, 'like'), scroll: false, timeoutMs: 3000 },
+          { kind: 'tap', target: selectorTarget(app, 'like'), commit: false },
+        ],
+        summary: `Like this on ${app.name}`,
       };
+    }
 
     case 'create_post': {
       const { caption } = intent.args;

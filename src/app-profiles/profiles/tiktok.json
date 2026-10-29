@@ -14,6 +14,9 @@
   "selectors": {
     "search": {
       "contentDescription": ["Search", "Pesquisar"]
+    },
+    "like": {
+      "contentDescription": ["Like", "Curtir", "Me gusta", "J'aime", "Gefällt mir", "Mi piace", "いいね", "点赞"]
     }
   }
 }

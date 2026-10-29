@@ -234,6 +234,49 @@ describe('ActionPlanner with a language model', () => {
   });
 });
 
+describe('ActionPlanner with system controls', () => {
+  async function fromModel(name: string, args: Record<string, unknown>, foregroundPackage?: string) {
+    const model = new ScriptedModel({ toolCalls: [{ name, arguments: args }] });
+    return new ActionPlanner({ profiles, model }).plan({ text: 'request', foregroundPackage });
+  }
+
+  it('plans volume, brightness, media, seek and speed as single steps that need no confirmation', async () => {
+    const cases: [string, Record<string, unknown>, PlanStep][] = [
+      ['volume', { action: 'set', level: 30 }, { kind: 'volume', stream: 'media', action: 'set', level: 30 }],
+      ['volume', { action: 'mute', stream: 'ring' }, { kind: 'volume', stream: 'ring', action: 'mute' }],
+      ['brightness', { action: 'down' }, { kind: 'brightness', action: 'down' }],
+      ['media', { action: 'pause' }, { kind: 'media', action: 'pause' }],
+      ['seek', { direction: 'back', seconds: 15 }, { kind: 'seek', seconds: -15 }],
+      ['playback_speed', { rate: 1.5 }, { kind: 'speed', rate: 1.5 }],
+      ['navigate', { action: 'power_menu' }, { kind: 'navigate', action: 'power_menu' }],
+      ['settings_panel', { panel: 'bluetooth' }, { kind: 'panel', panel: 'bluetooth' }],
+      ['control_sphere', { action: 'open' }, { kind: 'sphere', action: 'open' }],
+    ];
+    for (const [name, args, step] of cases) {
+      const plan = planned(await fromModel(name, args));
+      expect(plan.steps).toEqual([step]);
+      expect(plan.needsConfirmation).toBe(false);
+    }
+  });
+
+  it('rejects a volume level without set and set without a level', () => {
+    expect(parseToolCall({ name: 'volume', arguments: { action: 'up', level: 40 } }).ok).toBe(false);
+    expect(parseToolCall({ name: 'brightness', arguments: { action: 'set' } }).ok).toBe(false);
+    expect(parseToolCall({ name: 'volume', arguments: { action: 'set', level: 140 } }).ok).toBe(false);
+  });
+
+  it('likes the post on screen through the app selector, without a confirmation', async () => {
+    const plan = planned(await fromModel('like', {}, 'com.instagram.android'));
+    expect(plan.steps).toEqual([
+      { kind: 'find', target: { by: 'selector', app: 'instagram', name: 'like' }, scroll: false, timeoutMs: 3000 },
+      { kind: 'tap', target: { by: 'selector', app: 'instagram', name: 'like' }, commit: false },
+    ]);
+    expect(plan.needsConfirmation).toBe(false);
+    expect((await fromModel('like', {})).status).toBe('unsupported');
+    expect((await fromModel('like', { app: 'Chrome' })).status).toBe('unsupported');
+  });
+});
+
 describe('tool definitions', () => {
   it('describe the fixed set of intents as JSON schema function tools', () => {
     const tools = toolDefinitions();
@@ -246,6 +289,13 @@ describe('tool definitions', () => {
       'tap',
       'type_text',
       'media',
+      'seek',
+      'playback_speed',
+      'like',
+      'volume',
+      'brightness',
+      'settings_panel',
+      'control_sphere',
       'create_post',
       'clarify',
     ]);

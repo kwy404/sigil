@@ -1,12 +1,24 @@
+import * as Brightness from 'expo-brightness';
 import { Linking } from 'react-native';
 
-import type { WindowNode } from '../../modules/sigil-control';
-import type { GlobalAction, MediaAction } from '../app-profiles/schema';
+import type { ControlOutcome, WindowNode } from '../../modules/sigil-control';
+import type { GlobalAction, MediaAction, SystemPanel } from '../app-profiles/schema';
 import type { Direction } from '../gesture-engine/gestures';
-import { nodeMatches, type AppLaunch, type DeviceController, type NodeQuery, type UiNode } from '../sigil-core/executor';
+import {
+  nodeMatches,
+  type AppLaunch,
+  type ControlResult,
+  type DeviceController,
+  type NodeQuery,
+  type UiNode,
+} from '../sigil-core/executor';
+import type { BrightnessCommand, VolumeCommand } from '../sigil-core/steps';
 import type { NativeControl } from './native';
 
 const SNAPSHOT_LIMIT = 400;
+
+/** Percent of the brightness slider a spoken "brighter" or "darker" moves. */
+export const VOICE_BRIGHTNESS_STEP = 10;
 
 export function toUiNode(node: WindowNode): UiNode {
   return {
@@ -20,6 +32,21 @@ export function toUiNode(node: WindowNode): UiNode {
     editable: node.editable,
     focused: node.focused,
   };
+}
+
+/** Maps the native outcome of a system control to the core's result. */
+export function toControlResult(outcome: ControlOutcome): ControlResult {
+  switch (outcome) {
+    case 'done':
+      return { ok: true };
+    case 'write_settings':
+    case 'media_access':
+      return { ok: false, reason: 'needs_permission', permission: outcome };
+    case 'unsupported':
+      return { ok: false, reason: 'unsupported' };
+    default:
+      return { ok: false, reason: 'failed' };
+  }
 }
 
 /**
@@ -72,12 +99,36 @@ export class AndroidDeviceController implements DeviceController {
   media(action: MediaAction): Promise<boolean> {
     return this.native.mediaKey(action);
   }
+
+  async seek(seconds: number): Promise<ControlResult> {
+    return toControlResult(await this.native.seekBy(seconds));
+  }
+
+  async setSpeed(rate: number): Promise<ControlResult> {
+    return toControlResult(await this.native.setPlaybackSpeed(rate));
+  }
+
+  async volume(command: VolumeCommand): Promise<ControlResult> {
+    return toControlResult(await this.native.changeVolume(command.stream, command.action, command.level ?? 0));
+  }
+
+  async brightness(command: BrightnessCommand): Promise<ControlResult> {
+    const amount = command.action === 'set' ? (command.level ?? 0) : VOICE_BRIGHTNESS_STEP;
+    return toControlResult(await this.native.changeBrightness(command.action, amount));
+  }
+
+  async openPanel(panel: SystemPanel): Promise<boolean> {
+    return this.native.openPanel(panel);
+  }
 }
 
 /**
  * DeviceController where Sigil cannot reach other apps: iOS, Expo Go and the
- * web. It can still open deep links; everything else reports false so plans
- * stop at the first step they cannot do instead of pretending.
+ * web. It can still open deep links and, where the platform allows it, change
+ * the screen brightness; everything else reports failure so plans stop at the
+ * first step they cannot do instead of pretending. iOS gives apps no way to set
+ * the system volume (only the system volume view) or to control the player of
+ * another app.
  */
 export class InAppDeviceController implements DeviceController {
   readonly systemWide = false;
@@ -119,6 +170,44 @@ export class InAppDeviceController implements DeviceController {
   }
 
   async media(): Promise<boolean> {
+    return false;
+  }
+
+  async seek(): Promise<ControlResult> {
+    return { ok: false, reason: 'unsupported' };
+  }
+
+  async setSpeed(): Promise<ControlResult> {
+    return { ok: false, reason: 'unsupported' };
+  }
+
+  async volume(): Promise<ControlResult> {
+    return { ok: false, reason: 'unsupported' };
+  }
+
+  /**
+   * On iOS this is the screen brightness of the phone; on Android without the
+   * native module only Sigil's own window gets brighter or darker.
+   */
+  async brightness(command: BrightnessCommand): Promise<ControlResult> {
+    try {
+      if (!(await Brightness.isAvailableAsync())) {
+        return { ok: false, reason: 'unsupported' };
+      }
+      const current = await Brightness.getBrightnessAsync();
+      const next =
+        command.action === 'set'
+          ? (command.level ?? 0) / 100
+          : current + ((command.action === 'up' ? 1 : -1) * VOICE_BRIGHTNESS_STEP) / 100;
+      await Brightness.setBrightnessAsync(Math.min(1, Math.max(0, next)));
+      return { ok: true };
+    } catch {
+      return { ok: false, reason: 'failed' };
+    }
+  }
+
+  async openPanel(): Promise<boolean> {
+    // iOS has no public link to the Wi-Fi, Bluetooth or Focus settings.
     return false;
   }
 }

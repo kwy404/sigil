@@ -1,12 +1,22 @@
 import type { ProfileRegistry } from '../app-profiles/registry';
 import type { ProfileAction } from '../app-profiles/schema';
 import type { Vec2 } from '../gesture-engine/landmarks';
+import type { SpecialAccess } from '../sigil-core/executor';
 import type { NativeControl } from './native';
 
 /** The native calls gesture actions need. NativeControl satisfies it; tests use a fake. */
 export type GestureTarget = Pick<
   NativeControl,
-  'tap' | 'doubleTap' | 'longPress' | 'swipe' | 'scroll' | 'globalAction' | 'mediaKey' | 'adjustVolume' | 'openApp'
+  | 'tap'
+  | 'doubleTap'
+  | 'longPress'
+  | 'swipe'
+  | 'scroll'
+  | 'globalAction'
+  | 'mediaKey'
+  | 'adjustVolume'
+  | 'changeBrightness'
+  | 'openApp'
 >;
 
 /** Actions that change Sigil's own interface instead of the app in front. */
@@ -15,7 +25,12 @@ export interface SigilUi {
   listen(): void;
   cursor(action: 'toggle' | 'recenter'): void;
   pause(): void;
+  /** A gesture needed a special access the user has not granted; the screen explains it. */
+  needsAccess(access: SpecialAccess): void;
 }
+
+/** Percent of the brightness slider one step of the pinch and drag gesture moves. */
+export const GESTURE_BRIGHTNESS_STEP = 6;
 
 export interface DispatchContext {
   /** Cursor in screen pixels, or null when no hand is visible. */
@@ -81,6 +96,13 @@ export async function dispatchProfileAction(
       return target.mediaKey(action.action);
     case 'volume':
       return target.adjustVolume(action.direction);
+    case 'brightness': {
+      const outcome = await target.changeBrightness(action.direction, GESTURE_BRIGHTNESS_STEP);
+      if (outcome === 'write_settings') {
+        ui.needsAccess('write_settings');
+      }
+      return outcome === 'done';
+    }
     case 'open_app': {
       const profile = ctx.profiles.get(action.app);
       const packageName = profile ? profile.packages[0] : action.app;

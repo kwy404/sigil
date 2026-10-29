@@ -59,6 +59,14 @@ class SigilControlModule : Module() {
       openActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
     }
 
+    Function("openWriteSettings") {
+      openActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
+    }
+
+    Function("openMediaAccessSettings") { openActivity(SigilMediaListener.settingsIntent(context)) }
+
+    Function("openPanel") { panel: String -> openPanel(panel) }
+
     Function("startCameraService") { withMicrophone: Boolean -> startCameraService(withMicrophone) }
 
     Function("stopCameraService") { stopCameraService() }
@@ -106,7 +114,23 @@ class SigilControlModule : Module() {
 
     AsyncFunction("mediaKey") { action: String -> mediaKey(action) }
 
+    AsyncFunction("seekBy") { seconds: Double -> SigilMediaListener.seekBy(context, seconds) }
+
+    AsyncFunction("setPlaybackSpeed") { rate: Double -> SigilMediaListener.setSpeed(context, rate.toFloat()) }
+
     AsyncFunction("adjustVolume") { direction: String -> adjustVolume(direction) }
+
+    AsyncFunction("changeVolume") { stream: String, change: String, level: Double ->
+      SystemLevels.changeVolume(context, stream, change, level)
+    }
+
+    Function("getVolume") { stream: String -> SystemLevels.volume(context, stream) }
+
+    AsyncFunction("changeBrightness") { change: String, level: Double ->
+      SystemLevels.changeBrightness(context, change, level)
+    }
+
+    Function("getBrightness") { SystemLevels.brightness(context) }
 
     AsyncFunction("openApp") { packageName: String?, url: String?, label: String? ->
       openApp(packageName, url, label)
@@ -118,6 +142,8 @@ class SigilControlModule : Module() {
     "overlayPermission" to Settings.canDrawOverlays(context),
     "cameraServiceRunning" to SigilCameraService.running,
     "foregroundPackage" to SigilRuntime.foregroundPackage,
+    "writeSettings" to Settings.System.canWrite(context),
+    "mediaAccess" to SigilMediaListener.isEnabled(context),
     "sdkInt" to Build.VERSION.SDK_INT,
   )
 
@@ -192,9 +218,34 @@ class SigilControlModule : Module() {
     ctx.stopService(Intent(ctx, SigilCameraService::class.java))
   }
 
+  /**
+   * Wi-Fi, Bluetooth and Do Not Disturb open where the user flips the switch:
+   * since Android 10 apps cannot turn Wi-Fi on or off, so Sigil never tries.
+   * Each panel lists fallbacks for older versions and vendor settings apps.
+   */
+  private fun openPanel(panel: String): Boolean {
+    val candidates = when (panel) {
+      "wifi" -> listOfNotNull(
+        if (Build.VERSION.SDK_INT >= 29) Intent(Settings.Panel.ACTION_WIFI) else null,
+        Intent(Settings.ACTION_WIFI_SETTINGS),
+      )
+      "bluetooth" -> listOf(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+      "do_not_disturb" -> listOf(
+        Intent("android.settings.ZEN_MODE_SETTINGS"),
+        Intent("android.settings.ZEN_MODE_PRIORITY_SETTINGS"),
+        Intent(Settings.ACTION_SOUND_SETTINGS),
+      )
+      "display" -> listOf(Intent(Settings.ACTION_DISPLAY_SETTINGS))
+      else -> emptyList()
+    }
+    return candidates.any { openActivity(it) }
+  }
+
   private fun mediaKey(action: String): Boolean {
     val code = when (action) {
       "play_pause" -> KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+      "play" -> KeyEvent.KEYCODE_MEDIA_PLAY
+      "pause" -> KeyEvent.KEYCODE_MEDIA_PAUSE
       "next" -> KeyEvent.KEYCODE_MEDIA_NEXT
       "previous" -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
       else -> return false

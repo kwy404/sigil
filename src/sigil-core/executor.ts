@@ -1,10 +1,17 @@
 import type { ProfileRegistry } from '../app-profiles/registry';
-import type { GlobalAction, MediaAction } from '../app-profiles/schema';
+import type { GlobalAction, MediaAction, SystemPanel } from '../app-profiles/schema';
 import { foldText } from '../app-profiles/text';
 import type { Direction } from '../gesture-engine/gestures';
 import { ConfirmationPolicy } from './confirmation';
 import type { Plan } from './planner';
-import { describeStep, type ConfirmReason, type PlanStep, type StepTarget } from './steps';
+import {
+  describeStep,
+  type BrightnessCommand,
+  type ConfirmReason,
+  type PlanStep,
+  type StepTarget,
+  type VolumeCommand,
+} from './steps';
 
 export interface NodeBounds {
   left: number;
@@ -91,7 +98,36 @@ export interface DeviceController {
   typeText(text: string, node: UiNode, submit: boolean): Promise<boolean>;
   scroll(direction: Direction): Promise<boolean>;
   navigate(action: GlobalAction): Promise<boolean>;
+  /** A media key for whichever app holds the media session. */
   media(action: MediaAction): Promise<boolean>;
+  /** Moves the playing media by this many seconds, back when negative. */
+  seek(seconds: number): Promise<ControlResult>;
+  setSpeed(rate: number): Promise<ControlResult>;
+  volume(command: VolumeCommand): Promise<ControlResult>;
+  brightness(command: BrightnessCommand): Promise<ControlResult>;
+  /** Opens the system panel where the user flips the switch. */
+  openPanel(panel: SystemPanel): Promise<boolean>;
+}
+
+/**
+ * Result of a system control. needs_permission names the Android special
+ * access that is missing, so the screen can explain it and offer the switch.
+ */
+export type ControlResult =
+  | { ok: true }
+  | { ok: false; reason: 'needs_permission'; permission: SpecialAccess }
+  | { ok: false; reason: 'unsupported' | 'failed' };
+
+/**
+ * Android special access the user grants in Settings: write_settings for the
+ * brightness, media_access (a notification listener) to seek and change the
+ * speed of the player in front.
+ */
+export type SpecialAccess = 'write_settings' | 'media_access';
+
+/** Sigil's own interface, for plan steps that open or close the Control Sphere. */
+export interface SigilInterface {
+  sphere(action: 'open' | 'close'): void;
 }
 
 export interface ConfirmationRequest {
@@ -111,12 +147,15 @@ export interface StepEvent {
   label: string;
   status: StepStatus;
   detail?: string;
+  /** Set when the step failed for lack of a special access the user can grant. */
+  permission?: SpecialAccess;
 }
 
 export interface ExecutionResult {
   status: 'completed' | 'failed' | 'cancelled' | 'refused';
   completedSteps: number;
   message?: string;
+  permission?: SpecialAccess;
 }
 
 export interface Clock {
@@ -142,9 +181,32 @@ export interface ExecutorOptions {
   /** Most scrolls a find step may do. */
   maxScrolls?: number;
   onStep?: (event: StepEvent) => void;
+  /** Sigil's own interface. Without it, Control Sphere steps fail. */
+  ui?: SigilInterface;
 }
 
-type StepOutcome = { ok: true } | { ok: false; detail: string; status: 'failed' | 'cancelled' | 'refused' };
+type StepOutcome =
+  | { ok: true }
+  | { ok: false; detail: string; status: 'failed' | 'cancelled' | 'refused'; permission?: SpecialAccess };
+
+const PERMISSION_DETAILS: Record<SpecialAccess, string> = {
+  write_settings: 'Sigil needs the permission to modify system settings to change the brightness.',
+  media_access: 'Sigil needs media access to skip and change the speed of the player.',
+};
+
+function controlOutcome(result: ControlResult, failure: string): StepOutcome {
+  if (result.ok) {
+    return { ok: true };
+  }
+  switch (result.reason) {
+    case 'needs_permission':
+      return { ok: false, detail: PERMISSION_DETAILS[result.permission], status: 'failed', permission: result.permission };
+    case 'unsupported':
+      return { ok: false, detail: 'This phone does not let Sigil do that.', status: 'failed' };
+    case 'failed':
+      return { ok: false, detail: failure, status: 'failed' };
+  }
+}
 
 /**
  * Runs a plan one visible step at a time. A commit step (send, post) runs only
@@ -161,6 +223,7 @@ export class PlanExecutor {
   private readonly confirmationTtlMs: number;
   private readonly maxScrolls: number;
   private readonly onStep?: (event: StepEvent) => void;
+  private readonly ui?: SigilInterface;
 
   constructor(options: ExecutorOptions) {
     this.device = options.device;
@@ -172,6 +235,7 @@ export class PlanExecutor {
     this.confirmationTtlMs = options.confirmationTtlMs ?? 30000;
     this.maxScrolls = options.maxScrolls ?? 5;
     this.onStep = options.onStep;
+    this.ui = options.ui;
   }
 
   async run(plan: Plan, signal?: AbortSignal): Promise<ExecutionResult> {
@@ -200,8 +264,16 @@ export class PlanExecutor {
       confirmed = step.kind === 'confirm' && outcome.ok;
 
       if (!outcome.ok) {
-        this.onStep?.({ index, step, label, status: outcome.status === 'cancelled' ? 'cancelled' : 'failed', detail: outcome.detail });
-        return { status: outcome.status, completedSteps: index, message: outcome.detail };
+        const permission = outcome.permission ? { permission: outcome.permission } : {};
+        this.onStep?.({
+          index,
+          step,
+          label,
+          status: outcome.status === 'cancelled' ? 'cancelled' : 'failed',
+          detail: outcome.detail,
+          ...permission,
+        });
+        return { status: outcome.status, completedSteps: index, message: outcome.detail, ...permission };
       }
       this.onStep?.({ index, step, label, status: 'done' });
     }
@@ -320,6 +392,23 @@ export class PlanExecutor {
         return (await this.device.navigate(step.action)) ? { ok: true } : fail(`Could not go ${step.action}.`);
       case 'media':
         return (await this.device.media(step.action)) ? { ok: true } : fail('No media session answered.');
+      case 'seek':
+        return controlOutcome(await this.device.seek(step.seconds), 'No player could skip.');
+      case 'speed':
+        return controlOutcome(await this.device.setSpeed(step.rate), 'No player could change its speed.');
+      case 'volume':
+        return controlOutcome(
+          await this.device.volume({ stream: step.stream, action: step.action, level: step.level }),
+          'The volume did not change.',
+        );
+      case 'brightness':
+        return controlOutcome(await this.device.brightness({ action: step.action, level: step.level }), 'The brightness did not change.');
+      case 'panel':
+        return (await this.device.openPanel(step.panel)) ? { ok: true } : fail('The settings panel did not open.');
+      case 'sphere':
+        if (!this.ui) return fail('The Control Sphere is not available here.');
+        this.ui.sphere(step.action);
+        return { ok: true };
       case 'confirm': {
         const askedAt = this.clock.now();
         const accepted = await this.confirmHandler({ summary: step.summary, reason: step.reason, plan });
