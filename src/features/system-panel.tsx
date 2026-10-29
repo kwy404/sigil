@@ -23,6 +23,14 @@ export function SystemPanel() {
   const demo = useRef<ReturnType<typeof setInterval> | null>(null);
   const native = control.native;
   const v = m.system.values;
+  // Android 13 and later lock the accessibility service of sideloaded builds until restricted settings are allowed.
+  const [restricted] = useState(() => {
+    try {
+      return getNativeControl()?.getInstallSource().restrictedSettings === true;
+    } catch {
+      return false;
+    }
+  });
 
   const refresh = useCallback(() => {
     const next = getSystemControl();
@@ -148,7 +156,12 @@ export function SystemPanel() {
               <Button label={m.system.buttons.allowMedia} onPress={() => native.openMediaAccessSettings()} />
             </View>
           )}
-          <Text style={textStyles.muted}>{m.system.restricted}</Text>
+          {!status.accessibilityEnabled && restricted ? (
+            <View style={styles.access}>
+              <Text style={textStyles.muted}>{m.system.restricted}</Text>
+              <Button label={m.system.buttons.appInfo} tone="warning" onPress={() => native.openAppInfo()} />
+            </View>
+          ) : null}
         </>
       ) : (
         <Text style={textStyles.muted}>{Platform.OS === 'ios' ? m.system.iosOnly : m.system.devClient}</Text>

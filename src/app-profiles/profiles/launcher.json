@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "launcher",
+  "name": "Home screen",
+  "description": "The home screen and its recent apps screen. The clear all button of the common launchers is a best effort and must be checked on each device.",
+  "packages": [
+    "com.google.android.apps.nexuslauncher",
+    "com.android.launcher3",
+    "com.sec.android.app.launcher",
+    "com.miui.home",
+    "com.huawei.android.launcher",
+    "com.oppo.launcher",
+    "com.motorola.launcher3",
+    "net.oneplus.launcher"
+  ],
+  "aliases": ["home screen", "launcher"],
+  "bindings": {},
+  "selectors": {
+    "clearAll": {
+      "resourceId": [
+        "com.google.android.apps.nexuslauncher:id/clear_all",
+        "com.android.launcher3:id/clear_all",
+        "com.sec.android.app.launcher:id/clear_all_button",
+        "com.miui.home:id/clearAnimView",
+        "com.huawei.android.launcher:id/clear_all_recents_image_button"
+      ],
+      "text": [
+        "Clear all",
+        "Close all",
+        "Limpar tudo",
+        "Fechar tudo",
+        "Fechar todos",
+        "Borrar todo",
+        "Cerrar todo",
+        "Cerrar todas",
+        "Tout effacer",
+        "Tout fermer",
+        "Alle löschen",
+        "Alle schließen",
+        "Alles schließen",
+        "Cancella tutto",
+        "Chiudi tutto",
+        "Chiudi tutte",
+        "すべてクリア",
+        "すべて閉じる",
+        "全て閉じる",
+        "全部清除",
+        "清除全部",
+        "全部关闭",
+        "关闭全部",
+        "一键清理"
+      ],
+      "contentDescription": [
+        "Clear all",
+        "Close all",
+        "Limpar tudo",
+        "Fechar tudo",
+        "Fechar todos",
+        "Borrar todo",
+        "Cerrar todo",
+        "Cerrar todas",
+        "Tout effacer",
+        "Tout fermer",
+        "Alle löschen",
+        "Alle schließen",
+        "Alles schließen",
+        "Cancella tutto",
+        "Chiudi tutto",
+        "Chiudi tutte",
+        "すべてクリア",
+        "すべて閉じる",
+        "全て閉じる",
+        "全部清除",
+        "清除全部",
+        "全部关闭",
+        "关闭全部",
+        "一键清理"
+      ],
+      "commit": true
+    }
+  }
+}

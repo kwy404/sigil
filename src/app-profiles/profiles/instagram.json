@@ -31,9 +31,19 @@
     "like": {
       "resourceId": ["com.instagram.android:id/row_feed_button_like"],
       "contentDescription": ["Like", "Curtir", "Me gusta", "J'aime", "Gefällt mir", "Mi piace", "いいね！", "赞"]
+    },
+    "profileTab": {
+      "resourceId": ["com.instagram.android:id/profile_tab"],
+      "contentDescription": ["Profile", "Perfil", "Profil", "Profilo", "プロフィール", "主页", "个人主页"]
     }
   },
   "links": {
     "launch": "instagram://"
+  },
+  "places": {
+    "reels": { "link": "https://www.instagram.com/reels/" },
+    "messages": { "link": "https://www.instagram.com/direct/inbox/" },
+    "explore": { "link": "https://www.instagram.com/explore/" },
+    "profile": { "tab": "profileTab" }
   }
 }

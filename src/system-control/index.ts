@@ -1,6 +1,7 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 
 import type { DeviceController } from '../sigil-core/executor';
+import type { PlanPlatform } from '../sigil-core/flows';
 import { AndroidDeviceController, InAppDeviceController } from './devices';
 import { getNativeControl, type NativeControl } from './native';
 
@@ -25,7 +26,26 @@ export {
   UNKNOWN_LEVELS,
   type LevelsSnapshot,
 } from './levels';
+export { installedApps, refreshInstalledApps, useInstalledApps } from './apps';
 export { getNativeControl, type NativeControl } from './native';
+
+/** Where plans run: Android acts on other apps, iOS opens them through links, the web only shows plans. */
+export function planPlatform(): PlanPlatform {
+  return Platform.OS === 'android' ? 'android' : Platform.OS === 'ios' ? 'ios' : 'web';
+}
+
+/**
+ * The app in front, for planning. Null when Sigil itself is in front (a
+ * request made on Sigil's own screen is never about closing Sigil) or when
+ * this build cannot tell.
+ */
+export function foregroundApp(): string | null {
+  const status = getNativeControl()?.getStatus();
+  if (!status?.foregroundPackage || status.foregroundPackage === status.packageName) {
+    return null;
+  }
+  return status.foregroundPackage;
+}
 
 /**
  * android-system: the accessibility service is on, Sigil can act on any app.
@@ -47,7 +67,8 @@ export function getSystemControl(): SystemControl {
     return {
       mode: enabled ? 'android-system' : 'android-setup',
       native,
-      device: enabled ? new AndroidDeviceController(native) : new InAppDeviceController(),
+      // Without the service Sigil still opens apps and sets timers; taps and navigation fail honestly.
+      device: new AndroidDeviceController(native, enabled),
     };
   }
   return { mode: 'in-app', native: null, device: new InAppDeviceController() };

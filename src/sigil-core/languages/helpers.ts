@@ -1,3 +1,4 @@
+import type { AppPlace } from '../../app-profiles/schema';
 import { foldText } from '../../app-profiles/text';
 import type { Groups, RuleArgs } from './types';
 
@@ -234,6 +235,80 @@ export function percent(value: number | null): number | null {
 export function speedRate(value: number | null): number | null {
   if (value === null || !Number.isFinite(value)) return null;
   return value >= 0.25 && value <= 4 ? value : null;
+}
+
+/** Unit words of a language for spoken durations. */
+export interface DurationUnits {
+  hour: RegExp;
+  minute: RegExp;
+  second: RegExp;
+}
+
+/**
+ * Seconds of a spoken duration made of number and unit pairs, as in "1 hour
+ * 30 minutes", for a timer. half adds half of the last unit, as in "a minute
+ * and a half". Null when a part is not a number or the total is not between
+ * one second and 24 hours.
+ */
+export function durationSeconds(
+  parts: readonly [number | null, string | undefined][],
+  units: DurationUnits,
+  half = false,
+): number | null {
+  let total = 0;
+  let last = 0;
+  for (const [value, unit] of parts) {
+    if (unit === undefined) continue;
+    if (value === null || !Number.isFinite(value) || value < 0) return null;
+    const size = units.hour.test(unit) ? 3600 : units.minute.test(unit) ? 60 : units.second.test(unit) ? 1 : 0;
+    if (size === 0) return null;
+    total += value * size;
+    last = size;
+  }
+  if (last === 0) return null;
+  const seconds = Math.round(total + (half ? last / 2 : 0));
+  return seconds >= 1 && seconds <= 86400 ? seconds : null;
+}
+
+/**
+ * Morning or evening, when a spoken time says which. night is evening for 6
+ * to 11 and the small hours otherwise, as in "11 at night" and "2 at night".
+ */
+export type DayPeriod = 'am' | 'pm' | 'night' | null;
+
+/**
+ * Alarm arguments from a spoken hour and minutes. pm moves 1 to 11 to the
+ * afternoon and am moves 12 to midnight. Null for times that do not exist.
+ */
+export function clockTime(hour: number | null, minute: number | null = 0, period: DayPeriod = null): RuleArgs | null {
+  if (hour === null || minute === null || !Number.isInteger(hour) || !Number.isInteger(minute)) return null;
+  if (minute < 0 || minute > 59) return null;
+  let h = hour;
+  if ((period === 'pm' && h >= 1 && h < 12) || (period === 'night' && h >= 6 && h < 12)) h += 12;
+  if ((period === 'am' || period === 'night') && h === 12) h = 0;
+  return h >= 0 && h <= 23 ? { hour: h, minute } : null;
+}
+
+/** The hour before, on a twelve hour dial: "quarter to one" is 12:45, not 0:45. */
+export function hourBefore(hour: number | null): number | null {
+  if (hour === null) return null;
+  return hour <= 1 ? hour + 11 : hour - 1;
+}
+
+/** Hour and minutes of a written time such as 7:30, 7h30, 7.30 or 19h. */
+export function compactTime(text: string | undefined): [number, number] | null {
+  const match = /^(\d{1,2})(?:[:h.](\d{2})?)?$/iu.exec(text?.trim() ?? '');
+  return match ? [Number(match[1]), Number(match[2] ?? 0)] : null;
+}
+
+/**
+ * open_place arguments. A generic word such as "messages" needs an app name,
+ * so "open messages" stays a request to open the messaging app.
+ */
+export function placeArgs(g: Groups, place: AppPlace | '', generic: RegExp): RuleArgs | null {
+  if (!place) return null;
+  if (!(g.app ?? g.app1 ?? g.app2) && generic.test((g.place ?? '').trim())) return null;
+  return withApp(g, { place });
 }
 
 /** Picks the first key whose pattern matches the word, for directions, streams and similar small vocabularies. */

@@ -1,8 +1,9 @@
 import { GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles/registry';
+import { appNamesFor, type InstalledApp } from './apps';
 import { ConfirmationPolicy } from './confirmation';
-import { expandIntent } from './flows';
+import { expandIntent, type PlanPlatform } from './flows';
 import { RuleBasedModel, type LanguageModel, type ModelContext } from './model';
-import { noticeText, type Notice } from './notices';
+import { noticeText, type AppChoice, type Notice } from './notices';
 import type { PlanStep } from './steps';
 import { parseToolCall, toolDefinitions, type Intent } from './tools';
 
@@ -34,6 +35,16 @@ export interface Plan {
 export type PlanOutcome =
   | { status: 'planned'; plan: Plan; notes: string[] }
   | { status: 'clarify'; question: string; source: IntentSource }
+  | {
+      status: 'choose';
+      message: string;
+      notice: Notice;
+      /** The apps a name matched. planChoice plans again with the one the user picks. */
+      options: AppChoice[];
+      intent: Intent;
+      source: IntentSource;
+      request: VoiceRequest;
+    }
   | { status: 'blocked'; message: string; notice: Notice }
   | { status: 'unsupported'; message: string; intent: Intent; notice: Notice }
   | { status: 'not_understood'; message: string; notes: string[]; notice: Notice };
@@ -45,11 +56,17 @@ export interface PlannerOptions {
   /** Deterministic fallback. Defaults to RuleBasedModel. */
   fallback?: LanguageModel;
   policy?: ConfirmationPolicy;
-  /** How long to wait for the model before using the fallback. */
-  modelTimeoutMs?: number;
+  /** How long to wait for the model before using the fallback; a function is read on every request. */
+  modelTimeoutMs?: number | (() => number);
   defaultMessagingApp?: string;
   defaultSearchApp?: string;
+  /** Launchable apps of the phone, read on every request so a new install is heard at once. */
+  installedApps?: () => readonly InstalledApp[];
+  /** Where plans run. Defaults to android. */
+  platform?: PlanPlatform;
 }
+
+const NO_APPS: readonly InstalledApp[] = [];
 
 /**
  * Runs work with its own abort signal, and aborts that signal when the time
@@ -97,9 +114,11 @@ export class ActionPlanner {
   private readonly model: LanguageModel | null;
   private readonly fallback: LanguageModel;
   readonly policy: ConfirmationPolicy;
-  private readonly modelTimeoutMs: number;
+  private readonly modelTimeoutMs: number | (() => number);
   private readonly defaultMessagingApp: string;
   private readonly defaultSearchApp: string;
+  private readonly installedApps: () => readonly InstalledApp[];
+  private readonly platform: PlanPlatform;
 
   constructor(options: PlannerOptions) {
     this.profiles = options.profiles;
@@ -109,14 +128,13 @@ export class ActionPlanner {
     this.modelTimeoutMs = options.modelTimeoutMs ?? 4000;
     this.defaultMessagingApp = options.defaultMessagingApp ?? 'whatsapp';
     this.defaultSearchApp = options.defaultSearchApp ?? 'chrome';
+    this.installedApps = options.installedApps ?? (() => NO_APPS);
+    this.platform = options.platform ?? 'android';
   }
 
-  /** App names and aliases the rules and the model may refer to. */
+  /** App names the rules and the model may refer to: installed apps, profiles, known apps and their nicknames. */
   knownApps(): string[] {
-    return this.profiles
-      .list()
-      .filter((p) => p.id !== GENERAL_PROFILE_ID)
-      .flatMap((p) => [p.name, p.id, ...(p.aliases ?? [])]);
+    return appNamesFor({ profiles: this.profiles, installed: this.installedApps() });
   }
 
   async plan(request: VoiceRequest, signal?: AbortSignal): Promise<PlanOutcome> {
@@ -138,17 +156,30 @@ export class ActionPlanner {
       return { status: 'not_understood', message: noticeText(notice), notes, notice };
     }
     const { intent, source } = proposal;
+    return this.planIntent(intent, { ...request, text }, source, notes);
+  }
+
+  /**
+   * Plans an intent that is already chosen, by the model, the rules or
+   * planChoice. The flows and the confirmation policy apply as in plan.
+   */
+  planIntent(intent: Intent, request: VoiceRequest, source: IntentSource = 'rules', notes: string[] = []): PlanOutcome {
     if (intent.tool === 'clarify') {
       return { status: 'clarify', question: intent.args.question, source };
     }
-
     const flow = expandIntent(intent, {
       profiles: this.profiles,
       foregroundPackage: request.foregroundPackage,
       defaultMessagingApp: this.defaultMessagingApp,
       defaultSearchApp: this.defaultSearchApp,
+      installedApps: this.installedApps(),
+      platform: this.platform,
     });
     if (!flow.ok) {
+      if (flow.notice.code === 'which_app') {
+        const { options } = flow.notice;
+        return { status: 'choose', message: flow.message, notice: flow.notice, options, intent, source, request };
+      }
       return flow.reason === 'blocked'
         ? { status: 'blocked', message: flow.message, notice: flow.notice }
         : { status: 'unsupported', message: flow.message, intent, notice: flow.notice };
@@ -160,7 +191,7 @@ export class ActionPlanner {
     return {
       status: 'planned',
       plan: {
-        request: text,
+        request: request.text.trim(),
         intent,
         source,
         summary: flow.summary,
@@ -169,6 +200,13 @@ export class ActionPlanner {
       },
       notes,
     };
+  }
+
+  /** Plans a choose outcome again with the app the user picked from its options. */
+  planChoice(outcome: Extract<PlanOutcome, { status: 'choose' }>, choice: AppChoice): PlanOutcome {
+    const { intent } = outcome;
+    const picked = 'app' in intent.args ? ({ ...intent, args: { ...intent.args, app: choice.app } } as Intent) : intent;
+    return this.planIntent(picked, outcome.request, outcome.source);
   }
 
   /**
@@ -190,6 +228,10 @@ export class ActionPlanner {
     };
   }
 
+  private timeoutMs(): number {
+    return typeof this.modelTimeoutMs === 'function' ? this.modelTimeoutMs() : this.modelTimeoutMs;
+  }
+
   private async propose(
     text: string,
     context: ModelContext,
@@ -205,7 +247,7 @@ export class ActionPlanner {
       notes.push('The model is not loaded yet. The rules planned this request.');
     } else if (model) {
       try {
-        const reply = await withTimeout((inner) => model.propose(text, context, tools, inner), this.modelTimeoutMs, signal);
+        const reply = await withTimeout((inner) => model.propose(text, context, tools, inner), this.timeoutMs(), signal);
         if (reply.toolCalls.length > 1) {
           notes.push(`The model proposed ${reply.toolCalls.length} actions. Sigil runs one per request.`);
         }

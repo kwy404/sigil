@@ -7,6 +7,7 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
@@ -21,6 +22,9 @@ class SigilAccessibilityService : AccessibilityService() {
   /** Cursor drawn in an accessibility overlay, which needs no extra permission. */
   val cursor: CursorOverlay by lazy { CursorOverlay(this) }
 
+  /** Panel for voice requests made while another app is in front. */
+  val prompt: PromptOverlay by lazy { PromptOverlay(this) }
+
   override fun onServiceConnected() {
     super.onServiceConnected()
     SigilRuntime.attach(this)
@@ -31,8 +35,15 @@ class SigilAccessibilityService : AccessibilityService() {
       return
     }
     val packageName = event.packageName?.toString() ?: return
+    // The notification shade and the keyboard open windows too, but they are never the app in front.
+    if (packageName == SYSTEM_UI || packageName == currentKeyboard()) {
+      return
+    }
     SigilRuntime.reportForegroundApp(packageName, event.className?.toString())
   }
+
+  private fun currentKeyboard(): String? =
+    Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)?.substringBefore('/')
 
   override fun onInterrupt() {
     // Sigil gives no spoken or haptic feedback that could be interrupted.
@@ -40,12 +51,14 @@ class SigilAccessibilityService : AccessibilityService() {
 
   override fun onUnbind(intent: Intent?): Boolean {
     cursor.hide()
+    prompt.hide()
     SigilRuntime.detach(this)
     return super.onUnbind(intent)
   }
 
   override fun onDestroy() {
     cursor.hide()
+    prompt.hide()
     SigilRuntime.detach(this)
     super.onDestroy()
   }
@@ -93,9 +106,23 @@ class SigilAccessibilityService : AccessibilityService() {
       "lock_screen" -> if (Build.VERSION.SDK_INT >= 28) GLOBAL_ACTION_LOCK_SCREEN else return false
       "screenshot" -> if (Build.VERSION.SDK_INT >= 28) GLOBAL_ACTION_TAKE_SCREENSHOT else return false
       "power_menu" -> GLOBAL_ACTION_POWER_DIALOG
+      "split_screen" -> if (Build.VERSION.SDK_INT >= 24) GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN else return false
+      "previous_app" -> return previousApp()
       else -> return false
     }
     return performGlobalAction(action)
+  }
+
+  /**
+   * Switches to the previous app the way a double press of the recents
+   * button does. Called off the main thread, so the short wait blocks nothing.
+   */
+  private fun previousApp(): Boolean {
+    if (!performGlobalAction(GLOBAL_ACTION_RECENTS)) {
+      return false
+    }
+    Thread.sleep(PREVIOUS_APP_DELAY_MS)
+    return performGlobalAction(GLOBAL_ACTION_RECENTS)
   }
 
   /** Replaces the text of the focused input field. submit presses the keyboard action key on Android 11 and later. */
@@ -178,5 +205,7 @@ class SigilAccessibilityService : AccessibilityService() {
 
   companion object {
     private const val MAX_NODES = 600
+    private const val SYSTEM_UI = "com.android.systemui"
+    private const val PREVIOUS_APP_DELAY_MS = 300L
   }
 }

@@ -1,5 +1,5 @@
 import * as Brightness from 'expo-brightness';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
 import type { ControlOutcome, WindowNode } from '../../modules/sigil-control';
 import type { GlobalAction, MediaAction, SystemPanel } from '../app-profiles/schema';
@@ -44,22 +44,31 @@ export function toControlResult(outcome: ControlOutcome): ControlResult {
       return { ok: false, reason: 'needs_permission', permission: outcome };
     case 'unsupported':
       return { ok: false, reason: 'unsupported' };
+    case 'busy':
+      return { ok: false, reason: 'busy' };
     default:
       return { ok: false, reason: 'failed' };
   }
 }
 
 /**
- * DeviceController on Android, through the accessibility service. Nodes are
- * matched in JavaScript against a snapshot of the active window, so selectors
- * behave the same here and in the tests.
+ * DeviceController on Android. Opening apps, timers, alarms, the flashlight,
+ * the volume and the brightness work through the native module alone; taps,
+ * typing, scrolling and navigation need the accessibility service and fail
+ * without it. Nodes are matched in JavaScript against a snapshot of the active
+ * window, so selectors behave the same here and in the tests.
  */
 export class AndroidDeviceController implements DeviceController {
-  readonly systemWide = true;
-
-  constructor(private readonly native: NativeControl) {}
+  /** systemWide is true when the accessibility service is on. */
+  constructor(
+    private readonly native: NativeControl,
+    readonly systemWide = true,
+  ) {}
 
   openApp(launch: AppLaunch): Promise<boolean> {
+    if (launch.role && !launch.packageName && !launch.url) {
+      return this.native.openRole(launch.role);
+    }
     return this.native.openApp(launch.packageName ?? null, launch.url ?? null, launch.packageName ? null : launch.label);
   }
 
@@ -120,6 +129,22 @@ export class AndroidDeviceController implements DeviceController {
   async openPanel(panel: SystemPanel): Promise<boolean> {
     return this.native.openPanel(panel);
   }
+
+  swipe(fromX: number, fromY: number, toX: number, toY: number, durationMs: number): Promise<boolean> {
+    return this.native.swipe(fromX, fromY, toX, toY, durationMs);
+  }
+
+  async setTimer(seconds: number): Promise<ControlResult> {
+    return toControlResult(await this.native.setTimer(seconds));
+  }
+
+  async setAlarm(hour: number, minute: number): Promise<ControlResult> {
+    return toControlResult(await this.native.setAlarm(hour, minute));
+  }
+
+  async setTorch(on: boolean): Promise<ControlResult> {
+    return toControlResult(await this.native.setTorch(on));
+  }
 }
 
 /**
@@ -133,12 +158,14 @@ export class AndroidDeviceController implements DeviceController {
 export class InAppDeviceController implements DeviceController {
   readonly systemWide = false;
 
+  /** iOS opens apps only through their links: the app's own URL scheme first, then a web link. */
   async openApp(launch: AppLaunch): Promise<boolean> {
-    if (!launch.url) {
+    const url = Platform.OS === 'ios' ? (launch.iosUrl ?? launch.url) : launch.url;
+    if (!url) {
       return false;
     }
     try {
-      await Linking.openURL(launch.url);
+      await Linking.openURL(url);
       return true;
     } catch {
       return false;
@@ -209,5 +236,22 @@ export class InAppDeviceController implements DeviceController {
   async openPanel(): Promise<boolean> {
     // iOS has no public link to the Wi-Fi, Bluetooth or Focus settings.
     return false;
+  }
+
+  async swipe(): Promise<boolean> {
+    return false;
+  }
+
+  /** iOS has no public way for an app to start a timer or an alarm in the Clock app. */
+  async setTimer(): Promise<ControlResult> {
+    return { ok: false, reason: 'unsupported' };
+  }
+
+  async setAlarm(): Promise<ControlResult> {
+    return { ok: false, reason: 'unsupported' };
+  }
+
+  async setTorch(): Promise<ControlResult> {
+    return { ok: false, reason: 'unsupported' };
   }
 }

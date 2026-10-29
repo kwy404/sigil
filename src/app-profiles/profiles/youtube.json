@@ -35,5 +35,9 @@
   "links": {
     "launch": "youtube://",
     "search": "https://www.youtube.com/results?search_query={query}"
+  },
+  "places": {
+    "shorts": { "link": "https://www.youtube.com/shorts" },
+    "subscriptions": { "link": "https://www.youtube.com/feed/subscriptions" }
   }
 }

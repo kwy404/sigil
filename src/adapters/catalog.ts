@@ -49,10 +49,10 @@ export const MODEL_CATALOG: readonly ModelAsset[] = [
     kind: 'vision',
     label: 'MediaPipe Hand Landmarker',
     runtime: 'mediapipe',
-    source: 'MediaPipe hand_landmarker.task, bundled with the app',
+    source: 'MediaPipe hand_landmarker.task (float16, version 1), downloaded at build time and bundled with the app',
     downloadMb: 8,
     memoryMb: 60,
-    notes: '21 landmarks per hand, runs on the GPU delegate when available.',
+    notes: '21 landmarks per hand; one hand, on the CPU, in live stream mode. Apache 2.0.',
   },
   {
     id: 'platform-stt',

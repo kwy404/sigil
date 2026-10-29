@@ -1,11 +1,19 @@
+import type { AppPlace } from '../../app-profiles/schema';
 import {
+  clockTime,
+  compactTime,
   composeNumbers,
   contactCleaner,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
   fixed,
+  hourBefore,
   lookup,
   messageArgs,
   NumberWords,
   percent,
+  placeArgs,
   speedRate,
   toSeconds,
   unquote,
@@ -73,16 +81,73 @@ function rate(g: Groups): RuleArgs | null {
   return value === null ? null : { rate: value };
 }
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^reels?$/iu, 'reels'],
+  [/^shorts?$/iu, 'shorts'],
+  [/^subscriptions?$/iu, 'subscriptions'],
+  [/^(?:direct messages|dms?|direct|inbox|messages|chats)$/iu, 'messages'],
+  [/^profile$/iu, 'profile'],
+  [/^explore(?: page| tab)?$/iu, 'explore'],
+];
+/** Words that only name a place with an app: "open messages" opens the messaging app. */
+const GENERIC_PLACE = /^(?:messages|inbox|chats)$/iu;
+const SPAN_UNITS: DurationUnits = { hour: /^(?:hours?|hrs?)$/iu, minute: /^(?:minutes?|mins?)$/iu, second: /^(?:seconds?|secs?)$/iu };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  if (g.halfhour) return { seconds: 1800 };
+  const seconds = durationSeconds(
+    [
+      [numbers.parse(g.n1), g.u1],
+      [numbers.parse(g.n2), g.u2],
+    ],
+    SPAN_UNITS,
+    Boolean(g.half),
+  );
+  return seconds === null ? null : { seconds };
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = !g.period
+    ? null
+    : /^(?:at night|tonight)$/iu.test(g.period)
+      ? 'night'
+      : /^(?:p|in the afternoon|in the evening)/iu.test(g.period)
+        ? 'pm'
+        : 'am';
+  if (g.noon) return clockTime(/midnight/iu.test(g.noon) ? 0 : 12);
+  if (g.hm) {
+    const time = compactTime(g.hm);
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  if (g.halfh) return clockTime(numbers.parse(g.halfh), 30, period);
+  if (g.qh) return clockTime(numbers.parse(g.qh), 15, period);
+  if (g.th) return clockTime(hourBefore(numbers.parse(g.th)), 45, period);
+  return clockTime(numbers.parse(g.h), g.m === undefined ? 0 : numbers.parse(g.m), period);
+}
+
 export const en: LanguagePack = {
   id: 'en',
   code: 'en',
   vocab: {
+    SPAN: '(?:(?<n1>NUM) (?<u1>hours?|hrs?|minutes?|mins?|seconds?|secs?)(?:,? (?:and )?(?<n2>NUM) (?<u2>minutes?|mins?|seconds?|secs?))?(?<half> and a half)?|(?<halfhour>half an hour|a half hour))',
+    CLOCK:
+      "(?:(?<hm>\\d{1,2}[:.]\\d{2})|(?<h>NUM)(?: (?<m>NUM))?(?: ?o'?clock)?|half past (?<halfh>NUM)|quarter (?:past|after) (?<qh>NUM)|quarter (?:to|before|of) (?<th>NUM)|(?<noon>noon|midday|midnight))(?: ?(?<period>a\\.? ?m\\.?|p\\.? ?m\\.?|in the morning|in the afternoon|in the evening|at night|tonight))?",
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.| dot )[a-z0-9-]+)*(?:\\.| dot )[a-z]{2,}(?:/[^ ]*)?',
     NUM: numbers.pattern(),
     PCT: '(?:\\s*%| percent| per cent)',
     UNIT: '(?<unit>seconds?|secs?|minutes?|mins?)',
     STREAM: '(?<stream>ring|ringer|ringtone|alarms?|media|music)',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source: [
+        '^(?:open|show|go to|show me|take me to|watch)(?: the| my)? (?<place>reels?|shorts?|subscriptions?|direct messages|dms?|direct|inbox|messages|chats|profile|explore(?: page| tab)?)(?: (?:on|in|of) (?<app>APPS))?$',
+        '^(?:open|show|go to|show me|watch)(?: the| my)? (?<app>APPS) (?<place>reels?|shorts|subscriptions|direct messages|dms?|inbox|messages|profile|explore(?: page)?)$',
+      ],
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-on-app-saying',
       tool: 'send_message',
@@ -279,6 +344,101 @@ export const en: LanguagePack = {
       source:
         '^(?:(?:turn|switch) (?:on|off) |(?:open|enable|disable|start) )?(?:the )?(?:do not disturb|dnd)(?: mode)?(?: (?:on|off|settings))?$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:close|clear|kill|quit|exit|dismiss) (?:all|every)(?: of)?(?: the| my)?(?: open| running| background| recent)? (?:apps|applications)$',
+        '^(?:close|clear|dismiss)(?: all)?(?: the| my)? recent(?:s| apps)$',
+        '^(?:close|clear) everything$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: [
+        '^(?:close|quit|exit|kill|leave)(?: (?:this|the|the current|current))? (?:app|application)$',
+        '^(?:close|quit|exit|kill) (?:it|this)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: ['^(?:(?:go back|switch back|go|switch|return) to |open )?(?:the )?(?:previous|last) app$', '^switch (?:back )?apps$'],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: ['^(?:(?:turn on|enable|open|start|use|toggle|enter) )?(?:the )?split ?screen(?: mode)?$', '^split the screen$'],
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:(?:open|show|start|play|redo|replay|restart|repeat|run|do|take)(?: me)?(?: the)? )?(?:tutorial|walkthrough|guided tour)(?: again)?$',
+        '^(?:show me|teach me) how to use sigil$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:(?:set|start|create|make|put on|run)(?: me)?(?: a| an| the)? )?timer (?:for |of |to )?SPAN$',
+        '^(?:(?:set|start|create|make|run)(?: a| an)? )?SPAN timer$',
+        '^(?:remind me|tell me|let me know) in SPAN$',
+        '^count down(?: from)? SPAN$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: [
+        '^(?:(?:set|create|make|put)(?: me)?(?: an?| the| my)? )?alarm (?:for |at |to )*CLOCK$',
+        '^wake me(?: up)? (?:at |by )?CLOCK$',
+        '^(?:set|create)(?: an?)? CLOCK alarm$',
+      ],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: [
+        '^(?:turn|switch) (?<state>on|off) (?:the )?(?:flashlight|torch|flash light)$',
+        '^(?:turn|switch) (?:the )?(?:flashlight|torch|flash light) (?<state>on|off)$',
+        '^(?:flashlight|torch)(?: (?<state>on|off))?$',
+      ],
+      build: (g) => ({ on: !/^off$/iu.test(g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: [
+        '^(?:open|go to|visit|browse to|load)(?: the)? (?:website|web site|site|web page|page) (?<url>.+)$',
+        '^(?:open|go to|visit|browse to|load) (?<url>DOMAIN)$',
+      ],
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source: [
+        `^(?:open|show|go to)(?: the| my)? (?:chat|conversation|messages) (?:with|from) (?<contact>.+?)(?: ${ON} (?<app>APPS))?$`,
+        `^(?:open|go to) (?<contact>.+?)'s (?:chat|conversation)(?: ${ON} (?<app>APPS))?$`,
+      ],
+      build: (g) => withApp(g, { contact: cleanContact(unquote(g.contact ?? '')) }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source: '^(?:close|quit|exit|kill|force close|force stop|get out of)(?: the)? (?<app>.+?)(?: app)?$',
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     { id: 'back', tool: 'navigate', source: '^(?:go )?back$', build: fixed({ action: 'back' }) },
     {

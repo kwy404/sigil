@@ -6,23 +6,34 @@ Read [docs/VISION.md](docs/VISION.md) for the product, [docs/ARCHITECTURE.md](do
 
 ## Status
 
-This is the first skeleton (milestone M1).
+Hands free control runs on Android: milestones M2 (live hands), M3 (Android end to end) and M4 (speech and the on device language model). GitHub Actions builds the release APK, and a smoke test runs it on an emulator with a recorded demo hand. Real hands and voices on real phones are the next test.
+
+On an Android phone:
+
+- **Live hand tracking.** A camera foreground service runs CameraX and MediaPipe Hand Landmarker on the front camera, in Sigil and over other apps. The cursor follows the index finger over every app, and each gesture does what the profile of the app in front binds it to, so a pinch taps where the cursor points.
+- **Floating bubble.** While Sigil runs, a bubble over the other apps shows whether it is tracking, sees a hand, listens or is paused. A tap opens the Control Sphere; a long press opens a menu to pause or resume, turn voice over other apps on or off, open Sigil or stop. It can be dragged, snaps to the nearest edge and dims when idle.
+- **Quick Settings tile, home screen widget and notification.** The tile and the widget show whether Sigil runs and start or stop it, and the notification of the camera service has Pause or Resume and Stop. Android lets an app turn the camera on only from its own screen, so Start opens Sigil first.
+- **Voice.** Requests such as "open Instagram", "close YouTube", "go back to the previous app", "set a timer for 5 minutes" or "turn on the flashlight" are heard by the phone's own speech recognizer, which keeps the audio on the phone; a recognizer that may use the network is used only if the user allows it. Sigil cleans the audio (audio focus, noise suppression, echo cancelling) and checks every capture before trusting it: speech that is too short, clipped, too quiet against the noise or heard with low confidence does nothing, and Sigil asks the user to repeat. A request that sends, posts or closes all apps always waits for an explicit yes.
+- **Typed requests** go through the same planner, steps and confirmations.
+- **Guided tour.** The first launch explains and asks for each access, then lets the user practice the gestures and a voice request. It can be replayed from the main screen or by asking for the tutorial.
+- **Demo hand.** The link `sigil://control/demo` plays recorded gestures through the live path: the cursor and the bubble move, but nothing is tapped. It shows the cursor without a camera, and the emulator smoke test uses it.
 
 Works and is tested without a device:
 
 - Gesture engine: 21 point hand model, One Euro filter, and a classifier for open palm, point, pinch, double pinch, pinch and hold, fist, two and three finger swipes, clockwise and counterclockwise circles, flicks, and a moving pinch that turns like a knob or drags like a slider, tested on synthetic hand recordings.
 - App profiles: JSON gesture profiles for WhatsApp, Instagram, YouTube, TikTok, Chrome, Messages, Settings and a general profile, validated with a schema. In the general profile a pinched circle turns the volume and a pinched drag up or down changes the brightness.
 - Sigil core: intent tools for a local model with a rule based fallback in eight languages, an action planner, a confirmation policy that blocks bulk automation and reads confirm and cancel words the same way in every language, and a plan executor.
+- App requests: open, close and switch apps by the name the launcher shows or a nickname ("insta", "zap"), with a question when a name fits several apps; places inside apps, chats, websites, timers, alarms, the flashlight and the tutorial.
+- Voice requests: the voice session checks each transcript (confidence, alternatives, unclear speech) before planning, asks to repeat once at most, and takes yes and no by voice, pinch, fist or tap. The Kotlin voice gate has its own unit tests.
 - System controls: volume up, down, to a percent, mute and unmute (media by default, ring and alarm when named), play, pause, next and previous for any player, skipping seconds and changing the playback speed, likes, brightness, back, home, recent apps, notifications, quick settings, lock screen, screenshot, power menu, and the Wi-Fi, Bluetooth and Do Not Disturb panels. The Control Sphere has volume and brightness quick actions with live level rings.
 - On device language model (milestone M4): llama.rn (llama.cpp) runs Qwen2.5 1.5B Instruct on phones with 6 GB of RAM (lite tier) or Qwen2.5 3B Instruct with 8 GB (full tier), picked from the RAM expo-device reports. The settings section "On device model" shows the recommended tier, its size and memory, and downloads the model once from Hugging Face over Wi-Fi, resumable and checked against a SHA-256 pinned in the code; it can pause, cancel and delete. The planner uses the model when it is loaded and falls back to the rules on a timeout, an invalid call or no model; without a model the rule parser still understands the built in commands. See [On device model](#on-device-model).
-- Voice adapter with a mock speech engine.
 
-Needs a device or the next milestones:
+Needs real phones or the next milestones:
 
-- Live hand tracking (MediaPipe Hand Landmarker through a frame processor and inside the camera service).
-- The Android control module (accessibility service, cursor overlay, camera foreground service, volume, brightness and media session control) and the llama.rn runtime build in the release APK, but have not run on a phone yet.
-- Speed, memory and the quality of the model's tool calls on real phones, in the eight languages.
-- On device speech (whisper.rn or the system recognizer).
+- Tuning with real hands: the control box, the gesture thresholds, light and distance, and the battery cost of the camera. The emulator only proves that the pieces start, draw and talk to each other.
+- Plans inside other apps (WhatsApp, Instagram, YouTube) depend on their screens, so their selectors must be checked on phones.
+- Speech depends on the phone: an on device recognizer for the language needs Android 12 or later, and the cleaned audio Android 13 or later.
+- The language model: llama.rn is in the release APK and the app starts with it on the emulator, but no model has run on a phone yet. Speed, memory and the quality of the tool calls in the eight languages need real phones.
 
 ## On device model
 
@@ -35,7 +46,7 @@ Needs a device or the next milestones:
 - The files come from the official Qwen repositories on Hugging Face, pinned to a commit, with their size and SHA-256 in `src/adapters/catalog.ts`. A file that does not match is deleted.
 - Downloads use Wi-Fi only unless the user allows mobile data, check the free storage first, continue after a pause, a lost connection or a restart, and can be cancelled. The model file is the only thing Sigil downloads; requests never leave the phone, and there is no backend.
 - The model runs on the CPU with a 2,048 token context and about half the cores. It loads when the user starts to speak or at the first request, and is released in the background, under memory pressure and after five minutes without requests.
-- The answer is constrained by a JSON schema to exactly one call to one of the 17 intent tools, through the model's own chat template, and then goes through the same validation and confirmation rules as the rule parser's.
+- The answer is constrained by a JSON schema to exactly one call to one of the intent tools, through the model's own chat template, and then goes through the same validation and confirmation rules as the rule parser's.
 - The full tier's license allows research and evaluation; commercial use of Qwen2.5 3B needs a license from Alibaba Cloud.
 
 ## Languages
@@ -63,11 +74,13 @@ The Android control module needs a development build:
 npx eas-cli@latest build --profile development --platform android
 ```
 
-After installing the build, open Settings, Accessibility and enable "Sigil hands free control". On Android 13 and later, an APK installed outside an app store first needs App info, menu, "Allow restricted settings".
+The first Gradle build downloads the MediaPipe hand model (`hand_landmarker.task`, Apache 2.0) into the module's assets and checks it against a pinned SHA-256; see [Hand tracking model](docs/ARCHITECTURE.md#hand-tracking-model). Preview APKs are on the [releases page](https://github.com/kwy404/sigil/releases).
+
+The guided tour asks for each access on the first launch. By hand: open Settings, Accessibility and enable "Sigil hands free control". On Android 13 and later, an APK installed outside an app store first needs App info, menu, "Allow restricted settings".
 
 ## Platforms
 
-- **Android**: system wide control through an accessibility service, a cursor window over other apps and a camera foreground service with its visible notification. Sigil is declared as an accessibility tool for hands free control.
+- **Android**: system wide control through an accessibility service, a cursor window over other apps and a camera foreground service with its visible notification, plus a floating bubble ("Display over other apps"), a Quick Settings tile and a home screen widget. Sigil is declared as an accessibility tool for hands free control.
   - Volume and media keys need no permission.
   - Brightness needs "Modify system settings", which Sigil asks for with an explanation; without it Sigil opens the display settings. Setting the brightness turns adaptive brightness off, or the system would replace the value at once.
   - Skipping seconds and changing the playback speed need notification access ("Sigil media control"): Android shares the active media session only with enabled notification listeners. Sigil never reads notifications.
@@ -89,6 +102,12 @@ src/
   cursor-overlay/    holographic cursor (Skia, Reanimated)
   control-sphere/    Control Sphere hub and level rings (Skia, Reanimated)
   ui/                design tokens and primitives
+  runtime/           the app wide runtime: hand control, bubble, voice requests, demo hand
+  session/           the session API the screens use: phase, checklist, levels and actions
+  voice/             one voice request, from listening to the confirmed plan
+  hand-control/      live hand frames to the cursor and the gestures
+  tutorial/          the guided tour: steps, access requests, practice
+  settings/          the settings file: language, tour, voice and speech
 modules/
   sigil-control/     Android native module (Kotlin) and its config plugin
   sigil-memory/      Android native module (Kotlin): CPU cores, free memory and memory pressure for the model

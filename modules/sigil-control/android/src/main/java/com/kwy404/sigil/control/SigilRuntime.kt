@@ -42,14 +42,15 @@ object SigilRuntime {
     emit("onForegroundAppChanged", mapOf("packageName" to packageName, "className" to className))
   }
 
-  /** Forwards one hand tracker result: 21 landmarks packed as x, y, z triples. */
-  fun reportHandFrame(timestampMs: Long, landmarks: FloatArray, score: Float) {
+  /** Forwards one hand tracker result: 21 landmarks packed as x, y, z triples, empty when the hand is lost. */
+  fun reportHandFrame(timestampMs: Long, landmarks: FloatArray, score: Float, handedness: String?) {
     emit(
       "onHandFrame",
       mapOf(
         "t" to timestampMs.toDouble(),
         "landmarks" to landmarks.map { it.toDouble() },
         "score" to score.toDouble(),
+        "handedness" to handedness,
       ),
     )
   }

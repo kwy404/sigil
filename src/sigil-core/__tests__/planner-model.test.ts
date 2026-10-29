@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 
 import { ProfileRegistry } from '../../app-profiles';
-import { ActionPlanner, type LanguageModel, type ModelContext, type ModelReply, type ToolDefinition } from '..';
+import { ActionPlanner, toolDefinitions, type LanguageModel, type ModelContext, type ModelReply, type ToolDefinition } from '..';
 
 const profiles = ProfileRegistry.withBuiltins();
 
@@ -25,7 +25,7 @@ class ProbeModel implements LanguageModel {
   }
 
   prepare(context: ModelContext, tools: readonly ToolDefinition[]): void {
-    expect(tools).toHaveLength(17);
+    expect(tools).toEqual(toolDefinitions());
     this.prepared.push(context);
   }
 

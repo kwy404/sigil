@@ -28,11 +28,13 @@ Everything runs on the phone: hand tracking, speech recognition and the language
 
 | Milestone | Scope |
 | --- | --- |
-| M1, this skeleton | Gesture engine with tests, app profiles, planner, confirmation policy, plan executor, Android control module skeleton, first screen |
+| M1, skeleton | Gesture engine with tests, app profiles, planner, confirmation policy, plan executor, Android control module skeleton, first screen |
 | M2, live hands | MediaPipe Hand Landmarker in a frame processor while Sigil is open, and in the camera service while other apps are open; per user calibration of the control box |
 | M3, Android end to end | Gestures acting in WhatsApp, YouTube, TikTok and Chrome on real devices; plans executed with confirmation; onboarding with the accessibility disclosure |
 | M4, on device language | whisper.rn or the system recognizer; a 1.5B tool calling model through llama.rn; model download manager with tiers by device RAM |
 | M5, stores | iOS App Intents and Shortcuts; Play Console accessibility declaration and review |
+
+Where things stand: M1 is done. For M2 and M3, the camera service tracks the hand in Sigil and over other apps, gestures act through the accessibility service, plans run with confirmation, and the guided tour carries the accessibility disclosure; per user calibration and checks on real phones remain. From M4, speech uses the phone's own recognizer, and the local language model is in progress.
 
 ## Non goals
 

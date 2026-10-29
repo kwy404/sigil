@@ -164,6 +164,22 @@ export class OnDeviceModel {
     return model;
   }
 
+  /**
+   * One LanguageModel for planners that live as long as the app: every call
+   * goes to the model of the tier in use at that moment, so switching tiers
+   * needs no new planner. Pair it with plannerTimeoutMs as a function.
+   */
+  readonly plannerModel: LanguageModel = {
+    id: 'on-device',
+    kind: 'local',
+    isReady: () => this.languageModel()?.isReady() ?? false,
+    propose: (request, context, tools, signal) => {
+      const model = this.languageModel();
+      return model ? model.propose(request, context, tools, signal) : Promise.reject(new Error('No on device model for this tier.'));
+    },
+    prepare: (context, tools) => this.languageModel()?.prepare?.(context, tools),
+  };
+
   /** How long the planner waits for the model of a tier before the rules answer. */
   plannerTimeoutMs(tier: TierId = this.effectiveTier()): number {
     return PLANNER_TIMEOUT_MS[tier];

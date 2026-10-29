@@ -58,16 +58,18 @@ describe('ToolCallingModel', () => {
     expect(request.toolChoice).toBe('required');
     expect(request.tools).toEqual(toolDefinitions());
     expect(request.messages[0].content).toContain('exactly one tool call');
-    expect(request.messages[0].content).toContain('WhatsApp');
+    expect(request.messages[0].content).toContain('Write app names as the user said them');
     expect(request.messages[1]).toEqual({ role: 'system', content: 'App on screen: unknown. Request language: en-US.' });
     expect(request.messages[2]).toEqual({ role: 'user', content: 'search for lofi beats on YouTube' });
   });
 
   it('keeps the first system message the same for every request, so the runtime can cache it with the tools', () => {
-    const first = buildMessages('open YouTube', { locale: 'en-US', foregroundApp: null, knownApps: ['WhatsApp', 'whatsapp', 'zap'] });
-    const second = buildMessages('manda oi pra Ana', { locale: 'pt-BR', foregroundApp: 'WhatsApp', knownApps: ['WhatsApp', 'whatsapp', 'zap'] });
+    const first = buildMessages('open YouTube', { locale: 'en-US', foregroundApp: null, knownApps: ['WhatsApp', 'zap'] });
+    // A phone with hundreds of apps installed gets the same system message: the names are not listed.
+    const installed = Array.from({ length: 300 }, (_, i) => `App ${i}`);
+    const second = buildMessages('manda oi pra Ana', { locale: 'pt-BR', foregroundApp: 'WhatsApp', knownApps: installed });
     expect(second[0]).toEqual(first[0]);
-    expect(first[0].content).toContain('Known apps: WhatsApp, zap.');
+    expect(first[0].content).not.toContain('zap');
     expect(second[1].content).toBe('App on screen: WhatsApp. Request language: pt-BR.');
   });
 

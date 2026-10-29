@@ -1,5 +1,22 @@
 export { parseAnswer, type Answer } from './answers';
 export {
+  appNamesFor,
+  cleanAppName,
+  findProfile,
+  KNOWN_APPS,
+  pickApp,
+  resolveApp,
+  SYSTEM_APP_WORDS,
+  SYSTEM_APPS,
+  targetInfo,
+  type AppCatalog,
+  type AppResolution,
+  type AppTarget,
+  type InstalledApp,
+  type KnownApp,
+  type SystemApp,
+} from './apps';
+export {
   ConfirmationPolicy,
   isSensitiveLabel,
   namesSeveralPeople,
@@ -26,6 +43,7 @@ export {
   type ConfirmHandler,
   type ControlResult,
   type DeviceController,
+  type ExecutionFailure,
   type ExecutionResult,
   type ExecutorOptions,
   type NodeBounds,
@@ -36,9 +54,9 @@ export {
   type StepStatus,
   type UiNode,
 } from './executor';
-export { expandIntent, type FlowContext, type FlowResult } from './flows';
+export { expandIntent, LAUNCHER_PROFILE_ID, normalizeWebsite, type FlowContext, type FlowResult, type PlanPlatform } from './flows';
 export { RuleBasedModel, type LanguageModel, type ModelContext, type ModelReply } from './model';
-export { noticeText, type Notice, type NoticeCode } from './notices';
+export { noticeText, type AndroidOnlyFeature, type AppChoice, type Notice, type NoticeCode } from './notices';
 export {
   ActionPlanner,
   type IntentSource,
@@ -53,6 +71,7 @@ export {
   describeStep,
   describeTarget,
   describeVolume,
+  formatDuration,
   type BrightnessAction,
   type BrightnessCommand,
   type ConfirmReason,

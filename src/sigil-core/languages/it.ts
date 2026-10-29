@@ -1,11 +1,19 @@
+import type { AppPlace } from '../../app-profiles/schema';
 import {
+  clockTime,
+  compactTime,
   composeNumbers,
   contactCleaner,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
   fixed,
+  hourBefore,
   lookup,
   messageArgs,
   NumberWords,
   percent,
+  placeArgs,
   speedRate,
   toSeconds,
   unquote,
@@ -78,16 +86,76 @@ function rate(g: Groups): RuleArgs | null {
 const UP = '(?:alza|alzare|aumenta|aumentare)';
 const DOWN = '(?:abbassa|abbassare|diminuisci|diminuire|riduci|ridurre)';
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^reels?$/iu, 'reels'],
+  [/^shorts?$/iu, 'shorts'],
+  [/^iscrizioni$/iu, 'subscriptions'],
+  [/^(?:messaggi diretti|direct|dms?|messaggi|chat|posta in arrivo)$/iu, 'messages'],
+  [/^profilo$/iu, 'profile'],
+  [/^esplora$/iu, 'explore'],
+];
+/** Words that only name a place with an app: "apri i messaggi" opens the messaging app. */
+const GENERIC_PLACE = /^(?:messaggi|chat|posta in arrivo)$/iu;
+const SPAN_UNITS: DurationUnits = { hour: /^or[ae]$/iu, minute: /^min(?:ut[oi])?$/iu, second: /^sec(?:ond[oi])?$/iu };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  if (g.halfhour) return { seconds: 1800 };
+  if (g.onehour) return { seconds: g.half2 ? 5400 : 3600 };
+  const seconds = durationSeconds(
+    [
+      [numbers.parse(g.n1), g.u1],
+      [numbers.parse(g.n2), g.u2],
+    ],
+    SPAN_UNITS,
+    Boolean(g.half),
+  );
+  return seconds === null ? null : { seconds };
+}
+
+function minuteOf(word: string | undefined): number | null {
+  if (word === undefined) return 0;
+  if (/^mezz[ao]$/iu.test(word)) return 30;
+  if (/quarto$/iu.test(word)) return 15;
+  return numbers.parse(word);
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = !g.period ? null : /notte$/iu.test(g.period) ? 'night' : /(?:pomeriggio|sera)$/iu.test(g.period) ? 'pm' : 'am';
+  if (g.noon) return clockTime(/notte$/iu.test(g.noon) ? 0 : 12);
+  if (g.hm) {
+    const time = compactTime(g.hm);
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  if (g.less) {
+    const less = minuteOf(g.less);
+    return less === null ? null : clockTime(hourBefore(numbers.parse(g.h)), 60 - less, period);
+  }
+  return clockTime(numbers.parse(g.h), minuteOf(g.m), period);
+}
+
 export const it: LanguagePack = {
   id: 'it',
   code: 'it',
   vocab: {
+    SPAN: "(?:(?<n1>NUM) (?<u1>or[ae]|minut[oi]|min|second[oi]|sec)(?:(?: e|,) (?<n2>NUM) (?<u2>minut[oi]|min|second[oi]|sec))?(?<half> e mezz[oa])?|(?<halfhour>mezz[’']ora|mezzora|mezza ora)|(?<onehour>un[’']ora)(?<half2> e mezz[oa])?)",
+    CLOCK:
+      '(?:(?<hm>\\d{1,2}[:.]\\d{2})|(?<h>NUM)(?: e (?<m>NUM|mezza|mezzo|un quarto|quarto)| meno (?<less>un quarto|NUM))?|(?<noon>mezzogiorno|mezzanotte))(?: (?<period>di mattina|del mattino|della mattina|del pomeriggio|di pomeriggio|di sera|della sera|di notte))?',
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.| punto )[a-z0-9-]+)*(?:\\.| punto )[a-z]{2,}(?:/[^ ]*)?',
     NUM: numbers.pattern(),
     PCT: '(?:\\s*%| per cento|percento)',
     UNIT: '(?<unit>secondi|secondo|minuti|minuto)',
     STREAM: '(?:della |delle |dell\')?(?<stream>suoneria|sveglia|allarme|chiamate)',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source: [
+        "^(?:apri|aprire|mostra|mostrami|mostrare|vai su|vai a|vai in|vai al|vai ai|vai alle|vedi)(?: (?:i|il|lo|la|le|gli|mio|mia|miei|mie))?(?: l[’'])? ?(?<place>reels?|shorts?|iscrizioni|messaggi diretti|direct|dms?|messaggi|chat|posta in arrivo|profilo|esplora)(?: (?:di|del|della|su|in) (?<app>APPS))?$",
+        '^(?:i )?(?<place>reels|shorts)(?: (?:di|del|su|in) (?<app>APPS))?$',
+      ],
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-on-app-saying',
       tool: 'send_message',
@@ -246,6 +314,100 @@ export const it: LanguagePack = {
       tool: 'settings_panel',
       source: '^(?:(?:attiva|attivare|disattiva|disattivare|metti|apri) )?(?:la )?(?:modalità )?non disturbare$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:chiudi|chiudere|cancella|cancellare|pulisci|pulire)(?: tutte le| tutti i| le| tutte)(?: mie)? (?:app|applicazioni)(?: aperte| recenti| in background)?$',
+        '^(?:chiudi|chiudere) tutto$',
+        '^(?:pulisci|pulire|cancella|cancellare)(?: le)? (?:app )?recenti$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: [
+        "^(?:chiudi|chiudere) (?:questa app|questa applicazione|l[’']app|l[’']applicazione|questo)(?: attuale| corrente)?$",
+        "^(?:esci|uscire) (?:da qui|da questa app|dall[’']app|da questa applicazione|dall[’']applicazione)$",
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: [
+        "^(?:(?:torna|tornare|vai|passa|passare) (?:all[’']|alla ))?(?:app|applicazione) precedente$",
+        "^(?:(?:torna|tornare|vai|passa|passare) all[’'])?ultima (?:app|applicazione)$",
+        '^(?:cambia|cambiare) (?:app|applicazione)$',
+      ],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: ['^(?:(?:attiva|attivare|apri|aprire|usa|usare|metti) (?:lo )?)?schermo diviso$', '^(?:dividi|dividere) lo schermo$'],
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:(?:apri|aprire|mostra|mostrami|mostrare|avvia|avviare|rifai|rifare|ripeti|ripetere|ricomincia|riavvia|rivedi|rivedere|fai|fare)(?: il)? )?tutorial(?: di nuovo| ancora)?$',
+        '^(?:insegnami|mostrami) (?:a usare|come usare) sigil$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:(?:imposta|impostare|metti|mettere|avvia|avviare|attiva|attivare|fai partire|crea|creare)(?: un| il)? )?(?:timer|conto alla rovescia) (?:di |da |per )?SPAN$',
+        '^(?:avvisami|ricordamelo) (?:tra|fra) SPAN$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: [
+        "^(?:(?:imposta|impostare|metti|mettere|crea|creare|attiva|attivare)(?: una| la)? )?sveglia (?:alle |per le |per |a |all[’'] ?)*CLOCK$",
+        "^svegliami (?:alle |all[’'] ?|a |per le )?CLOCK$",
+      ],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: [
+        '^(?<verb>accendi|accendere|attiva|attivare|spegni|spegnere|disattiva|disattivare)(?: la| il)? (?:torcia|luce del telefono|flash)$',
+        '^torcia(?: (?<state>accesa|spenta|on|off))?$',
+      ],
+      build: (g) => ({ on: !/^(?:spegn|disattiv)/iu.test(g.verb ?? '') && !/^(?:spenta|off)$/iu.test(g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: [
+        '^(?:apri|aprire|vai su|vai a|visita|visitare)(?: il| la)? (?:sito|sito web|pagina|pagina web) (?<url>.+)$',
+        '^(?:apri|aprire|vai su|vai a|visita|visitare) (?<url>DOMAIN)$',
+      ],
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source:
+        '^(?:apri|aprire|vai nella|vai alla)(?: la)? (?:chat|conversazione) (?:con|di) (?<contact>.+?)(?: (?:su|in|con) (?<app>APPS))?$',
+      build: (g) => withApp(g, { contact: cleanContact(unquote(g.contact ?? '')) }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source:
+        "^(?:chiudi|chiudere|esci da|uscire da|esci dal|uscire dal|termina|terminare|forza la chiusura di)(?: l[’']applicazione(?= )| l[’']app(?= ))?(?:(?: il| la| lo| le| gli)(?= )| l[’'])? ?(?<app>.+?)$",
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     {
       id: 'back',

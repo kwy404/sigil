@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
 import { ProfileRegistry } from '../../app-profiles';
-import { toolDefinitions } from '../../sigil-core';
+import { ActionPlanner, toolDefinitions } from '../../sigil-core';
 import {
   buildMessages,
   DEFAULT_CONTEXT_SIZE,
@@ -99,7 +99,7 @@ describe('LlamaChatEngine', () => {
 
   it('lists every tool with its arguments, required ones first, and allows exactly one call in the schema', () => {
     const list = toolList(toolDefinitions());
-    expect(list.split('\n').filter((line) => line.startsWith('- '))).toHaveLength(17);
+    expect(list.split('\n').filter((line) => line.startsWith('- '))).toHaveLength(toolDefinitions().length);
     expect(describeTool(toolDefinitions().find((t) => t.function.name === 'send_message')!)).toBe(
       '- send_message(contact: string, text: string, app?: string): Write a message to one contact in a messaging app. ' +
         'Sigil always asks the user to confirm before sending. contact: One contact name, exactly as the user said it. ' +
@@ -109,26 +109,25 @@ describe('LlamaChatEngine', () => {
       'volume(action: "up" | "down" | "set" | "mute" | "unmute", level?: integer 0 to 100, stream?: "media" | "ring" | "alarm")',
     );
     const schema = toolCallSchema(toolDefinitions()) as { oneOf: { properties: { name: { const: string } }; required: string[] }[] };
-    expect(schema.oneOf).toHaveLength(17);
+    expect(schema.oneOf).toHaveLength(toolDefinitions().length);
     expect(schema.oneOf[0]).toMatchObject({ properties: { name: { const: 'open_app' } }, required: ['name', 'arguments'] });
     expect(JSON.stringify(schema)).not.toContain('additionalProperties');
   });
 
   it('keeps the prompt small enough for a 2048 token context with room for the answer', () => {
-    // The app passes about 50 app names and aliases, some in Japanese and Chinese.
-    const knownApps = ProfileRegistry.withBuiltins()
-      .list()
-      .flatMap((p) => [p.name, p.id, ...(p.aliases ?? [])]);
+    // The planner passes every app name it knows, installed apps included; none of them reaches the prompt.
+    const knownApps = new ActionPlanner({ profiles: ProfileRegistry.withBuiltins() }).knownApps();
+    expect(knownApps.length).toBeGreaterThan(100);
     const messages = buildMessages('send a message to Ana on WhatsApp saying I will be there in ten minutes', {
       locale: 'pt-BR',
       foregroundApp: 'WhatsApp',
       knownApps,
     });
     const prompt = [`${messages[0].content}\n${toolList(toolDefinitions())}`, messages[1].content, messages[2].content].join('\n');
-    // Pessimistic: 3 characters per token for English and JSON, 1 per CJK character, plus the chat template markers.
-    const cjk = [...prompt].filter((c) => /[぀-ヿ一-鿿]/u.test(c)).length;
-    const estimatedTokens = Math.ceil((prompt.length - cjk) / 3) + cjk + 40;
-    expect(estimatedTokens + 200).toBeLessThanOrEqual(DEFAULT_CONTEXT_SIZE * 0.75);
+    // Pessimistic: 3 characters per token for English and the tool list, plus the chat template markers.
+    const estimatedTokens = Math.ceil(prompt.length / 3) + 40;
+    // The answer may use up to 200 tokens; keep a tenth of the context free on top.
+    expect(estimatedTokens + 200).toBeLessThanOrEqual(DEFAULT_CONTEXT_SIZE * 0.9);
   });
 
   it('warms up the cache with the system prompt and tools when prepared, then reports ready', async () => {

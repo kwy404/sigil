@@ -45,6 +45,21 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --max-workers=3 -PreactNativeArchitectures=x86_64
 
+      # MediaPipe ships its native tracker only for some processors; this shows
+      # which ones the AAR has and which libraries the emulator APK packaged.
+      - name: List the native libraries of the hand tracker
+        if: always()
+        run: |
+          mkdir -p smoke
+          {
+            find ~/.gradle/caches -name 'tasks-*.aar' 2>/dev/null | while read -r aar; do
+              echo "$aar"
+              unzip -l "$aar" | grep '\.so$' || echo "  no native libraries"
+            done
+            echo "APK:"
+            unzip -l android/app/build/outputs/apk/release/app-release.apk | grep '\.so$' | awk '{print $4}' | sort
+          } | tee smoke/native-libs.txt
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -63,6 +78,16 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-front emulated -camera-back none
           script: bash .github/smoke.sh
+
+      # After the emulator, so a failing test still leaves the screenshots.
+      # Android Gradle Plugin 9 only creates unit tests for the debug build type.
+      - name: Run the native unit tests
+        working-directory: android
+        run: ./gradlew :sigil-control:testDebugUnitTest --no-daemon --max-workers=3
+
+      - name: Keep the unit test reports
+        if: always()
+        run: mkdir -p smoke && cp -r android/../modules/sigil-control/android/build/reports/tests smoke/unit-tests 2>/dev/null || true
 
       - uses: actions/upload-artifact@v4
         if: always()

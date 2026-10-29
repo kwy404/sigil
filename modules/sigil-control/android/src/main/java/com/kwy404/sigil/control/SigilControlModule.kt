@@ -1,16 +1,21 @@
 package com.kwy404.sigil.control
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.KeyEvent
+import com.facebook.react.bridge.ReactContext
+import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -26,6 +31,13 @@ class SigilControlModule : Module() {
   /** Cursor window used while the accessibility service is off. */
   private var appCursor: CursorOverlay? = null
 
+  /** Prompt panel used while the accessibility service is off. */
+  private var appPrompt: PromptOverlay? = null
+
+  /** The voice request in progress, if any. */
+  @Volatile
+  private var speech: SpeechSession? = null
+
   override fun definition() = ModuleDefinition {
     Name("SigilControl")
 
@@ -35,17 +47,35 @@ class SigilControlModule : Module() {
       "onCameraServiceStateChanged",
       "onHandFrame",
       "onCursorError",
+      "onAppsChanged",
+      "onControlAction",
+      "onSpeechState",
+      "onSpeechLevel",
+      "onSpeechPartial",
+      "onSpeechResult",
+      "onSpeechError",
     )
 
     OnCreate {
       SigilRuntime.eventSink = { name, body -> this@SigilControlModule.sendEvent(name, body) }
+      appContext.reactContext?.let { ctx ->
+        LaunchableApps.watch(ctx) { SigilRuntime.emit("onAppsChanged", emptyMap()) }
+      }
     }
 
     OnDestroy {
       SigilRuntime.eventSink = null
+      appContext.reactContext?.let { LaunchableApps.unwatch(it) }
       appCursor?.hide()
       appCursor = null
+      appPrompt?.hide()
+      appPrompt = null
+      speech?.cancel()
+      speech = null
     }
+
+    /** The live camera view with the hand landmarks, for tuning distance and light. */
+    View(HandPreviewView::class) {}
 
     Function("getStatus") { status() }
 
@@ -65,11 +95,39 @@ class SigilControlModule : Module() {
 
     Function("openMediaAccessSettings") { openActivity(SigilMediaListener.settingsIntent(context)) }
 
+    /** Sigil's App info screen, where Android 13 and later hide "Allow restricted settings". */
+    Function("openAppInfo") {
+      openActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
+    }
+
+    Function("getInstallSource") { installSource() }
+
     Function("openPanel") { panel: String -> openPanel(panel) }
 
     Function("startCameraService") { withMicrophone: Boolean -> startCameraService(withMicrophone) }
 
     Function("stopCameraService") { stopCameraService() }
+
+    /** Pauses or resumes hand tracking; the service, the bubble and the notification stay. */
+    Function("setTrackingPaused") { paused: Boolean ->
+      val service = SigilCameraService.instance ?: return@Function false
+      Handler(Looper.getMainLooper()).post { service.setPaused(paused) }
+      true
+    }
+
+    /** What the floating bubble shows: tracking, hand, listening or paused. */
+    Function("setBubbleState") { state: String ->
+      val service = SigilCameraService.instance ?: return@Function false
+      Handler(Looper.getMainLooper()).post { service.setBubbleState(BubbleState.from(state)) }
+      true
+    }
+
+    /** Keeps JavaScript timers running while Sigil is in the background; see JsKeepAlive. */
+    Function("setKeepAlive") { on: Boolean ->
+      val reactContext = appContext.reactContext as? ReactContext ?: return@Function false
+      JsKeepAlive.set(reactContext, on)
+      true
+    }
 
     Function("showCursor") { activeCursor().show() }
 
@@ -135,16 +193,113 @@ class SigilControlModule : Module() {
     AsyncFunction("openApp") { packageName: String?, url: String?, label: String? ->
       openApp(packageName, url, label)
     }
+
+    AsyncFunction("getLaunchableApps") { LaunchableApps.list(context) }
+
+    AsyncFunction("openRole") { role: String -> SystemActions.roleIntents(role).any { openActivity(it) } }
+
+    AsyncFunction("setTimer") { seconds: Int -> startOutcome(SystemActions.timerIntent(seconds)) }
+
+    AsyncFunction("setAlarm") { hour: Int, minute: Int -> startOutcome(SystemActions.alarmIntent(hour, minute)) }
+
+    AsyncFunction("setTorch") { on: Boolean -> SystemActions.setTorch(context, on) }
+
+    AsyncFunction("getSpeechSupport") { locale: String, promise: Promise ->
+      SpeechSession.checkSupport(context.applicationContext, locale) { answer -> promise.resolve(answer) }
+    }
+
+    Function("downloadSpeechModel") { locale: String -> SpeechSession.downloadModel(context.applicationContext, locale) }
+
+    Function("startListening") { locale: String, allowOffDevice: Boolean, maxMs: Int, noSpeechMs: Int ->
+      startListening(locale, allowOffDevice, maxMs, noSpeechMs)
+    }
+
+    Function("stopListening") { speech?.stop() }
+
+    Function("cancelListening") { speech?.cancel() }
+
+    Function("showPrompt") { title: String, message: String, level: Double, tone: String ->
+      activePrompt().show(title, message, level.toFloat(), tone)
+    }
+
+    Function("setPromptLevel") { level: Double -> activePrompt().setLevel(level.toFloat()) }
+
+    Function("hidePrompt") {
+      SigilRuntime.service?.prompt?.hide()
+      appPrompt?.hide()
+    }
+  }
+
+  /** Starts a voice request. Returns null, or why it cannot start: busy, permission, on_device_unavailable, no_recognizer. */
+  private fun startListening(locale: String, allowOffDevice: Boolean, maxMs: Int, noSpeechMs: Int): String? {
+    if (speech != null) return "busy"
+    val session = SpeechSession(
+      context.applicationContext,
+      SpeechSession.Options(locale, allowOffDevice, maxMs, noSpeechMs),
+    ) { name, body -> SigilRuntime.emit(name, body) }
+    session.onEnded = { if (speech === session) speech = null }
+    val problem = session.start()
+    if (problem == null) speech = session
+    return problem
+  }
+
+  /** The service prompt when the accessibility service runs, the application overlay otherwise. */
+  private fun activePrompt(): PromptOverlay {
+    val service = SigilRuntime.service
+    if (service != null) {
+      appPrompt?.hide()
+      appPrompt = null
+      return service.prompt
+    }
+    return appPrompt ?: PromptOverlay(context.applicationContext).also { appPrompt = it }
+  }
+
+  /**
+   * Who installed Sigil. On Android 13 and later, an app installed outside an
+   * app store needs "Allow restricted settings" in App info before its
+   * accessibility service can be turned on.
+   */
+  private fun installSource(): Map<String, Any?> {
+    val packages = context.packageManager
+    val installer = try {
+      if (Build.VERSION.SDK_INT >= 30) {
+        packages.getInstallSourceInfo(context.packageName).installingPackageName
+      } else {
+        @Suppress("DEPRECATION")
+        packages.getInstallerPackageName(context.packageName)
+      }
+    } catch (error: Exception) {
+      null
+    }
+    return mapOf(
+      "installer" to installer,
+      "restrictedSettings" to (Build.VERSION.SDK_INT >= 33 && installer != PLAY_STORE),
+    )
+  }
+
+  /** Starts the activity of a system feature: done, unsupported when no app handles it, or failed. */
+  private fun startOutcome(intent: Intent): String {
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    return try {
+      launchContext().startActivity(intent)
+      "done"
+    } catch (error: ActivityNotFoundException) {
+      "unsupported"
+    } catch (error: RuntimeException) {
+      "failed"
+    }
   }
 
   private fun status(): Map<String, Any?> = mapOf(
     "accessibilityEnabled" to (SigilRuntime.service != null),
     "overlayPermission" to Settings.canDrawOverlays(context),
     "cameraServiceRunning" to SigilCameraService.running,
+    "trackingPaused" to SigilCameraService.paused,
     "foregroundPackage" to SigilRuntime.foregroundPackage,
     "writeSettings" to Settings.System.canWrite(context),
     "mediaAccess" to SigilMediaListener.isEnabled(context),
     "sdkInt" to Build.VERSION.SDK_INT,
+    "packageName" to context.packageName,
   )
 
   @Suppress("DEPRECATION")
@@ -278,6 +433,10 @@ class SigilControlModule : Module() {
       else -> null
     } ?: return false
     return openActivity(intent)
+  }
+
+  companion object {
+    private const val PLAY_STORE = "com.android.vending"
   }
 
   /** Finds an installed app by the name shown under its launcher icon. */

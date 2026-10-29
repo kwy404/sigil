@@ -7,23 +7,17 @@ export interface ToolCallingModelOptions {
   maxTokens?: number;
 }
 
-/** App names once each, ignoring case: "WhatsApp" and "whatsapp" are one name to the model. */
-function uniqueNames(names: readonly string[]): string[] {
-  const seen = new Set<string>();
-  return names.filter((name) => {
-    const key = name.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 /**
  * Messages for small instruction tuned models. Short on purpose: every token
  * costs time on a phone. The first system message (and the tool list an
  * engine adds to it) never changes between requests, so the runtime keeps it
  * in its KV cache and evaluates only the short context note and the request.
  * Anything that varies comes after it.
+ *
+ * The app names Sigil knows are not listed: with the apps installed on the
+ * phone they run to hundreds of names, change with every install and would
+ * not fit the context. The model copies the name the user said, and Sigil
+ * finds the app, nicknames included.
  */
 export function buildMessages(request: string, context: ModelContext): ChatMessage[] {
   const system = [
@@ -32,8 +26,8 @@ export function buildMessages(request: string, context: ModelContext): ChatMessa
     '- Call one tool only. If the request needs several actions, call the first one.',
     '- Use clarify when the request is ambiguous or misses a contact, an app or a message text.',
     '- Never invent contacts, messages or captions. Copy them from the request, in the language the user used.',
+    '- Write app names as the user said them, nicknames included; Sigil finds the app on the phone.',
     '- One contact per message. Sigil applies its own safety rules after you, so just pick the tool.',
-    `Known apps: ${uniqueNames(context.knownApps).join(', ')}.`,
   ].join('\n');
   const note = `App on screen: ${context.foregroundApp ?? 'unknown'}. Request language: ${context.locale}.`;
   return [

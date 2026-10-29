@@ -17,6 +17,16 @@
     },
     "like": {
       "contentDescription": ["Like", "Curtir", "Me gusta", "J'aime", "Gefällt mir", "Mi piace", "いいね", "点赞"]
+    },
+    "inboxTab": {
+      "contentDescription": ["Inbox", "Caixa de entrada", "Bandeja de entrada", "Boîte de réception", "Posteingang", "Posta in arrivo", "受信トレイ", "收件箱", "消息"]
+    },
+    "profileTab": {
+      "contentDescription": ["Profile", "Perfil", "Profil", "Profilo", "プロフィール", "主页", "我"]
     }
+  },
+  "places": {
+    "messages": { "tab": "inboxTab" },
+    "profile": { "tab": "profileTab" }
   }
 }
