@@ -1,7 +1,7 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { getSigil, sessionActions } from '@/session';
+import { getSigil, openControlSphere, sessionActions } from '@/session';
 
 /**
  * Links from outside the app: the Quick Settings tile, the home screen widget,
@@ -19,7 +19,10 @@ export default function ControlLink() {
       if (action === 'start') await sessionActions.start();
       if (action === 'stop') sessionActions.stop();
       if (action === 'demo') await getSigil().startDemo();
-      if (!cancelled) setDone(true);
+      if (cancelled) return;
+      // The bubble opens the sphere: the screen the screens registered, or home.
+      if (action === 'sphere') openControlSphere();
+      else setDone(true);
     };
     void run();
     return () => {

@@ -22,6 +22,11 @@ export function setSessionHandlers(next: Partial<typeof handlers>): void {
   Object.assign(handlers, next);
 }
 
+/** Shows the Control Sphere where the screens put it, as the bubble and the open palm do. */
+export function openControlSphere(): void {
+  handlers.openSphere();
+}
+
 function deviceLocales(): DeviceLocale[] {
   return getLocales().map((locale) => ({
     languageTag: locale.languageTag,
