@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sigil_accessibility_label">Sigil 隔空操控</string>
+  <string name="sigil_accessibility_description">借助 Sigil，你可以用前置摄像头看到的手势和你的声音来操控手机。它需要这项服务来了解当前打开的是哪个应用，在你指向的位置点按、滚动和输入，并执行你提出的语音请求。Sigil 只在你做出手势或提出请求时才会行动，会在屏幕上显示每一个步骤，并且在发送或发布任何内容之前一定会先询问你。摄像头画面、音频和屏幕内容都在手机上处理，不会被保存，也不会被发送到任何地方。</string>
+  <string name="sigil_channel_name">隔空操控</string>
+  <string name="sigil_channel_description">在 Sigil 使用摄像头跟随你的手时显示。</string>
+  <string name="sigil_camera_notification_title">Sigil 正在跟随你的手</string>
+  <string name="sigil_camera_notification_text">前置摄像头已开启，用于手势控制。</string>
+  <string name="sigil_camera_notification_text_voice">前置摄像头和麦克风已开启，用于手势和语音。</string>
+  <string name="sigil_stop">停止</string>
+  <string name="sigil_media_access_label">Sigil 媒体控制</string>
+</resources>

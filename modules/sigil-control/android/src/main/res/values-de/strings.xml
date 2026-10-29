@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sigil_accessibility_label">Sigil: freihändige Steuerung</string>
+  <string name="sigil_accessibility_description">Mit Sigil steuerst du dein Telefon mit Handgesten, die die Frontkamera erkennt, und mit deiner Stimme. Sigil braucht diesen Dienst, um zu wissen, welche App geöffnet ist, um dort zu tippen, zu scrollen und zu schreiben, wo du hinzeigst, und um deine Sprachanfragen auszuführen. Sigil handelt nur, wenn du eine Geste machst oder etwas anfragst, zeigt jeden Schritt auf dem Bildschirm und fragt immer, bevor etwas gesendet oder gepostet wird. Kamerabilder, Audio und Bildschirminhalte werden auf deinem Telefon verarbeitet und weder gespeichert noch irgendwohin gesendet.</string>
+  <string name="sigil_channel_name">Freihändige Steuerung</string>
+  <string name="sigil_channel_description">Wird angezeigt, solange Sigil die Kamera nutzt, um deiner Hand zu folgen.</string>
+  <string name="sigil_camera_notification_title">Sigil folgt deiner Hand</string>
+  <string name="sigil_camera_notification_text">Die Frontkamera ist für die Gestensteuerung an.</string>
+  <string name="sigil_camera_notification_text_voice">Frontkamera und Mikrofon sind für Gesten und Stimme an.</string>
+  <string name="sigil_stop">Stopp</string>
+  <string name="sigil_media_access_label">Sigil: Mediensteuerung</string>
+</resources>

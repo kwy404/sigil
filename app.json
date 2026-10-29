@@ -43,7 +43,8 @@
             "android": ["en", "pt-BR", "es", "fr", "de", "it", "ja", "zh-Hans"]
           }
         }
-      ]
+      ],
+      "./modules/sigil-control/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true,

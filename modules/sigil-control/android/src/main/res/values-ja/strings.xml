@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sigil_accessibility_label">Sigil ハンズフリー操作</string>
+  <string name="sigil_accessibility_description">Sigil を使うと、前面カメラがとらえた手のジェスチャーと声でスマートフォンを操作できます。このサービスは、どのアプリが開いているかを知り、指さした場所でタップ、スクロール、入力を行い、あなたの音声リクエストを実行するために必要です。Sigil はあなたがジェスチャーをしたりリクエストしたりしたときだけ動き、すべての手順を画面に表示し、送信や投稿の前には必ず確認します。カメラの映像、音声、画面の内容はスマートフォンの中で処理され、保存も送信もされません。</string>
+  <string name="sigil_channel_name">ハンズフリー操作</string>
+  <string name="sigil_channel_description">Sigil がカメラで手を追っている間に表示されます。</string>
+  <string name="sigil_camera_notification_title">Sigil が手を追っています</string>
+  <string name="sigil_camera_notification_text">ジェスチャー操作のために前面カメラがオンになっています。</string>
+  <string name="sigil_camera_notification_text_voice">ジェスチャーと音声のために前面カメラとマイクがオンになっています。</string>
+  <string name="sigil_stop">停止</string>
+  <string name="sigil_media_access_label">Sigil メディア操作</string>
+</resources>

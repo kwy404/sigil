@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sigil_accessibility_label">Sigil : contrôle mains libres</string>
+  <string name="sigil_accessibility_description">Sigil vous permet de contrôler votre téléphone avec des gestes de la main vus par la caméra avant et avec votre voix. Il a besoin de ce service pour savoir quelle app est ouverte, pour toucher, faire défiler et saisir là où vous pointez, et pour exécuter les demandes vocales que vous faites. Sigil n\'agit que lorsque vous faites un geste ou une demande, affiche chaque étape à l\'écran et demande toujours avant d\'envoyer ou de publier quoi que ce soit. Les images de la caméra, l\'audio et le contenu de l\'écran sont traités sur votre téléphone et ne sont ni conservés ni envoyés nulle part.</string>
+  <string name="sigil_channel_name">Contrôle mains libres</string>
+  <string name="sigil_channel_description">Affichée pendant que Sigil utilise la caméra pour suivre votre main.</string>
+  <string name="sigil_camera_notification_title">Sigil suit votre main</string>
+  <string name="sigil_camera_notification_text">La caméra avant est active pour le contrôle par gestes.</string>
+  <string name="sigil_camera_notification_text_voice">La caméra avant et le micro sont actifs pour les gestes et la voix.</string>
+  <string name="sigil_stop">Arrêter</string>
+  <string name="sigil_media_access_label">Sigil : contrôle des médias</string>
+</resources>
