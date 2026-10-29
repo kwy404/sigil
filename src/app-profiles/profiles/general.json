@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "general",
+  "name": "General",
+  "description": "Default bindings for every app. App profiles inherit these and override only what differs.",
+  "packages": [],
+  "bindings": {
+    "pinch": { "type": "tap" },
+    "double_pinch": { "type": "double_tap" },
+    "pinch_hold": { "type": "long_press" },
+    "open_palm": { "type": "sphere", "action": "toggle" },
+    "fist": { "type": "voice", "action": "listen" },
+    "swipe_two_up": { "type": "scroll", "direction": "down" },
+    "swipe_two_down": { "type": "scroll", "direction": "up" },
+    "swipe_two_left": { "type": "scroll", "direction": "right" },
+    "swipe_two_right": { "type": "scroll", "direction": "left" },
+    "swipe_three_left": { "type": "global", "action": "back" },
+    "swipe_three_right": { "type": "global", "action": "recents" },
+    "swipe_three_up": { "type": "global", "action": "home" },
+    "swipe_three_down": { "type": "global", "action": "notifications" },
+    "circle_cw": { "type": "volume", "direction": "up" },
+    "circle_ccw": { "type": "volume", "direction": "down" },
+    "flick_up": { "type": "swipe", "direction": "up" },
+    "flick_down": { "type": "swipe", "direction": "down" },
+    "flick_left": { "type": "swipe", "direction": "left" },
+    "flick_right": { "type": "swipe", "direction": "right" }
+  }
+}

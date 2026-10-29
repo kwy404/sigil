@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "youtube",
+  "name": "YouTube",
+  "description": "Videos and Shorts. Media gestures use the system media session.",
+  "packages": ["com.google.android.youtube"],
+  "aliases": ["yt", "you tube"],
+  "bindings": {
+    "flick_up": { "type": "swipe", "direction": "up" },
+    "flick_down": { "type": "swipe", "direction": "down" },
+    "swipe_two_left": { "type": "media", "action": "next" },
+    "swipe_two_right": { "type": "media", "action": "previous" },
+    "pinch_hold": { "type": "media", "action": "play_pause" }
+  },
+  "selectors": {
+    "search": {
+      "resourceId": ["com.google.android.youtube:id/menu_item_view"],
+      "contentDescription": ["Search", "Pesquisar"]
+    }
+  },
+  "links": {
+    "launch": "youtube://",
+    "search": "https://www.youtube.com/results?search_query={query}"
+  }
+}

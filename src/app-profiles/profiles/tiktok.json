@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "tiktok",
+  "name": "TikTok",
+  "description": "Vertical feed. Flicks move between videos, a double pinch likes the video under the cursor.",
+  "packages": ["com.zhiliaoapp.musically", "com.ss.android.ugc.trill"],
+  "aliases": ["tik tok"],
+  "bindings": {
+    "flick_up": { "type": "swipe", "direction": "up" },
+    "flick_down": { "type": "swipe", "direction": "down" },
+    "swipe_two_left": { "type": "swipe", "direction": "left" },
+    "swipe_two_right": { "type": "swipe", "direction": "right" }
+  },
+  "selectors": {
+    "search": {
+      "contentDescription": ["Search", "Pesquisar"]
+    }
+  }
+}

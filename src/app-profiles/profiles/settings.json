@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "settings",
+  "name": "Settings",
+  "description": "System settings. Planned taps that change a setting ask for confirmation.",
+  "packages": ["com.android.settings"],
+  "aliases": ["configurações", "configuracoes", "ajustes", "preferences"],
+  "bindings": {
+    "flick_up": { "type": "scroll", "direction": "down" },
+    "flick_down": { "type": "scroll", "direction": "up" }
+  },
+  "selectors": {
+    "search": {
+      "resourceId": ["com.android.settings:id/search_action_bar", "com.android.settings.intelligence:id/search_src_text"],
+      "contentDescription": ["Search settings", "Pesquisar configurações", "Search", "Pesquisar"]
+    }
+  }
+}

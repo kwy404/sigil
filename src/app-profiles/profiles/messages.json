@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "messages",
+  "name": "Messages",
+  "description": "SMS and RCS conversations in Google Messages and Samsung Messages.",
+  "packages": ["com.google.android.apps.messaging", "com.samsung.android.messaging"],
+  "aliases": ["sms", "text messages", "mensagens", "torpedo"],
+  "bindings": {
+    "flick_right": { "type": "swipe", "direction": "right", "origin": "cursor" }
+  },
+  "selectors": {
+    "startChat": {
+      "resourceId": ["com.google.android.apps.messaging:id/start_chat_fab"],
+      "text": ["Start chat", "Iniciar conversa"],
+      "contentDescription": ["Start chat", "Iniciar conversa"]
+    },
+    "recipientInput": {
+      "resourceId": ["com.google.android.apps.messaging:id/recipient_text_view"],
+      "className": "android.widget.EditText"
+    },
+    "messageInput": {
+      "resourceId": ["com.google.android.apps.messaging:id/compose_message_text"],
+      "className": "android.widget.EditText"
+    },
+    "send": {
+      "resourceId": ["com.google.android.apps.messaging:id/send_message_button_icon"],
+      "contentDescription": ["Send SMS", "Send message", "Send", "Enviar SMS", "Enviar mensagem", "Enviar"],
+      "commit": true
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "chrome",
+  "name": "Chrome",
+  "description": "Web browsing. Searches open as Google result pages.",
+  "packages": ["com.android.chrome"],
+  "aliases": ["google chrome", "browser", "navegador", "google"],
+  "bindings": {
+    "swipe_two_right": { "type": "global", "action": "back" }
+  },
+  "selectors": {
+    "addressBar": {
+      "resourceId": ["com.android.chrome:id/url_bar", "com.android.chrome:id/search_box_text"]
+    }
+  },
+  "links": {
+    "launch": "googlechrome://",
+    "search": "https://www.google.com/search?q={query}"
+  }
+}

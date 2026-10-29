@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "whatsapp",
+  "name": "WhatsApp",
+  "description": "Chats and messages. Selectors come from public app builds and must be checked on a device.",
+  "packages": ["com.whatsapp", "com.whatsapp.w4b"],
+  "aliases": ["whats", "zap", "wpp", "whatsapp business"],
+  "bindings": {
+    "flick_right": { "type": "swipe", "direction": "right", "origin": "cursor" },
+    "swipe_two_left": { "type": "swipe", "direction": "left" },
+    "swipe_two_right": { "type": "swipe", "direction": "right" }
+  },
+  "selectors": {
+    "search": {
+      "resourceId": ["com.whatsapp:id/menuitem_search", "com.whatsapp:id/my_search_bar"],
+      "contentDescription": ["Search", "Pesquisar", "Buscar"]
+    },
+    "searchInput": {
+      "resourceId": ["com.whatsapp:id/search_input", "com.whatsapp:id/search_src_text"],
+      "className": "android.widget.EditText"
+    },
+    "messageInput": {
+      "resourceId": ["com.whatsapp:id/entry"],
+      "className": "android.widget.EditText"
+    },
+    "send": {
+      "resourceId": ["com.whatsapp:id/send"],
+      "contentDescription": ["Send", "Enviar"],
+      "commit": true
+    }
+  },
+  "links": {
+    "launch": "whatsapp://",
+    "compose": "whatsapp://send?text={text}"
+  }
+}

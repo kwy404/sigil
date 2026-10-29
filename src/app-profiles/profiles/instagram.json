@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "instagram",
+  "name": "Instagram",
+  "description": "Feed, Reels and Stories. Posting always stops for confirmation before Share.",
+  "packages": ["com.instagram.android"],
+  "aliases": ["insta", "ig"],
+  "bindings": {
+    "flick_up": { "type": "swipe", "direction": "up" },
+    "flick_down": { "type": "swipe", "direction": "down" },
+    "swipe_two_left": { "type": "swipe", "direction": "left" },
+    "swipe_two_right": { "type": "swipe", "direction": "right" }
+  },
+  "selectors": {
+    "create": {
+      "contentDescription": ["Create", "New post", "Criar", "Nova publicação"]
+    },
+    "next": {
+      "text": ["Next", "Avançar"],
+      "contentDescription": ["Next", "Avançar"]
+    },
+    "captionInput": {
+      "resourceId": ["com.instagram.android:id/caption_input_text_view"],
+      "text": ["Write a caption...", "Escreva uma legenda..."]
+    },
+    "share": {
+      "text": ["Share", "Compartilhar"],
+      "contentDescription": ["Share", "Compartilhar"],
+      "commit": true
+    }
+  },
+  "links": {
+    "launch": "instagram://"
+  }
+}
