@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "kaway401",
+    "name": "Sigil",
     "slug": "kaway401",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "kaway401",
+    "scheme": "sigil",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.kwy404.sigil"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +18,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kwy404.sigil"
     },
     "web": {
       "output": "server",
@@ -37,6 +39,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "10051fdb-d939-4ce4-a742-ef60c1aa0688"
+      }
     }
   }
 }
