@@ -15,7 +15,8 @@ On an Android phone:
 - **Quick Settings tile, home screen widget and notification.** The tile and the widget show whether Sigil runs and start or stop it, and the notification of the camera service has Pause or Resume and Stop. Android lets an app turn the camera on only from its own screen, so Start opens Sigil first.
 - **Voice.** Requests such as "open Instagram", "close YouTube", "go back to the previous app", "set a timer for 5 minutes" or "turn on the flashlight" are heard by the phone's own speech recognizer, which keeps the audio on the phone; a recognizer that may use the network is used only if the user allows it. Sigil cleans the audio (audio focus, noise suppression, echo cancelling) and checks every capture before trusting it: speech that is too short, clipped, too quiet against the noise or heard with low confidence does nothing, and Sigil asks the user to repeat. A request that sends, posts or closes all apps always waits for an explicit yes.
 - **Typed requests** go through the same planner, steps and confirmations.
-- **Guided tour.** The first launch explains and asks for each access, then lets the user practice the gestures and a voice request. It can be replayed from the main screen or by asking for the tutorial.
+- **The app.** Five tabs: Now (start Sigil, finish setup, quick gestures, voice examples, levels and recent activity), Gestures (every sign as an album with a drawn preview and practice), Apps (the gesture profiles with their bindings), Voice (the mic, commands by category and the history) and Settings (language, permissions, the on device model, the tutorial, the Lab and about). A command pill above the tab bar shows the state, opens the Live sheet with the hand, the levels and the controls, and takes typed or spoken commands, planned first and run on request.
+- **Guided tour.** The first launch explains and asks for each access, then lets the user practice the gestures, a voice request and a confirmation. It can be replayed from Settings or by asking for the tutorial.
 - **Demo hand.** The link `sigil://control/demo` plays recorded gestures through the live path: the cursor and the bubble move, but nothing is tapped. It shows the cursor without a camera, and the emulator smoke test uses it.
 
 Works and is tested without a device:
@@ -91,8 +92,13 @@ The guided tour asks for each access on the first launch. By hand: open Settings
 
 ```
 src/
-  app/               screens (Expo Router)
-  features/          home screen sections, the on device model settings included
+  app/               routes (Expo Router): five tabs, the Live and command sheets, the tour
+  screens/           the tab screens and their pages: Now, Gestures, Apps, Voice, Settings
+  onboarding/        the first run tour: a tested state machine and its pages
+  catalog/           gesture albums and the hand clips of their previews
+  history/           recent gestures and requests for the feeds
+  preferences/       the tour completion and haptics, in the settings file
+  features/          the developer panels of the Lab, the on device model settings included
   i18n/              typed messages in eight languages, language detection and picker
   gesture-engine/    landmarks, One Euro filter, classifier, synthetic hands
   app-profiles/      JSON gesture profiles and their registry
@@ -101,12 +107,11 @@ src/
   system-control/    device controllers, gesture dispatch, volume and brightness levels
   cursor-overlay/    holographic cursor (Skia, Reanimated)
   control-sphere/    Control Sphere hub and level rings (Skia, Reanimated)
-  ui/                design tokens and primitives
+  ui/                design tokens, theme, type, glyphs from design/icons and components
   runtime/           the app wide runtime: hand control, bubble, voice requests, demo hand
   session/           the session API the screens use: phase, checklist, levels and actions
   voice/             one voice request, from listening to the confirmed plan
   hand-control/      live hand frames to the cursor and the gestures
-  tutorial/          the guided tour: steps, access requests, practice
   settings/          the settings file: language, tour, voice and speech
 modules/
   sigil-control/     Android native module (Kotlin) and its config plugin
