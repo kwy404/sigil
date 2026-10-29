@@ -1,6 +1,6 @@
 import { BlurMask, Canvas, Circle, Group, LinearGradient, Path, RadialGradient, Skia, useClock, vec } from '@shopify/react-native-skia';
 import { View } from 'react-native';
-import { useDerivedValue, useReducedMotion } from 'react-native-reanimated';
+import { useDerivedValue, useReducedMotion, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import Svg, { Circle as SvgCircle, Path as SvgPath } from 'react-native-svg';
 
 import { useSkiaReady } from './skia-ready';
@@ -71,12 +71,29 @@ export function SigilMark({
       </View>
     );
   }
-  return <LuminousMark size={size} state={state} level={level} motes={motes} />;
+  return <SkiaMark size={size} state={state} level={level} motes={motes} />;
 }
 
-function LuminousMark({ size, state, level, motes }: { size: number; state: MarkState; level: number; motes: boolean }) {
+type MarkProps = { size: number; state: MarkState; level: number; motes: boolean };
+
+function SkiaMark(props: MarkProps) {
   const reduceMotion = useReducedMotion();
+  // A mark that cannot move draws once instead of on every frame.
+  return props.state === 'off' || reduceMotion ? <StillMark {...props} /> : <MovingMark {...props} />;
+}
+
+function MovingMark(props: MarkProps) {
   const clock = useClock();
+  return <LuminousMark {...props} clock={clock} />;
+}
+
+function StillMark(props: MarkProps) {
+  const clock = useSharedValue(0);
+  return <LuminousMark {...props} clock={clock} />;
+}
+
+function LuminousMark({ size, state, level, motes, clock }: MarkProps & { clock: SharedValue<number> }) {
+  const reduceMotion = useReducedMotion();
   const { top, bottom } = markPaths();
   // The mark spans 62 percent of the canvas; the rest is room for the light.
   const unit = (size * 0.62) / 24;
