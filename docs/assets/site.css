@@ -384,6 +384,7 @@ glyph-fox { display: inline-flex; flex: none; color: inherit; }
   text-wrap: balance;
 }
 .hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px; }
+.hero-note { margin-top: 16px; font-size: 14px; color: var(--t3); text-align: center; }
 
 .hero-stage {
   position: relative;
