@@ -17,6 +17,8 @@ export const GLOBAL_ACTIONS = [
   'lock_screen',
   'screenshot',
   'power_menu',
+  'previous_app',
+  'split_screen',
 ] as const;
 
 /** Media keys, delivered to the player that holds the media session in any app. */
@@ -93,6 +95,20 @@ export const SelectorSchema = z
     message: 'A selector needs at least one of resourceId, text or contentDescription.',
   });
 
+/** Places inside an app that a voice request can open directly, such as the Instagram reels. */
+export const APP_PLACES = ['reels', 'shorts', 'subscriptions', 'messages', 'profile', 'explore'] as const;
+
+/**
+ * How to reach a place: a link the app opens, or a selector (usually a tab)
+ * to tap once the app is in front. A link wins when both are given.
+ */
+export const PlaceSchema = z
+  .strictObject({
+    link: z.string().min(3).optional(),
+    tab: z.string().regex(/^[a-z][a-zA-Z0-9]*$/, 'Use the camelCase name of a selector.').optional(),
+  })
+  .refine((place) => Boolean(place.link || place.tab), { message: 'A place needs a link or a tab selector.' });
+
 /** URL templates. {query} and {text} are replaced with URL encoded values. */
 export const LinksSchema = z.strictObject({
   launch: z.string().min(3).optional(),
@@ -115,6 +131,7 @@ export const AppProfileSchema = z.strictObject({
   bindings: z.partialRecord(GestureKeySchema, ProfileActionSchema),
   selectors: z.record(z.string().regex(/^[a-z][a-zA-Z0-9]*$/, 'Use camelCase names.'), SelectorSchema).optional(),
   links: LinksSchema.optional(),
+  places: z.partialRecord(z.enum(APP_PLACES), PlaceSchema).optional(),
 });
 
 export type AppProfile = z.infer<typeof AppProfileSchema>;
@@ -126,3 +143,5 @@ export type GlobalAction = (typeof GLOBAL_ACTIONS)[number];
 export type MediaAction = (typeof MEDIA_ACTIONS)[number];
 export type VolumeStream = (typeof VOLUME_STREAMS)[number];
 export type SystemPanel = (typeof SYSTEM_PANELS)[number];
+export type AppPlace = (typeof APP_PLACES)[number];
+export type PlaceLink = z.infer<typeof PlaceSchema>;

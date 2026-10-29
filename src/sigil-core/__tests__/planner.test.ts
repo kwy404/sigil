@@ -101,8 +101,13 @@ describe('ActionPlanner with the rule based fallback', () => {
   });
 
   it('opens apps that have no profile by their label', async () => {
+    const plan = planned(await planner.plan({ text: 'open Foobar Notes' }));
+    expect(plan.steps).toEqual([{ kind: 'open_app', app: 'Foobar Notes', label: 'Foobar Notes' }]);
+  });
+
+  it('opens the default app of a kind by its role', async () => {
     const plan = planned(await planner.plan({ text: 'open calculator' }));
-    expect(plan.steps).toEqual([{ kind: 'open_app', app: 'calculator', label: 'calculator' }]);
+    expect(plan.steps).toEqual([{ kind: 'open_app', app: 'role:calculator', label: 'calculator', role: 'calculator' }]);
   });
 
   it('plans single step requests', async () => {
@@ -290,6 +295,15 @@ describe('tool definitions', () => {
     const tools = toolDefinitions();
     expect(tools.map((t) => t.function.name)).toEqual([
       'open_app',
+      'close_app',
+      'close_all_apps',
+      'open_place',
+      'open_chat',
+      'set_timer',
+      'set_alarm',
+      'flashlight',
+      'open_website',
+      'open_tutorial',
       'send_message',
       'search',
       'scroll',

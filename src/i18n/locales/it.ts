@@ -115,6 +115,8 @@ export const it: Messages = {
       lock_screen: 'Blocca schermo',
       screenshot: 'Screenshot',
       power_menu: 'Menu di spegnimento',
+      previous_app: 'App precedente',
+      split_screen: 'Schermo diviso',
     },
     media: {
       play_pause: 'Riproduci o metti in pausa',
@@ -138,7 +140,7 @@ export const it: Messages = {
     everyApp: 'Tutte le app senza un profilo proprio',
     gestures: (count) => `${count} gesti`,
     ownShared: (own, shared) => `${own} propri, ${shared} ereditati`,
-    names: { general: 'Generale', messages: 'Messaggi', settings: 'Impostazioni' },
+    names: { general: 'Generale', messages: 'Messaggi', settings: 'Impostazioni', launcher: 'Schermata Home' },
   },
   planner: {
     title: 'Pianificatore vocale',
@@ -157,6 +159,7 @@ export const it: Messages = {
     status: {
       planned: 'pianificato',
       clarify: 'domanda',
+      choose: 'scegli',
       blocked: 'bloccato',
       unsupported: 'non ancora',
       not_understood: 'non capito',
@@ -172,6 +175,11 @@ export const it: Messages = {
     tap: (label) => `Tocca ${q(label)}`,
     type: (text) => `Scrivi ${q(text)}`,
     like: (app) => `Metti mi piace su ${app}`,
+    close: (app) => `Chiudi ${app}`,
+    closeAll: 'Chiudi tutte le app',
+    openPlace: (place, app) => `Apri ${place} in ${app}`,
+    openChat: (contact, app) => `Apri la chat con ${contact} su ${app}`,
+    website: (site) => `Apri ${site}`,
   },
   steps: {
     open: (app) => `Apri ${app}`,
@@ -220,6 +228,44 @@ export const it: Messages = {
     },
     sphere: { open: 'Apri la sfera di controllo', close: 'Chiudi la sfera di controllo' },
     ask: (question) => `Chiedi: ${question}`,
+    close: (app) => `Chiudi ${app}`,
+    tutorial: 'Apri il tutorial',
+    timer: (duration) => `Avvia un timer di ${duration}`,
+    alarm: (time) => `Imposta una sveglia alle ${time}`,
+    torch: { on: 'Accendi la torcia', off: 'Spegni la torcia' },
+  },
+  time: {
+    duration: (h, m, s) => [h ? `${h} h` : '', m ? `${m} min` : '', s ? `${s} s` : ''].filter(Boolean).join(' '),
+    clock: (hour, minute) => `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+  },
+  places: {
+    reels: 'Reels',
+    shorts: 'Shorts',
+    subscriptions: 'Iscrizioni',
+    messages: 'Messaggi',
+    profile: 'Profilo',
+    explore: 'Esplora',
+  },
+  roles: {
+    camera: 'Fotocamera',
+    phone: 'Telefono',
+    contacts: 'Contatti',
+    calculator: 'Calcolatrice',
+    calendar: 'Calendario',
+    clock: 'Orologio',
+    gallery: 'Galleria',
+    music: 'Musica',
+    email: 'Email',
+    maps: 'Mappe',
+    files: 'File',
+    messages: 'Messaggi',
+    browser: 'Browser',
+  },
+  failures: {
+    went_background: (app) => `L’app ${app} è passata in background, ma Sigil non ha trovato la sua scheda nelle app recenti per chiuderla.`,
+    not_open: (app) => `L’app ${app} non è aperta.`,
+    still_open: (app) => `Sigil ha scorso via l’app ${app}, ma è ancora nelle app recenti.`,
+    busy: () => 'La torcia è occupata mentre una fotocamera è in uso.',
   },
   targets: {
     selectors: {
@@ -240,11 +286,25 @@ export const it: Messages = {
     focused: 'il campo attivo',
   },
   confirm: {
+    closeAll: 'Chiudere tutte le app? Quello che non è salvato al loro interno può andare perso.',
     send: (text, contact, app) => `Inviare ${q(text)} a ${contact} su ${app}?`,
     post: (app, caption) => `Condividere questo post su ${app} con la didascalia ${q(caption)}?`,
     tap: (target) => `Toccare ${target}?`,
   },
   notices: {
+    which_app: (options) => `Quale: ${options.join(', ')}?`,
+    not_installed: (app) => `L’app ${app} non è installata su questo telefono.`,
+    android_only: (feature) =>
+      ({
+        close: 'iOS non permette a un’app di chiudere altre app. Scorri l’app verso l’alto nel selettore delle app.',
+        timer: 'iOS non permette alle app di avviare un timer nell’app Orologio. Chiedi a Siri o usa un comando rapido.',
+        alarm: 'iOS non permette alle app di impostare una sveglia nell’app Orologio. Chiedi a Siri o usa un comando rapido.',
+        flashlight: 'Sigil non controlla ancora la torcia su iOS. Usa il Centro di Controllo.',
+        chat: 'Su iOS, Sigil apre l’app ma non riesce a trovare una chat al suo interno.',
+        open: 'Su iOS, Sigil apre solo le app che hanno un link pubblico.',
+      })[feature],
+    no_app_in_front: () => `Sigil non sa quale app è sullo schermo. Dimmi il suo nome, per esempio ${q('chiudi YouTube')}.`,
+    cannot_open_place: (place, app) => `Sigil non sa ancora aprire ${place} in ${app}.`,
     nothing_heard: () => 'Non ho sentito niente.',
     not_understood: () => `Sigil non ha capito. Prova ${q('apri YouTube')} o ${q('alza il volume')}.`,
     bulk: () =>

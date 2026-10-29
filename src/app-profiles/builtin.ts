@@ -1,6 +1,7 @@
 import chrome from './profiles/chrome.json';
 import general from './profiles/general.json';
 import instagram from './profiles/instagram.json';
+import launcher from './profiles/launcher.json';
 import messages from './profiles/messages.json';
 import settings from './profiles/settings.json';
 import tiktok from './profiles/tiktok.json';
@@ -21,4 +22,5 @@ export const BUILTIN_PROFILE_SOURCES: readonly unknown[] = [
   chrome,
   messages,
   settings,
+  launcher,
 ];

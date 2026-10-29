@@ -115,6 +115,8 @@ export const ptBR: Messages = {
       lock_screen: 'Bloquear a tela',
       screenshot: 'Captura de tela',
       power_menu: 'Menu de energia',
+      previous_app: 'App anterior',
+      split_screen: 'Tela dividida',
     },
     media: {
       play_pause: 'Tocar ou pausar',
@@ -138,7 +140,7 @@ export const ptBR: Messages = {
     everyApp: 'Todos os apps sem perfil próprio',
     gestures: (count) => `${count} gestos`,
     ownShared: (own, shared) => `${own} próprios, ${shared} herdados`,
-    names: { general: 'Geral', messages: 'Mensagens', settings: 'Configurações' },
+    names: { general: 'Geral', messages: 'Mensagens', settings: 'Configurações', launcher: 'Tela inicial' },
   },
   planner: {
     title: 'Planejador de voz',
@@ -157,6 +159,7 @@ export const ptBR: Messages = {
     status: {
       planned: 'planejado',
       clarify: 'pergunta',
+      choose: 'escolha',
       blocked: 'bloqueado',
       unsupported: 'ainda não',
       not_understood: 'não entendi',
@@ -172,6 +175,11 @@ export const ptBR: Messages = {
     tap: (label) => `Tocar em ${q(label)}`,
     type: (text) => `Digitar ${q(text)}`,
     like: (app) => `Curtir no ${app}`,
+    close: (app) => `Fechar ${app}`,
+    closeAll: 'Fechar todos os apps',
+    openPlace: (place, app) => `Abrir ${place} no ${app}`,
+    openChat: (contact, app) => `Abrir a conversa com ${contact} no ${app}`,
+    website: (site) => `Abrir ${site}`,
   },
   steps: {
     open: (app) => `Abrir ${app}`,
@@ -220,6 +228,44 @@ export const ptBR: Messages = {
     },
     sphere: { open: 'Abrir a Esfera de Controle', close: 'Fechar a Esfera de Controle' },
     ask: (question) => `Perguntar: ${question}`,
+    close: (app) => `Fechar ${app}`,
+    tutorial: 'Abrir o tutorial',
+    timer: (duration) => `Iniciar um timer de ${duration}`,
+    alarm: (time) => `Criar um alarme para as ${time}`,
+    torch: { on: 'Ligar a lanterna', off: 'Desligar a lanterna' },
+  },
+  time: {
+    duration: (h, m, s) => [h ? `${h} h` : '', m ? `${m} min` : '', s ? `${s} s` : ''].filter(Boolean).join(' '),
+    clock: (hour, minute) => `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+  },
+  places: {
+    reels: 'Reels',
+    shorts: 'Shorts',
+    subscriptions: 'Inscrições',
+    messages: 'Mensagens',
+    profile: 'Perfil',
+    explore: 'Explorar',
+  },
+  roles: {
+    camera: 'Câmera',
+    phone: 'Telefone',
+    contacts: 'Contatos',
+    calculator: 'Calculadora',
+    calendar: 'Agenda',
+    clock: 'Relógio',
+    gallery: 'Galeria',
+    music: 'Música',
+    email: 'E-mail',
+    maps: 'Mapas',
+    files: 'Arquivos',
+    messages: 'Mensagens',
+    browser: 'Navegador',
+  },
+  failures: {
+    went_background: (app) => `O app ${app} foi para segundo plano, mas o Sigil não achou o cartão dele nos apps recentes para fechar.`,
+    not_open: (app) => `O app ${app} não está aberto.`,
+    still_open: (app) => `O Sigil deslizou o app ${app} para fechar, mas ele continua nos apps recentes.`,
+    busy: () => 'A lanterna fica ocupada enquanto uma câmera está em uso.',
   },
   targets: {
     selectors: {
@@ -240,11 +286,25 @@ export const ptBR: Messages = {
     focused: 'o campo selecionado',
   },
   confirm: {
+    closeAll: 'Fechar todos os apps? O que não estiver salvo neles pode se perder.',
     send: (text, contact, app) => `Enviar ${q(text)} para ${contact} no ${app}?`,
     post: (app, caption) => `Compartilhar esta publicação no ${app} com a legenda ${q(caption)}?`,
     tap: (target) => `Tocar em ${target}?`,
   },
   notices: {
+    which_app: (options) => `Qual deles: ${options.join(', ')}?`,
+    not_installed: (app) => `O app ${app} não está instalado neste celular.`,
+    android_only: (feature) =>
+      ({
+        close: 'O iOS não deixa um app fechar outros apps. Deslize o app para cima no alternador de apps.',
+        timer: 'O iOS não deixa um app iniciar um timer no app Relógio. Peça à Siri ou use um atalho.',
+        alarm: 'O iOS não deixa um app criar um alarme no app Relógio. Peça à Siri ou use um atalho.',
+        flashlight: 'O Sigil ainda não controla a lanterna no iOS. Use a Central de Controle.',
+        chat: 'No iOS, o Sigil abre o app, mas não consegue achar uma conversa dentro dele.',
+        open: 'No iOS, o Sigil só abre apps que têm um link público.',
+      })[feature],
+    no_app_in_front: () => `O Sigil não sabe qual app está na tela. Diga o nome dele, como em ${q('fecha o YouTube')}.`,
+    cannot_open_place: (place, app) => `O Sigil ainda não consegue abrir ${place} no ${app}.`,
     nothing_heard: () => 'Não ouvi nada.',
     not_understood: () => 'O Sigil não entendeu. Tente “abre o YouTube” ou “aumenta o volume”.',
     bulk: () =>

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { DirectionSchema, GLOBAL_ACTIONS, MEDIA_ACTIONS, SYSTEM_PANELS, VOLUME_STREAMS } from '../app-profiles/schema';
+import { APP_PLACES, DirectionSchema, GLOBAL_ACTIONS, MEDIA_ACTIONS, SYSTEM_PANELS, VOLUME_STREAMS } from '../app-profiles/schema';
 
 const PercentSchema = z.number().int().min(0).max(100);
 
@@ -16,10 +16,57 @@ function levelMatchesAction(args: { action: string; level?: number }): boolean {
  */
 export const INTENT_TOOLS = {
   open_app: {
-    description: 'Open an app on the phone.',
+    description: 'Open any app installed on the phone, by the name or nickname the user said.',
     args: z.strictObject({
-      app: z.string().min(1).describe('App name as the user said it, for example WhatsApp or YouTube.'),
+      app: z.string().min(1).describe('App name as the user said it, for example WhatsApp, zap or the calculator.'),
     }),
+  },
+  close_app: {
+    description: 'Close an app: the one named, or the app on screen when no app is named.',
+    args: z.strictObject({
+      app: z.string().min(1).optional().describe('App to close. Leave empty for the app on screen.'),
+    }),
+  },
+  close_all_apps: {
+    description: 'Close every app in recent apps. Sigil asks the user first.',
+    args: z.strictObject({}),
+  },
+  open_place: {
+    description: 'Open a place inside an app, such as the Instagram reels, direct messages or the YouTube subscriptions.',
+    args: z.strictObject({
+      place: z.enum(APP_PLACES),
+      app: z.string().min(1).optional().describe('Leave empty to use the usual app for the place.'),
+    }),
+  },
+  open_chat: {
+    description: 'Open the chat with one contact in a messaging app, without writing or sending anything.',
+    args: z.strictObject({
+      contact: z.string().min(1),
+      app: z.string().min(1).optional(),
+    }),
+  },
+  set_timer: {
+    description: 'Start a countdown timer in the clock app.',
+    args: z.strictObject({ seconds: z.number().int().min(1).max(86400) }),
+  },
+  set_alarm: {
+    description: 'Set an alarm in the clock app, which shows it for review. hour is from 0 to 23.',
+    args: z.strictObject({
+      hour: z.number().int().min(0).max(23),
+      minute: z.number().int().min(0).max(59),
+    }),
+  },
+  flashlight: {
+    description: 'Turn the flashlight on or off.',
+    args: z.strictObject({ on: z.boolean() }),
+  },
+  open_website: {
+    description: 'Open a website in the browser.',
+    args: z.strictObject({ url: z.string().min(3).describe('Address as the user said it, for example g1.com.br.') }),
+  },
+  open_tutorial: {
+    description: "Open Sigil's guided tutorial again.",
+    args: z.strictObject({}),
   },
   send_message: {
     description:
@@ -42,7 +89,8 @@ export const INTENT_TOOLS = {
     args: z.strictObject({ direction: DirectionSchema }),
   },
   navigate: {
-    description: 'A system navigation action such as back, home, the notifications or the power menu.',
+    description:
+      'A system navigation action such as back, home, recent apps, the previous app, split screen, the notifications or the power menu.',
     args: z.strictObject({ action: z.enum(GLOBAL_ACTIONS) }),
   },
   tap: {

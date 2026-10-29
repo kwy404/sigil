@@ -7,7 +7,7 @@ export interface ModelContext {
   locale: string;
   /** Name of the app in the foreground, when known. */
   foregroundApp: string | null;
-  /** App names and aliases Sigil has profiles for. */
+  /** App names Sigil can open: installed apps, profiles and well known apps with their nicknames. */
   knownApps: string[];
 }
 

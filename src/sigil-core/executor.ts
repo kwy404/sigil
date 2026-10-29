@@ -2,6 +2,7 @@ import type { ProfileRegistry } from '../app-profiles/registry';
 import type { GlobalAction, MediaAction, SystemPanel } from '../app-profiles/schema';
 import { foldText } from '../app-profiles/text';
 import type { Direction } from '../gesture-engine/gestures';
+import type { SystemApp } from './apps';
 import { ConfirmationPolicy } from './confirmation';
 import type { Plan } from './planner';
 import {
@@ -80,7 +81,12 @@ export interface AppLaunch {
   app: string;
   label: string;
   packageName?: string;
+  /** A link for both platforms. */
   url?: string;
+  /** A link only iOS uses, where apps open through their URL schemes. */
+  iosUrl?: string;
+  /** The phone's default app of this kind, on Android. */
+  role?: SystemApp;
 }
 
 /**
@@ -107,6 +113,12 @@ export interface DeviceController {
   brightness(command: BrightnessCommand): Promise<ControlResult>;
   /** Opens the system panel where the user flips the switch. */
   openPanel(panel: SystemPanel): Promise<boolean>;
+  /** A finger swipe between two screen points, in pixels. */
+  swipe(fromX: number, fromY: number, toX: number, toY: number, durationMs: number): Promise<boolean>;
+  setTimer(seconds: number): Promise<ControlResult>;
+  /** Opens the clock app with the alarm filled in, for the user to review. */
+  setAlarm(hour: number, minute: number): Promise<ControlResult>;
+  setTorch(on: boolean): Promise<ControlResult>;
 }
 
 /**
@@ -116,7 +128,15 @@ export interface DeviceController {
 export type ControlResult =
   | { ok: true }
   | { ok: false; reason: 'needs_permission'; permission: SpecialAccess }
-  | { ok: false; reason: 'unsupported' | 'failed' };
+  | { ok: false; reason: 'unsupported' | 'failed' | 'busy' };
+
+/**
+ * Why a step failed, when the screen should say more than that it failed:
+ * went_background, the app was in front but its card was not in recent apps;
+ * not_open, a named app was not in recent apps; still_open, its card did not
+ * go away; busy, the camera holds the flashlight.
+ */
+export type ExecutionFailure = 'went_background' | 'not_open' | 'still_open' | 'busy';
 
 /**
  * Android special access the user grants in Settings: write_settings for the
@@ -125,9 +145,10 @@ export type ControlResult =
  */
 export type SpecialAccess = 'write_settings' | 'media_access';
 
-/** Sigil's own interface, for plan steps that open or close the Control Sphere. */
+/** Sigil's own interface, for plan steps that open the Control Sphere or the tutorial. */
 export interface SigilInterface {
   sphere(action: 'open' | 'close'): void;
+  tutorial(): void;
 }
 
 export interface ConfirmationRequest {
@@ -149,6 +170,7 @@ export interface StepEvent {
   detail?: string;
   /** Set when the step failed for lack of a special access the user can grant. */
   permission?: SpecialAccess;
+  failure?: ExecutionFailure;
 }
 
 export interface ExecutionResult {
@@ -156,6 +178,7 @@ export interface ExecutionResult {
   completedSteps: number;
   message?: string;
   permission?: SpecialAccess;
+  failure?: ExecutionFailure;
 }
 
 export interface Clock {
@@ -187,7 +210,20 @@ export interface ExecutorOptions {
 
 type StepOutcome =
   | { ok: true }
-  | { ok: false; detail: string; status: 'failed' | 'cancelled' | 'refused'; permission?: SpecialAccess };
+  | {
+      ok: false;
+      detail: string;
+      status: 'failed' | 'cancelled' | 'refused';
+      permission?: SpecialAccess;
+      failure?: ExecutionFailure;
+    };
+
+/** Time recent apps get to appear, to show a card and to drop a dismissed card. */
+const RECENTS_SETTLE_MS = 400;
+const CARD_TIMEOUT_MS = 2000;
+const CARD_GONE_MS = 600;
+/** Pages of recent apps Sigil looks through for a card, in each direction. */
+const RECENTS_PAGES = 4;
 
 const PERMISSION_DETAILS: Record<SpecialAccess, string> = {
   write_settings: 'Sigil needs the permission to modify system settings to change the brightness.',
@@ -203,9 +239,21 @@ function controlOutcome(result: ControlResult, failure: string): StepOutcome {
       return { ok: false, detail: PERMISSION_DETAILS[result.permission], status: 'failed', permission: result.permission };
     case 'unsupported':
       return { ok: false, detail: 'This phone does not let Sigil do that.', status: 'failed' };
+    case 'busy':
+      return { ok: false, detail: 'The camera is using the flashlight right now.', status: 'failed', failure: 'busy' };
     case 'failed':
       return { ok: false, detail: failure, status: 'failed' };
   }
+}
+
+function closeFailure(failure: ExecutionFailure, label: string): StepOutcome {
+  const detail =
+    failure === 'went_background'
+      ? `${label} went to the background, but its card was not found in recent apps.`
+      : failure === 'not_open'
+        ? `${label} is not open.`
+        : `${label} is still in recent apps.`;
+  return { ok: false, detail, status: 'failed', failure };
 }
 
 /**
@@ -264,16 +312,19 @@ export class PlanExecutor {
       confirmed = step.kind === 'confirm' && outcome.ok;
 
       if (!outcome.ok) {
-        const permission = outcome.permission ? { permission: outcome.permission } : {};
+        const extra = {
+          ...(outcome.permission ? { permission: outcome.permission } : {}),
+          ...(outcome.failure ? { failure: outcome.failure } : {}),
+        };
         this.onStep?.({
           index,
           step,
           label,
           status: outcome.status === 'cancelled' ? 'cancelled' : 'failed',
           detail: outcome.detail,
-          ...permission,
+          ...extra,
         });
-        return { status: outcome.status, completedSteps: index, message: outcome.detail, ...permission };
+        return { status: outcome.status, completedSteps: index, message: outcome.detail, ...extra };
       }
       this.onStep?.({ index, step, label, status: 'done' });
     }
@@ -346,6 +397,64 @@ export class PlanExecutor {
     }
   }
 
+  /**
+   * Closes an app through recent apps, the way a person does: home first when
+   * it is in front, then recent apps, where its card is flicked up and checked
+   * gone, then home again. A failure says whether the app only went to the
+   * background, was not open or stayed open.
+   */
+  private async closeApp(label: string, packages: readonly string[]): Promise<StepOutcome> {
+    const front = await this.device.foregroundPackage();
+    const inFront = front !== null && packages.includes(front);
+    if (inFront && !(await this.device.navigate('home'))) {
+      return { ok: false, detail: 'Could not go to the home screen.', status: 'failed' };
+    }
+    if (!(await this.device.navigate('recents'))) {
+      return { ok: false, detail: 'Could not open recent apps.', status: 'failed' };
+    }
+    await this.clock.sleep(RECENTS_SETTLE_MS);
+    const query: NodeQuery = { texts: [label], descriptions: [label] };
+    const card = await this.findCard(query);
+    if (!card) {
+      await this.device.navigate('home');
+      return closeFailure(inFront ? 'went_background' : 'not_open', label);
+    }
+    const { left, top, right, bottom } = card.bounds;
+    const x = (left + right) / 2;
+    const y = (top + bottom) / 2;
+    // Gestures cannot leave the screen, so the flick ends at its top edge at most.
+    await this.device.swipe(x, y, x, Math.max(0, y - Math.max(bottom - top, 400)), 200);
+    await this.clock.sleep(CARD_GONE_MS);
+    const stillThere = await this.device.findNode(query);
+    await this.device.navigate('home');
+    return stillThere ? closeFailure('still_open', label) : { ok: true };
+  }
+
+  /** Looks for an app card in recent apps, paging forward and then back past the start. */
+  private async findCard(query: NodeQuery): Promise<UiNode | null> {
+    const found = await this.waitForNode(query, CARD_TIMEOUT_MS, false);
+    if (found) {
+      return found;
+    }
+    const passes: [Direction, number][] = [
+      ['right', RECENTS_PAGES],
+      ['left', RECENTS_PAGES * 2],
+    ];
+    for (const [direction, pages] of passes) {
+      for (let page = 0; page < pages; page++) {
+        if (!(await this.device.scroll(direction))) {
+          break;
+        }
+        await this.clock.sleep(this.pollMs);
+        const node = await this.device.findNode(query);
+        if (node) {
+          return node;
+        }
+      }
+    }
+    return null;
+  }
+
   private async runStep(step: PlanStep, plan: Plan): Promise<StepOutcome> {
     const fail = (detail: string): StepOutcome => ({ ok: false, detail, status: 'failed' });
     switch (step.kind) {
@@ -355,6 +464,8 @@ export class PlanExecutor {
           label: step.label,
           packageName: step.packageName,
           url: step.url,
+          iosUrl: step.iosUrl,
+          role: step.role,
         });
         return opened ? { ok: true } : fail(`Could not open ${step.label}.`);
       }
@@ -409,6 +520,18 @@ export class PlanExecutor {
         if (!this.ui) return fail('The Control Sphere is not available here.');
         this.ui.sphere(step.action);
         return { ok: true };
+      case 'tutorial':
+        if (!this.ui) return fail('The tutorial is not available here.');
+        this.ui.tutorial();
+        return { ok: true };
+      case 'timer':
+        return controlOutcome(await this.device.setTimer(step.seconds), 'The timer did not start.');
+      case 'alarm':
+        return controlOutcome(await this.device.setAlarm(step.hour, step.minute), 'The clock app did not open.');
+      case 'torch':
+        return controlOutcome(await this.device.setTorch(step.on), 'The flashlight did not change.');
+      case 'close_app':
+        return this.closeApp(step.label, step.packages);
       case 'confirm': {
         const askedAt = this.clock.now();
         const accepted = await this.confirmHandler({ summary: step.summary, reason: step.reason, plan });

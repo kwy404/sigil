@@ -115,6 +115,8 @@ export const ja: Messages = {
       lock_screen: '画面ロック',
       screenshot: 'スクリーンショット',
       power_menu: '電源メニュー',
+      previous_app: '前のアプリ',
+      split_screen: '分割画面',
     },
     media: {
       play_pause: '再生または一時停止',
@@ -138,7 +140,7 @@ export const ja: Messages = {
     everyApp: '専用のプロファイルがないすべてのアプリ',
     gestures: (count) => `${count} 個のジェスチャー`,
     ownShared: (own, shared) => `独自 ${own}、共通 ${shared}`,
-    names: { general: '一般', messages: 'メッセージ', settings: '設定' },
+    names: { general: '一般', messages: 'メッセージ', settings: '設定', launcher: 'ホーム画面' },
   },
   planner: {
     title: '音声プランナー',
@@ -157,6 +159,7 @@ export const ja: Messages = {
     status: {
       planned: '計画済み',
       clarify: '確認',
+      choose: '選択',
       blocked: 'ブロック',
       unsupported: '未対応',
       not_understood: '理解できず',
@@ -172,6 +175,11 @@ export const ja: Messages = {
     tap: (label) => `${q(label)} をタップ`,
     type: (text) => `${q(text)} を入力`,
     like: (app) => `${app} でいいね`,
+    close: (app) => `${app} を閉じる`,
+    closeAll: 'すべてのアプリを閉じる',
+    openPlace: (place, app) => `${app} で${place}を開く`,
+    openChat: (contact, app) => `${app} で ${contact} とのチャットを開く`,
+    website: (site) => `${site} を開く`,
   },
   steps: {
     open: (app) => `${app} を開く`,
@@ -220,6 +228,44 @@ export const ja: Messages = {
     },
     sphere: { open: 'コントロールスフィアを開く', close: 'コントロールスフィアを閉じる' },
     ask: (question) => `確認：${question}`,
+    close: (app) => `${app} を閉じる`,
+    tutorial: 'チュートリアルを開く',
+    timer: (duration) => `${duration}のタイマーを開始`,
+    alarm: (time) => `${time} にアラームを設定`,
+    torch: { on: 'ライトをつける', off: 'ライトを消す' },
+  },
+  time: {
+    duration: (h, m, s) => [h ? `${h}時間` : '', m ? `${m}分` : '', s ? `${s}秒` : ''].filter(Boolean).join(''),
+    clock: (hour, minute) => `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+  },
+  places: {
+    reels: 'リール',
+    shorts: 'ショート',
+    subscriptions: '登録チャンネル',
+    messages: 'メッセージ',
+    profile: 'プロフィール',
+    explore: '発見',
+  },
+  roles: {
+    camera: 'カメラ',
+    phone: '電話',
+    contacts: '連絡先',
+    calculator: '電卓',
+    calendar: 'カレンダー',
+    clock: '時計',
+    gallery: 'ギャラリー',
+    music: '音楽',
+    email: 'メール',
+    maps: '地図',
+    files: 'ファイル',
+    messages: 'メッセージ',
+    browser: 'ブラウザ',
+  },
+  failures: {
+    went_background: (app) => `${app} はバックグラウンドに移りましたが、最近使ったアプリにカードが見つからず、閉じられませんでした。`,
+    not_open: (app) => `${app} は開いていません。`,
+    still_open: (app) => `${app} をスワイプしましたが、まだ最近使ったアプリに残っています。`,
+    busy: () => 'カメラの使用中はライトを使えません。',
   },
   targets: {
     selectors: {
@@ -240,11 +286,25 @@ export const ja: Messages = {
     focused: '選択中の入力欄',
   },
   confirm: {
+    closeAll: 'すべてのアプリを閉じますか？保存していない内容は失われることがあります。',
     send: (text, contact, app) => `${app} で ${contact} に ${q(text)} を送信しますか？`,
     post: (app, caption) => `この投稿をキャプション ${q(caption)} で ${app} にシェアしますか？`,
     tap: (target) => `${target} をタップしますか？`,
   },
   notices: {
+    which_app: (options) => `どれにしますか：${options.join('、')}`,
+    not_installed: (app) => `${app} はこのスマートフォンにインストールされていません。`,
+    android_only: (feature) =>
+      ({
+        close: 'iOS では、アプリがほかのアプリを閉じることはできません。アプリスイッチャーで上にスワイプしてください。',
+        timer: 'iOS では、アプリが時計アプリのタイマーを開始することはできません。Siri かショートカットを使ってください。',
+        alarm: 'iOS では、アプリが時計アプリのアラームを設定することはできません。Siri かショートカットを使ってください。',
+        flashlight: 'Sigil はまだ iOS でライトを操作できません。コントロールセンターを使ってください。',
+        chat: 'iOS では、Sigil はアプリを開けますが、その中のチャットは探せません。',
+        open: 'iOS では、Sigil は公開リンクのあるアプリだけを開けます。',
+      })[feature],
+    no_app_in_front: () => `Sigil は画面のアプリがわかりません。${q('YouTube を閉じて')}のように名前を言ってください。`,
+    cannot_open_place: (place, app) => `Sigil はまだ ${app} の${place}を開けません。`,
     nothing_heard: () => '何も聞こえませんでした。',
     not_understood: () => `Sigil には理解できませんでした。${q('YouTubeを開いて')}や${q('音量を上げて')}と言ってみてください。`,
     bulk: () =>

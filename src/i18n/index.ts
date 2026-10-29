@@ -2,6 +2,8 @@ export {
   appNameResolver,
   describeAction,
   describeConfirmation,
+  describeDuration,
+  describeFailure,
   describeGesture,
   describeNotice,
   describePlan,

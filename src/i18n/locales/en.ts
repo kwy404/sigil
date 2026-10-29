@@ -1,6 +1,8 @@
-import type { GlobalAction, MediaAction, SystemPanel, VolumeStream } from '../../app-profiles/schema';
+import type { AppPlace, GlobalAction, MediaAction, SystemPanel, VolumeStream } from '../../app-profiles/schema';
 import type { GestureKey, SampleId } from '../../gesture-engine';
-import type { NoticeCode } from '../../sigil-core/notices';
+import type { SystemApp } from '../../sigil-core/apps';
+import type { ExecutionFailure } from '../../sigil-core/executor';
+import type { AndroidOnlyFeature, NoticeCode } from '../../sigil-core/notices';
 import type { ControlMode } from '../../system-control';
 
 const q = (text: string) => `"${text}"`;
@@ -122,6 +124,8 @@ export const en = {
       lock_screen: 'Lock screen',
       screenshot: 'Screenshot',
       power_menu: 'Power menu',
+      previous_app: 'Previous app',
+      split_screen: 'Split screen',
     } satisfies Record<GlobalAction, string>,
     media: {
       play_pause: 'Play or pause',
@@ -145,7 +149,7 @@ export const en = {
     everyApp: 'Every app without its own profile',
     gestures: (count: number) => `${count} gestures`,
     ownShared: (own: number, shared: number) => `${own} own, ${shared} shared`,
-    names: { general: 'General', messages: 'Messages', settings: 'Settings' } as Record<string, string>,
+    names: { general: 'General', messages: 'Messages', settings: 'Settings', launcher: 'Home screen' } as Record<string, string>,
   },
   planner: {
     title: 'Voice planner',
@@ -164,6 +168,7 @@ export const en = {
     status: {
       planned: 'planned',
       clarify: 'question',
+      choose: 'pick one',
       blocked: 'blocked',
       unsupported: 'not yet',
       not_understood: 'not understood',
@@ -179,6 +184,11 @@ export const en = {
     tap: (label: string) => `Tap ${q(label)}`,
     type: (text: string) => `Type ${q(text)}`,
     like: (app: string) => `Like this on ${app}`,
+    close: (app: string) => `Close ${app}`,
+    closeAll: 'Close all apps',
+    openPlace: (place: string, app: string) => `Open ${place} in ${app}`,
+    openChat: (contact: string, app: string) => `Open the chat with ${contact} on ${app}`,
+    website: (site: string) => `Open ${site}`,
   },
   steps: {
     open: (app: string) => `Open ${app}`,
@@ -227,7 +237,46 @@ export const en = {
     } satisfies Record<SystemPanel, string>,
     sphere: { open: 'Open the Control Sphere', close: 'Close the Control Sphere' },
     ask: (question: string) => `Ask: ${question}`,
+    close: (app: string) => `Close ${app}`,
+    tutorial: 'Open the tutorial',
+    timer: (duration: string) => `Start a timer for ${duration}`,
+    alarm: (time: string) => `Set an alarm for ${time}`,
+    torch: { on: 'Turn the flashlight on', off: 'Turn the flashlight off' },
   },
+  time: {
+    duration: (h: number, m: number, s: number) =>
+      [h ? `${h} h` : '', m ? `${m} min` : '', s ? `${s} s` : ''].filter(Boolean).join(' '),
+    clock: (hour: number, minute: number) => `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+  },
+  places: {
+    reels: 'Reels',
+    shorts: 'Shorts',
+    subscriptions: 'Subscriptions',
+    messages: 'Messages',
+    profile: 'Profile',
+    explore: 'Explore',
+  } satisfies Record<AppPlace, string>,
+  roles: {
+    camera: 'Camera',
+    phone: 'Phone',
+    contacts: 'Contacts',
+    calculator: 'Calculator',
+    calendar: 'Calendar',
+    clock: 'Clock',
+    gallery: 'Gallery',
+    music: 'Music',
+    email: 'Email',
+    maps: 'Maps',
+    files: 'Files',
+    messages: 'Messages',
+    browser: 'Browser',
+  } satisfies Record<SystemApp, string>,
+  failures: {
+    went_background: (app: string) => `${app} went to the background, but Sigil did not find its card in recent apps to close it.`,
+    not_open: (app: string) => `${app} is not open.`,
+    still_open: (app: string) => `Sigil swiped ${app} away, but it is still in recent apps.`,
+    busy: () => 'The flashlight is busy while a camera is in use.',
+  } satisfies Record<ExecutionFailure, (app: string) => string>,
   targets: {
     selectors: {
       search: 'the search button',
@@ -247,11 +296,25 @@ export const en = {
     focused: 'the focused field',
   },
   confirm: {
+    closeAll: 'Close all apps? Anything not saved in them may be lost.',
     send: (text: string, contact: string, app: string) => `Send ${q(text)} to ${contact} on ${app}?`,
     post: (app: string, caption: string) => `Share this post on ${app} with the caption ${q(caption)}?`,
     tap: (target: string) => `Tap ${target}?`,
   },
   notices: {
+    which_app: (options: readonly string[]) => `Which one: ${options.join(', ')}?`,
+    not_installed: (app: string) => `${app} is not installed on this phone.`,
+    android_only: (feature: AndroidOnlyFeature) =>
+      ({
+        close: 'iOS does not let apps close other apps. Swipe it up in the app switcher.',
+        timer: 'iOS does not let apps start a timer in the Clock app. Ask Siri or use a shortcut.',
+        alarm: 'iOS does not let apps set an alarm in the Clock app. Ask Siri or use a shortcut.',
+        flashlight: 'Sigil cannot control the flashlight on iOS yet. Use the Control Center.',
+        chat: 'On iOS, Sigil can open the app but cannot find a chat inside it.',
+        open: 'On iOS, Sigil can only open apps that have a public link.',
+      })[feature],
+    no_app_in_front: () => `Sigil does not know which app is on screen. Say its name, as in ${q('close YouTube')}.`,
+    cannot_open_place: (place: string, app: string) => `Sigil cannot open ${place} in ${app} yet.`,
     nothing_heard: () => 'Nothing was heard.',
     not_understood: () => 'Sigil did not understand that. Try "open YouTube" or "turn the volume up".',
     bulk: () =>

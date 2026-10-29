@@ -1,3 +1,14 @@
+import type { AppPlace } from '../app-profiles/schema';
+
+/** An app the user can pick when a name matched several. app is what to plan with, usually the package. */
+export interface AppChoice {
+  label: string;
+  app: string;
+}
+
+/** Features that need Android, because iOS gives apps no way to do them. */
+export type AndroidOnlyFeature = 'close' | 'timer' | 'alarm' | 'flashlight' | 'chat' | 'open';
+
 /**
  * Why the planner did not produce a plan, as data. The core keeps an English
  * text for logs and tests; the screens translate the notice itself (see
@@ -17,6 +28,11 @@ export type Notice =
   | { code: 'cannot_post'; app: string; appId: string }
   | { code: 'cannot_like'; app: string; appId: string }
   | { code: 'like_needs_app' }
+  | { code: 'which_app'; options: AppChoice[] }
+  | { code: 'not_installed'; app: string }
+  | { code: 'android_only'; feature: AndroidOnlyFeature }
+  | { code: 'no_app_in_front' }
+  | { code: 'cannot_open_place'; app: string; appId: string; place: AppPlace }
   | { code: 'question'; question: string };
 
 export type NoticeCode = Notice['code'];
@@ -48,6 +64,22 @@ export function noticeText(notice: Notice): string {
       return `Sigil cannot like in ${notice.app} yet.`;
     case 'like_needs_app':
       return 'Open the post or video first, or say which app it is in.';
+    case 'which_app':
+      return `Which one: ${notice.options.map((option) => option.label).join(', ')}?`;
+    case 'not_installed':
+      return `${notice.app} is not installed on this phone.`;
+    case 'android_only':
+      return notice.feature === 'close'
+        ? 'iOS does not let apps close other apps. Swipe it away in the app switcher.'
+        : notice.feature === 'chat'
+          ? 'On iOS, Sigil can open the app but cannot find a chat inside it.'
+          : notice.feature === 'open'
+            ? 'On iOS, Sigil can only open apps that have a public link.'
+            : 'iOS does not let Sigil do that for other apps.';
+    case 'no_app_in_front':
+      return 'Sigil does not know which app is on screen.';
+    case 'cannot_open_place':
+      return `Sigil cannot open that place in ${notice.app} yet.`;
     case 'question':
       return notice.question;
   }

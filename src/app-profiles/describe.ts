@@ -9,6 +9,8 @@ const GLOBAL_LABELS: Record<GlobalAction, string> = {
   lock_screen: 'Lock screen',
   screenshot: 'Screenshot',
   power_menu: 'Power menu',
+  previous_app: 'Previous app',
+  split_screen: 'Split screen',
 };
 
 const MEDIA_LABELS: Record<MediaAction, string> = {

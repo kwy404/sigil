@@ -47,7 +47,8 @@ export function getSystemControl(): SystemControl {
     return {
       mode: enabled ? 'android-system' : 'android-setup',
       native,
-      device: enabled ? new AndroidDeviceController(native) : new InAppDeviceController(),
+      // Without the service Sigil still opens apps and sets timers; taps and navigation fail honestly.
+      device: new AndroidDeviceController(native, enabled),
     };
   }
   return { mode: 'in-app', native: null, device: new InAppDeviceController() };
