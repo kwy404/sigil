@@ -186,9 +186,10 @@ class SpeechSession(
       }
       val session = record.audioSessionId
       val effects = mutableListOf<AudioEffect>()
-      if (NoiseSuppressor.isAvailable()) NoiseSuppressor.create(session)?.let { effects.add(it) }
-      if (AcousticEchoCanceler.isAvailable()) AcousticEchoCanceler.create(session)?.let { effects.add(it) }
-      if (AutomaticGainControl.isAvailable()) AutomaticGainControl.create(session)?.let { effects.add(it) }
+      // Some phones throw instead of returning null when an effect cannot attach; the capture goes on without it.
+      if (NoiseSuppressor.isAvailable()) runCatching { NoiseSuppressor.create(session) }.getOrNull()?.let { effects.add(it) }
+      if (AcousticEchoCanceler.isAvailable()) runCatching { AcousticEchoCanceler.create(session) }.getOrNull()?.let { effects.add(it) }
+      if (AutomaticGainControl.isAvailable()) runCatching { AutomaticGainControl.create(session) }.getOrNull()?.let { effects.add(it) }
       effects.forEach { effect -> runCatching { effect.setEnabled(true) } }
       return record to effects
     }
@@ -256,6 +257,10 @@ class SpeechSession(
       }
     } catch (error: IOException) {
       // The recognizer stopped reading: it ended on its own or was cancelled.
+      broken = true
+    } catch (error: RuntimeException) {
+      // startRecording or read refused (the microphone is busy or no longer allowed). An error
+      // thrown on this thread would end the app, so the recognizer finishes with what it has.
       broken = true
     } finally {
       capturing = false

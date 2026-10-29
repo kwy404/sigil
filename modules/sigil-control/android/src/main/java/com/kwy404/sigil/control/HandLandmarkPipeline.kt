@@ -71,8 +71,11 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     executor.execute {
       val tracker = try {
         createLandmarker(listener)
-      } catch (error: Exception) {
-        reportError(error.message ?: "hand tracker")
+      } catch (error: Throwable) {
+        // Also UnsatisfiedLinkError: MediaPipe ships no native library for some
+        // processors (x86_64 emulators). The service, the bubble and the cursor
+        // keep working without tracking instead of the whole app ending.
+        reportError(error.message ?: error.javaClass.simpleName)
         null
       }
       if (tracker != null) {
@@ -176,6 +179,9 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
         postScale(-1f, 1f)
       }
       Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height, matrix, true)
+    } catch (error: Throwable) {
+      // A frame that cannot be converted is skipped: an error thrown on this thread would end the app.
+      return
     } finally {
       image.close()
     }
