@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sigil is declared as an accessibility tool: its core purpose is hands free
+  control of the phone for people who cannot use the touch screen easily.
+  It listens to window changes only, to know which app is in front, and reads
+  the active window on demand when a voice plan needs to find a control.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+  android:accessibilityEventTypes="typeWindowStateChanged|typeWindowsChanged"
+  android:accessibilityFeedbackType="feedbackGeneric"
+  android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews"
+  android:canPerformGestures="true"
+  android:canRetrieveWindowContent="true"
+  android:description="@string/sigil_accessibility_description"
+  android:isAccessibilityTool="true"
+  android:notificationTimeout="100" />

@@ -1,0 +1,45 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- Hand tracking with the front camera, also while another app is in front. -->
+  <uses-permission android:name="android.permission.CAMERA" />
+  <!-- Voice requests. Only requested when the user turns voice on. -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+  <!-- The camera service notification must stay visible on Android 13 and later. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- Fallback cursor window while the accessibility service is off. -->
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+  <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+
+  <!-- Lets Sigil open installed apps by package or launcher label without QUERY_ALL_PACKAGES. -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.MAIN" />
+      <category android:name="android.intent.category.LAUNCHER" />
+    </intent>
+  </queries>
+
+  <application>
+    <!-- Only the system holds BIND_ACCESSIBILITY_SERVICE, so no other app can bind to this service. -->
+    <service
+      android:name="com.kwy404.sigil.control.SigilAccessibilityService"
+      android:exported="true"
+      android:label="@string/sigil_accessibility_label"
+      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+      <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService" />
+      </intent-filter>
+      <meta-data
+        android:name="android.accessibilityservice"
+        android:resource="@xml/sigil_accessibility_service" />
+    </service>
+
+    <service
+      android:name="com.kwy404.sigil.control.SigilCameraService"
+      android:exported="false"
+      android:foregroundServiceType="camera|microphone" />
+  </application>
+</manifest>

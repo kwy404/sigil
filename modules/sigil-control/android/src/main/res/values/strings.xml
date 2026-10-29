@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sigil_accessibility_label">Sigil hands free control</string>
+  <string name="sigil_accessibility_description">Sigil lets you control your phone with hand gestures seen by the front camera and with your voice. It needs this service to know which app is open, to tap, scroll and type where you point, and to run the voice requests you make. Sigil only acts when you make a gesture or a request, shows every step on screen and always asks before sending or posting anything. Camera frames, audio and screen content are processed on your phone and are not stored or sent anywhere.</string>
+  <string name="sigil_channel_name">Hands free control</string>
+  <string name="sigil_channel_description">Shown while Sigil uses the camera to follow your hand.</string>
+  <string name="sigil_camera_notification_title">Sigil is following your hand</string>
+  <string name="sigil_camera_notification_text">The front camera is on for gesture control.</string>
+  <string name="sigil_camera_notification_text_voice">The front camera and the microphone are on for gestures and voice.</string>
+  <string name="sigil_stop">Stop</string>
+</resources>
