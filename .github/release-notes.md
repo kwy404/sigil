@@ -1,6 +1,7 @@
 Preview build of Sigil for Android phones with a 64 bit processor (arm64), which covers nearly every phone of recent years. GitHub Actions built it from this tag, and it is signed with a development key.
 
 **In this build**
+- A redesigned app: Now, Gestures, Apps, Voice and Settings tabs, a command pill above the tab bar to say or type a request, and a Live sheet with the camera view and the volume and brightness levels.
 - Live hand tracking with the front camera, also over other apps. The cursor follows your index finger, a pinch taps where it points, and each gesture follows the profile of the app in front.
 - A floating bubble over other apps that shows whether Sigil is tracking, sees your hand, listens or is paused. Tap it for the Control Sphere; hold it to pause, turn voice on or off, open Sigil or stop. Drag it anywhere and it snaps to the edge.
 - A Quick Settings tile, a home screen widget, and Pause and Stop in the notification.
@@ -17,7 +18,7 @@ Preview build of Sigil for Android phones with a 64 bit processor (arm64), which
 - Hand tracking and voice have been tried on an emulator with a recorded hand, not yet on many phones. Please report what does not work in the issues of this repository.
 
 **Coming next**
-- The redesigned app: tabs, the command pill above the tab bar and the Live sheet.
+- Hand tracking tuned on more phones, a smaller APK, and the store releases.
 
 **Install**
 1. Download `sigil-android.apk` below and open it. Android asks you to allow installs from your browser or file manager.
