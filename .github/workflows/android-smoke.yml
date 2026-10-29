@@ -45,6 +45,10 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --max-workers=3 -PreactNativeArchitectures=x86_64
 
+      - name: Run the native unit tests
+        working-directory: android
+        run: ./gradlew :sigil-control:testReleaseUnitTest --no-daemon --max-workers=3
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -60,6 +64,10 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-front emulated -camera-back none
           script: bash .github/smoke.sh
+
+      - name: Keep the unit test reports
+        if: always()
+        run: mkdir -p smoke && cp -r android/../modules/sigil-control/android/build/reports/tests smoke/unit-tests 2>/dev/null || true
 
       - uses: actions/upload-artifact@v4
         if: always()
