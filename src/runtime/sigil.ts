@@ -5,6 +5,7 @@ import { MockSpeechToText } from '../adapters/voice/mock-speech';
 import { NativeSpeechToText } from '../adapters/voice/native-speech';
 import { SpeechUnavailableError, type SpeechToText } from '../adapters/voice/speech-to-text';
 import { ProfileRegistry } from '../app-profiles/registry';
+import { gestureKey } from '../gesture-engine/gestures';
 import { sampleRecordings, type HandRecording } from '../gesture-engine/samples';
 import { flattenLandmarks } from '../gesture-engine/landmarks';
 import { HandControl, type NativeHandFrame } from '../hand-control/controller';
@@ -20,8 +21,16 @@ export interface SigilState {
   /** The camera service runs: tracking, cursor and bubble. */
   running: boolean;
   paused: boolean;
+  /** start() is asking for permissions or starting the camera service. */
+  starting: boolean;
   /** A hand is in view of the camera right now. */
   handVisible: boolean;
+  /** Which hand, as the tracker reports it; right when it does not say. */
+  hand: 'none' | 'left' | 'right';
+  /** The last gesture the classifier recognized, as a profile key. */
+  lastGesture: string | null;
+  /** The last request heard or typed and how it ended. */
+  lastCommand: LastCommand | null;
   /** The demo hand plays instead of the camera, for showing and testing the cursor. */
   demo: boolean;
   /** Voice requests may use the microphone while other apps are in front. */
@@ -32,6 +41,34 @@ export interface SigilState {
 }
 
 export type StartProblem = 'camera_permission' | 'unavailable' | 'failed';
+
+export interface LastCommand {
+  text: string;
+  at: number;
+  outcome: 'done' | 'failed' | 'cancelled' | 'not_understood';
+}
+
+/** How a finished voice request reads in the session: done, failed, cancelled or not understood. Null while it runs. */
+export function commandOutcome(state: VoiceState, busy: boolean): LastCommand | null {
+  const at = Date.now();
+  switch (state.phase) {
+    case 'done': {
+      const status = state.outcome.status;
+      if (status === 'not_understood') return { text: state.heard, at, outcome: 'not_understood' };
+      if (status !== 'planned' || !state.result) return { text: state.heard, at, outcome: 'failed' };
+      const result = state.result.status;
+      return { text: state.heard, at, outcome: result === 'completed' ? 'done' : result === 'cancelled' ? 'cancelled' : 'failed' };
+    }
+    case 'repeat':
+      return busy ? null : { text: '', at, outcome: 'not_understood' };
+    case 'cancelled':
+      return { text: '', at, outcome: 'cancelled' };
+    case 'unavailable':
+      return { text: '', at, outcome: 'failed' };
+    default:
+      return null;
+  }
+}
 
 export interface SigilHost {
   /** Shows the Control Sphere on Sigil's own screen. */
@@ -86,7 +123,11 @@ export class Sigil {
     this.state = {
       running: status?.cameraServiceRunning ?? false,
       paused: status?.trackingPaused ?? false,
+      starting: false,
       handVisible: false,
+      hand: 'none',
+      lastGesture: null,
+      lastCommand: null,
       demo: false,
       microphone: readSettings().voice?.microphone === true,
       needsAccess: null,
@@ -109,7 +150,19 @@ export class Sigil {
     });
     this.hands = this.native ? this.createHands(this.native) : null;
     if (this.native) this.listen(this.native);
-    this.subscriptions.push({ remove: this.voice.subscribe((voice) => this.syncBubble(voice)) });
+    let wasBusy = false;
+    this.subscriptions.push({
+      remove: this.voice.subscribe((voice) => {
+        this.syncBubble(voice);
+        // A request ended: remember what it was and how it went.
+        const busy = this.voice.busy;
+        if (wasBusy && !busy) {
+          const command = commandOutcome(voice, false);
+          if (command) this.set({ lastCommand: command });
+        }
+        wasBusy = busy;
+      }),
+    });
   }
 
   get current(): SigilState {
@@ -160,7 +213,7 @@ export class Sigil {
           running: event.running,
           paused: event.paused ?? false,
           error: event.error ?? null,
-          ...(event.running ? {} : { handVisible: false, demo: false }),
+          ...(event.running ? {} : { handVisible: false, hand: 'none' as const, demo: false }),
         });
         if (!event.running) this.stopDemoTimer();
       }),
@@ -169,10 +222,12 @@ export class Sigil {
   }
 
   private push(frame: NativeHandFrame): void {
-    this.hands?.push(frame);
+    const events = this.hands?.push(frame) ?? [];
     const visible = frame.landmarks.length > 0;
-    if (visible !== this.state.handVisible) {
-      this.set({ handVisible: visible });
+    const hand = visible ? (frame.handedness ?? 'right') : 'none';
+    const last = events.length > 0 ? gestureKey(events[events.length - 1]) : this.state.lastGesture;
+    if (visible !== this.state.handVisible || hand !== this.state.hand || last !== this.state.lastGesture) {
+      this.set({ handVisible: visible, hand, lastGesture: last });
       this.syncBubble(this.voice.current);
     }
   }
@@ -196,18 +251,23 @@ export class Sigil {
   async start(): Promise<StartProblem | null> {
     const native = this.native;
     if (!native || Platform.OS !== 'android') return 'unavailable';
-    const granted = await requestControlPermissions({ microphone: this.state.microphone });
-    if (!granted.camera) return 'camera_permission';
-    if (!native.startCameraService(this.state.microphone && granted.microphone)) return 'failed';
-    this.set({ running: true, error: null });
-    return null;
+    this.set({ starting: true, error: null });
+    try {
+      const granted = await requestControlPermissions({ microphone: this.state.microphone });
+      if (!granted.camera) return 'camera_permission';
+      if (!native.startCameraService(this.state.microphone && granted.microphone)) return 'failed';
+      this.set({ running: true });
+      return null;
+    } finally {
+      this.set({ starting: false });
+    }
   }
 
   stop(): void {
     this.stopDemoTimer();
     this.native?.stopCameraService();
     this.native?.hideCursor();
-    this.set({ running: false, demo: false, handVisible: false, paused: false });
+    this.set({ running: false, demo: false, handVisible: false, hand: 'none', paused: false });
   }
 
   pause(paused: boolean): void {

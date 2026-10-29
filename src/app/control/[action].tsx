@@ -1,7 +1,7 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { useSigil } from '@/runtime/provider';
+import { getSigil, sessionActions } from '@/session';
 
 /**
  * Links from outside the app: the Quick Settings tile, the home screen widget,
@@ -11,23 +11,22 @@ import { useSigil } from '@/runtime/provider';
  */
 export default function ControlLink() {
   const { action } = useLocalSearchParams<{ action: string }>();
-  const sigil = useSigil();
   const [done, setDone] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
-      if (action === 'start') await sigil.start();
-      if (action === 'stop') sigil.stop();
-      if (action === 'demo') await sigil.startDemo();
+      if (action === 'start') await sessionActions.start();
+      if (action === 'stop') sessionActions.stop();
+      if (action === 'demo') await getSigil().startDemo();
       if (!cancelled) setDone(true);
     };
     void run();
     return () => {
       cancelled = true;
     };
-  }, [action, sigil]);
+  }, [action]);
 
   if (!done) return null;
-  return <Redirect href={action === 'sphere' ? '/sphere' : '/'} />;
+  return <Redirect href="/" />;
 }

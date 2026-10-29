@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
   PixelRatio,
@@ -15,9 +15,9 @@ import type { ProfileRegistry } from '../app-profiles';
 import type { SampleId } from '../gesture-engine';
 import { subscribeGestures, type LiveGesture } from '../hand-control/feed';
 import { describeAction, describeNotice, describePlan, describeStep, describeGesture, useDescribeContext, useI18n } from '../i18n';
-import { ActionPlanner, type PlanOutcome } from '../sigil-core';
-import { useSigil } from '../runtime/provider';
-import { foregroundApp, getNativeControl, installedApps, planPlatform } from '../system-control';
+import type { PlanOutcome } from '../sigil-core';
+import { getSigil, planRequest } from '../session';
+import { getNativeControl } from '../system-control';
 import { Icon } from '../ui/icon';
 import type { IconName } from '../ui/icons';
 import { Button, textStyles } from '../ui/primitives';
@@ -185,8 +185,7 @@ export function VoiceStepView({ registry, onPracticed }: { registry: ProfileRegi
   const { messages: m, speechLocale } = useI18n();
   const ctx = useDescribeContext(registry);
   const copy = m.tutorial.steps.voice;
-  const planner = useMemo(() => new ActionPlanner({ profiles: registry, installedApps, platform: planPlatform() }), [registry]);
-  const { speech } = useSigil();
+  const { speech } = getSigil();
   const [typed, setTyped] = useState('');
   const [heard, setHeard] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<PlanOutcome | null>(null);
@@ -196,7 +195,7 @@ export function VoiceStepView({ registry, onPracticed }: { registry: ProfileRegi
     if (!text.trim()) return;
     setHeard(text);
     // A dry run: the plan is only shown, never given to the executor.
-    setOutcome(await planner.plan({ text, locale: speechLocale, foregroundPackage: foregroundApp() }));
+    setOutcome((await planRequest(text, { dryRun: true })).outcome);
     onPracticed();
   };
 
