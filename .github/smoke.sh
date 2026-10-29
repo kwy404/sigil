@@ -42,7 +42,7 @@ tree 01-open
 tap_text "Get started"
 sleep 3
 shot 02-tour-about
-tap_text "Continue"
+tap_text "Next"
 sleep 3
 shot 03-tour-permission
 tree 03-tour-permission
