@@ -39,14 +39,14 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # Native C++ builds can run out of memory on the smaller runners.
-      - name: Add swap space
+      # The native C++ builds need more disk than the runner has free, so
+      # remove preinstalled toolchains this build does not use.
+      - name: Free disk space
         run: |
-          sudo fallocate -l 8G /swapfile-build
-          sudo chmod 600 /swapfile-build
-          sudo mkswap /swapfile-build
-          sudo swapon /swapfile-build
-          free -h
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/.ghcup /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/share/powershell /usr/local/julia* /opt/microsoft /opt/google/chrome /usr/lib/jvm/java-8* /usr/lib/jvm/java-11*
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          df -h /
 
       - run: npm ci
 
