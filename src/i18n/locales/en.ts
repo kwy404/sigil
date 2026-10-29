@@ -264,6 +264,8 @@ export const en = {
       camera: 'Camera service',
       overlay: 'Display over other apps',
       foreground: 'App in front',
+      brightness: 'Change the brightness',
+      media: 'Media access',
     },
     values: {
       on: 'on',
@@ -279,6 +281,15 @@ export const en = {
       startCamera: 'Start camera service',
       stopCamera: 'Stop camera service',
       cursor: 'Show the cursor over apps',
+      allowBrightness: 'Allow brightness changes',
+      displaySettings: 'Open display settings',
+      allowMedia: 'Allow media access',
+    },
+    access: {
+      brightness:
+        'To set the screen brightness for you, Android asks you to let Sigil modify system settings. Sigil only changes the brightness when you ask, with a gesture or your voice. Without it, Sigil opens the display settings instead.',
+      media:
+        'To skip seconds and change the playback speed of the player in front, Android asks for notification access. Sigil uses it only to reach the active media session and never reads your notifications.',
     },
     restricted:
       'On Android 13 and later, a build installed outside the Play Store must first allow restricted settings in App info before its accessibility service can be turned on.',

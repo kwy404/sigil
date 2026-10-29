@@ -257,6 +257,8 @@ export const de: Messages = {
       camera: 'Kameradienst',
       overlay: 'Über anderen Apps einblenden',
       foreground: 'App im Vordergrund',
+      brightness: 'Helligkeit ändern',
+      media: 'Medienzugriff',
     },
     values: {
       on: 'an',
@@ -272,6 +274,15 @@ export const de: Messages = {
       startCamera: 'Kameradienst starten',
       stopCamera: 'Kameradienst stoppen',
       cursor: 'Cursor über Apps zeigen',
+      allowBrightness: 'Helligkeitsänderungen erlauben',
+      displaySettings: 'Display-Einstellungen öffnen',
+      allowMedia: 'Medienzugriff erlauben',
+    },
+    access: {
+      brightness:
+        'Damit Sigil die Bildschirmhelligkeit für dich einstellen kann, verlangt Android, dass du Sigil erlaubst, Systemeinstellungen zu ändern. Sigil ändert die Helligkeit nur, wenn du darum bittest, mit einer Geste oder deiner Stimme. Ohne diese Erlaubnis öffnet Sigil stattdessen die Display-Einstellungen.',
+      media:
+        'Um Sekunden zu überspringen und die Geschwindigkeit des Players im Vordergrund zu ändern, verlangt Android Zugriff auf Benachrichtigungen. Sigil nutzt ihn nur, um die aktive Mediensitzung zu erreichen, und liest deine Benachrichtigungen nie.',
     },
     restricted:
       'Ab Android 13 muss ein Build, der nicht aus dem Play Store installiert wurde, zuerst in den App-Infos eingeschränkte Einstellungen erlauben, bevor sein Bedienungshilfe-Dienst eingeschaltet werden kann.',

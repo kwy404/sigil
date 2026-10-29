@@ -245,6 +245,8 @@ export const zhCN: Messages = {
       camera: '相机服务',
       overlay: '显示在其他应用上层',
       foreground: '前台应用',
+      brightness: '调节亮度',
+      media: '媒体访问',
     },
     values: {
       on: '已开启',
@@ -260,6 +262,15 @@ export const zhCN: Messages = {
       startCamera: '启动相机服务',
       stopCamera: '停止相机服务',
       cursor: '在应用上层显示光标',
+      allowBrightness: '允许调节亮度',
+      displaySettings: '打开显示设置',
+      allowMedia: '允许媒体访问',
+    },
+    access: {
+      brightness:
+        '要替你调节屏幕亮度，Android 需要你允许 Sigil 修改系统设置。Sigil 只会在你用手势或语音提出时才调节亮度。没有这项权限时，Sigil 会改为打开显示设置。',
+      media:
+        '要在前台播放器中快进几秒或调整播放速度，Android 需要通知使用权。Sigil 只用它来连接当前的媒体会话，绝不会读取你的通知。',
     },
     restricted: '在 Android 13 及以上版本，不是从 Play 商店安装的版本需要先在应用信息中允许受限设置，才能开启它的无障碍服务。',
     iosOnly: '在 iOS 上，Sigil 在自己的界面中读取手势和语音，通过链接打开应用并运行快捷指令。它无法在其他应用中点按或绘制。',

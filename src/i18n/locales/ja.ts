@@ -257,6 +257,8 @@ export const ja: Messages = {
       camera: 'カメラサービス',
       overlay: 'ほかのアプリの上に重ねて表示',
       foreground: '前面のアプリ',
+      brightness: '明るさの変更',
+      media: 'メディアへのアクセス',
     },
     values: {
       on: 'オン',
@@ -272,6 +274,15 @@ export const ja: Messages = {
       startCamera: 'カメラサービスを開始',
       stopCamera: 'カメラサービスを停止',
       cursor: 'アプリの上にカーソルを表示',
+      allowBrightness: '明るさの変更を許可',
+      displaySettings: 'ディスプレイの設定を開く',
+      allowMedia: 'メディアへのアクセスを許可',
+    },
+    access: {
+      brightness:
+        '画面の明るさをあなたの代わりに調整するには、Sigil にシステム設定の変更を許可する必要があります。Sigil が明るさを変えるのは、ジェスチャーや声で頼まれたときだけです。許可がない場合は、代わりにディスプレイの設定を開きます。',
+      media:
+        '前面のプレーヤーで秒数を飛ばしたり再生速度を変えたりするには、Android が通知へのアクセスを求めます。Sigil はアクティブなメディアセッションに届くためだけに使い、通知を読むことはありません。',
     },
     restricted:
       'Android 13 以降では、Play ストア以外からインストールしたビルドは、ユーザー補助サービスをオンにする前に、アプリ情報で制限付き設定を許可する必要があります。',

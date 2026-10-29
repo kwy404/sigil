@@ -108,6 +108,16 @@ export function SystemPanel() {
             <Row label={m.system.rows.camera} value={status.cameraServiceRunning ? v.running : v.stopped} />
             <Row label={m.system.rows.overlay} value={status.overlayPermission ? v.allowed : v.notAllowed} />
             <Row label={m.system.rows.foreground} value={status.foregroundPackage ?? v.unknown} />
+            <Row
+              label={m.system.rows.brightness}
+              value={status.writeSettings ? v.allowed : v.notAllowed}
+              tone={status.writeSettings ? 'success' : 'warning'}
+            />
+            <Row
+              label={m.system.rows.media}
+              value={status.mediaAccess ? v.allowed : v.notAllowed}
+              tone={status.mediaAccess ? 'success' : 'warning'}
+            />
           </View>
           <View style={styles.buttons}>
             <Button label={m.system.buttons.accessibility} onPress={() => native.openAccessibilitySettings()} />
@@ -125,6 +135,19 @@ export function SystemPanel() {
             )}
             <Button label={m.system.buttons.cursor} onPress={cursorDemo} />
           </View>
+          {status.writeSettings ? null : (
+            <View style={styles.access}>
+              <Text style={textStyles.muted}>{m.system.access.brightness}</Text>
+              <Button label={m.system.buttons.allowBrightness} onPress={() => native.openWriteSettings()} />
+              <Button label={m.system.buttons.displaySettings} tone="neutral" onPress={() => native.openPanel('display')} />
+            </View>
+          )}
+          {status.mediaAccess ? null : (
+            <View style={styles.access}>
+              <Text style={textStyles.muted}>{m.system.access.media}</Text>
+              <Button label={m.system.buttons.allowMedia} onPress={() => native.openMediaAccessSettings()} />
+            </View>
+          )}
           <Text style={textStyles.muted}>{m.system.restricted}</Text>
         </>
       ) : (
@@ -138,5 +161,11 @@ export function SystemPanel() {
 const styles = StyleSheet.create({
   rows: { gap: tokens.space.sm },
   buttons: { gap: tokens.space.sm },
+  access: {
+    gap: tokens.space.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.color.border,
+    paddingTop: tokens.space.md,
+  },
   message: { color: tokens.color.warning, fontSize: 13 },
 });

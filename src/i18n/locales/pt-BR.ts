@@ -257,6 +257,8 @@ export const ptBR: Messages = {
       camera: 'Serviço de câmera',
       overlay: 'Sobrepor a outros apps',
       foreground: 'App na frente',
+      brightness: 'Mudar o brilho',
+      media: 'Acesso à mídia',
     },
     values: {
       on: 'ligado',
@@ -272,6 +274,15 @@ export const ptBR: Messages = {
       startCamera: 'Iniciar o serviço de câmera',
       stopCamera: 'Parar o serviço de câmera',
       cursor: 'Mostrar o cursor sobre os apps',
+      allowBrightness: 'Permitir mudar o brilho',
+      displaySettings: 'Abrir as configurações de tela',
+      allowMedia: 'Permitir acesso à mídia',
+    },
+    access: {
+      brightness:
+        'Para ajustar o brilho da tela por você, o Android pede que você permita que o Sigil modifique as configurações do sistema. O Sigil só muda o brilho quando você pede, com um gesto ou com a voz. Sem essa permissão, o Sigil abre as configurações de tela.',
+      media:
+        'Para avançar segundos e mudar a velocidade do player na frente, o Android pede acesso às notificações. O Sigil usa esse acesso só para chegar à sessão de mídia ativa e nunca lê as suas notificações.',
     },
     restricted:
       'No Android 13 ou mais novo, uma build instalada fora da Play Store precisa antes permitir as configurações restritas em Informações do app para o serviço de acessibilidade poder ser ativado.',

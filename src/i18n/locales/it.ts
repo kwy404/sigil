@@ -257,6 +257,8 @@ export const it: Messages = {
       camera: 'Servizio fotocamera',
       overlay: 'Mostra sopra altre app',
       foreground: 'App in primo piano',
+      brightness: 'Cambiare la luminosità',
+      media: 'Accesso ai contenuti multimediali',
     },
     values: {
       on: 'attivo',
@@ -272,6 +274,15 @@ export const it: Messages = {
       startCamera: 'Avvia il servizio fotocamera',
       stopCamera: 'Ferma il servizio fotocamera',
       cursor: 'Mostra il cursore sopra le app',
+      allowBrightness: 'Consenti di cambiare la luminosità',
+      displaySettings: 'Apri le impostazioni dello schermo',
+      allowMedia: 'Consenti l’accesso multimediale',
+    },
+    access: {
+      brightness:
+        'Per regolare la luminosità dello schermo al posto tuo, Android chiede di consentire a Sigil di modificare le impostazioni di sistema. Sigil cambia la luminosità solo quando lo chiedi, con un gesto o con la voce. Senza questo permesso, Sigil apre le impostazioni dello schermo.',
+      media:
+        'Per andare avanti di qualche secondo e cambiare la velocità del lettore in primo piano, Android chiede l’accesso alle notifiche. Sigil lo usa solo per raggiungere la sessione multimediale attiva e non legge mai le tue notifiche.',
     },
     restricted:
       'Da Android 13, una build installata fuori dal Play Store deve prima consentire le impostazioni con limitazioni in Info app prima di poter attivare il suo servizio di accessibilità.',
