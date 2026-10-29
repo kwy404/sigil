@@ -131,7 +131,8 @@ Intents, plans, safety and execution. No platform code.
 | Export | Description |
 | --- | --- |
 | `ActionPlanner` | `new ActionPlanner({ profiles, model?, fallback?, policy?, modelTimeoutMs?, defaultMessagingApp?, defaultSearchApp? })` |
-| `planner.plan({ text, locale?, foregroundPackage? }, signal?)` | `PlanOutcome`: `planned` (with `Plan` and notes), `clarify`, `blocked`, `unsupported` or `not_understood` |
+| `planner.plan({ text, locale?, foregroundPackage? }, signal?)` | `PlanOutcome`: `planned` (with `Plan` and notes), `clarify`, `blocked`, `unsupported` or `not_understood`. The model gets its own abort signal, aborted after `modelTimeoutMs` (4000 by default) or with `signal`; then the rules plan |
+| `planner.prepareModel({ locale?, foregroundPackage? })` | Starts loading a model that is not ready, for example when the user starts to speak |
 | `Plan` | `{ request, intent, source: 'model' or 'rules', summary, steps, needsConfirmation }` |
 | `PlanStep` | `open_app`, `wait`, `find`, `tap`, `type`, `scroll`, `navigate`, `media`, `confirm`; `StepTarget` is a profile selector, a text, a description or the focused field |
 | `describeStep`, `describeTarget` | One line labels for the step feed |
@@ -142,7 +143,7 @@ Intents, plans, safety and execution. No platform code.
 | `expandIntent(intent, context)` | Intent to steps, from profile selectors and links |
 | `ConfirmationPolicy` | `screenRequest(text)`, `isCommit(step)`, `apply(steps)`, `check(steps)`; `maxCommitsPerPlan` defaults to 1 |
 | `isSensitiveLabel`, `namesSeveralPeople` | Helpers behind the policy |
-| `LanguageModel`, `ModelContext`, `ModelReply`, `RuleBasedModel` | Model port and its deterministic implementation |
+| `LanguageModel`, `ModelContext`, `ModelReply`, `RuleBasedModel` | Model port (`isReady()`, `propose(request, context, tools, signal?)`, optional `prepare(context, tools)`) and its deterministic implementation |
 | `PlanExecutor` | `new PlanExecutor({ device, profiles, confirm, policy?, clock?, pollMs?, confirmationTtlMs?, maxScrolls?, onStep? })`, then `run(plan, signal?)` |
 | `DeviceController`, `UiNode`, `NodeQuery`, `nodeMatches`, `AppLaunch` | Device port and the shared node matching rules |
 | `ConfirmHandler`, `StepEvent`, `ExecutionResult`, `Clock`, `systemClock` | Execution callbacks and results |
@@ -167,44 +168,68 @@ Candidates for the native engine:
 
 ## adapters/model
 
+The on device language model: the `ChatEngine` port and its llama.rn engine, the `LanguageModel` the planner uses, the model download and the tier for the phone. Everything exported from `index.ts` runs in unit tests with fakes; `platform.ts` wires expo-file-system, expo-network, expo-device, `modules/sigil-memory` and llama.rn, and only the screens import it.
+
 | Export | Description |
 | --- | --- |
-| `ChatEngine` | `{ id, complete(request, signal?), release?() }`: the chat completion surface Sigil needs |
+| `ChatEngine` | `{ id, complete(request, signal?), release?(), isReady?(), prepare?(warmUp) }`: the chat completion surface Sigil needs; aborting the signal stops the generation |
 | `ChatRequest`, `ChatResponse`, `ChatMessage` | Messages, tools, tool choice, sampling; response text and tool calls |
-| `ToolCallingModel` | `new ToolCallingModel(id, () => engine or null, { temperature?, maxTokens? })`, a `LanguageModel` that loads lazily |
-| `buildMessages(request, context)` | Short system prompt for 1 to 3 billion parameter models |
+| `ToolCallingModel` | `new ToolCallingModel(id, () => engine or null, { temperature?, maxTokens? })`, a `LanguageModel` that loads lazily; `prepare(context, tools)` loads and warms up the engine |
+| `buildMessages(request, context)` | A system message that never changes (rules and known apps), a context note (app on screen, language) and the request |
 | `extractToolCallsFromText(text)` | Recovers a tool call printed as JSON, with or without tags |
-| `MockChatEngine` | Answers through the rule parser, so the model path runs before a runtime is installed |
+| `MockChatEngine` | Answers through the rule parser, so the model path runs without a runtime |
+| `LlamaChatEngine` | `new LlamaChatEngine({ id, modelPath, runtime, contextSize?, threads?, gpuLayers?, idleReleaseMs?, canLoad?, onStatus? })`; `status` is `idle`, `loading`, `ready` or `failed` |
+| `LlamaRuntime`, `llamaRnRuntime()` | The runtime port, and llama.rn behind it, imported on first use |
+| `threadCountFor(cores)` | About half the cores, at most four; four when the count is unknown |
+| `toolList(tools)`, `describeTool(tool)` | The tools as one line each: `send_message(contact: string, text: string, app?: string): description` |
+| `toolCallSchema(tools)` | JSON schema that accepts exactly one `{ name, arguments }` call to one of the tools |
+| `DEFAULT_CONTEXT_SIZE`, `DEFAULT_IDLE_RELEASE_MS` | 2048 tokens; release after 60 s without requests |
+| `ModelDownloader` | `new ModelDownloader({ file, url, storage, network, allowCellular, reserveBytes?, onChange? })`: `restore()`, `start()`, `pause()`, `cancel()`, `delete()`, `recheckNetwork()`, `dispose()` |
+| `DownloadState` | `absent`, `downloading` (bytes, total), `paused` (bytes, total, reason `user`, `network` or `interrupted`), `verifying`, `ready` (path), `failed` (error `offline`, `wifi_required`, `no_space`, `network`, `checksum` or `storage`) |
+| `ModelStorage`, `NetworkPort`, `NetworkInfo`, `Transfer` | Ports of the downloader: files, the network link and one HTTP transfer |
+| `OnDeviceModel` | `snapshot()`, `subscribe(listener)`, `languageModel(tier?)`, `plannerTimeoutMs(tier?)`, `selectTier(tier or 'auto')`, `setAllowCellular(allow)`, `download()`, `pause()`, `cancel()`, `deleteModel()`, `release()` |
+| `OnDeviceModelSnapshot`, `TierOption` | RAM, recommended and selected tier, each tier with its model, size, peak memory, fit and download state, and the engine status |
+| `PLANNER_TIMEOUT_MS` | `rules` 4000, `lite` 6000, `full` 9000 |
+| `getOnDeviceModel()` (`platform.ts`) | The app wide instance; releases the weights in the background and under memory pressure |
 
-Candidates for the runtime and the model:
+The runtime is llama.rn 0.12.9 (llama.cpp), pinned exactly in `package.json`, with its Expo config plugin set to `enableOpenCLAndHexagon: false`, so it runs on the CPU. Its postinstall downloads the prebuilt native libraries of that release and checks them with SHA-256.
 
-| Runtime | Notes |
-| --- | --- |
-| llama.rn (llama.cpp) | GGUF models, chat templates with tool calls and JSON schema constrained output; Metal on iOS; CPU on Android with optional GPU backends depending on the version |
-| react-native-executorch | ExecuTorch runtime with exported Llama 3.2 and Qwen models |
-| MLC LLM | Compiled models with GPU on both platforms; heavier integration |
+| Tier | Model | Pinned file | Size | SHA-256 | License |
+| --- | --- | --- | --- | --- | --- |
+| lite | Qwen2.5 1.5B Instruct (Q4_K_M) | `Qwen/Qwen2.5-1.5B-Instruct-GGUF` at `91cad51170dc346986eccefdc2dd33a9da36ead9`, `qwen2.5-1.5b-instruct-q4_k_m.gguf` | 1,117,320,736 bytes | `6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e` | Apache 2.0 |
+| full | Qwen2.5 3B Instruct (Q4_K_M) | `Qwen/Qwen2.5-3B-Instruct-GGUF` at `7dabda4d13d513e3e842b20f0d435c732f172cbe`, `qwen2.5-3b-instruct-q4_k_m.gguf` | 2,104,932,768 bytes | `626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d` | Qwen Research License |
+
+The download URL is `https://huggingface.co/<repo>/resolve/<commit>/<file>`. Other candidates stay in the catalog without a pinned file:
 
 | Model (Q4_K_M) | Download | Memory loaded | Notes |
 | --- | --- | --- | --- |
 | Llama 3.2 1B Instruct | about 810 MB | about 1.1 GB | Smallest useful tool caller |
-| Qwen2.5 1.5B Instruct | about 1.0 GB | about 1.35 GB | Reliable JSON tool calls, good Portuguese; default for the lite tier |
-| Qwen2.5 3B Instruct | about 1.95 GB | about 2.5 GB | Better with indirect requests; full tier |
 | Llama 3.2 3B Instruct | about 2.0 GB | about 2.6 GB | Alternative license |
+
+| Other runtime | Notes |
+| --- | --- |
+| react-native-executorch | ExecuTorch runtime with exported Llama 3.2 and Qwen models |
+| MLC LLM | Compiled models with GPU on both platforms; heavier integration |
 
 ## adapters/catalog
 
 | Export | Description |
 | --- | --- |
-| `MODEL_CATALOG`, `ModelAsset` | Hand landmarker, speech and language models with download and memory sizes |
-| `MODEL_TIERS`, `ModelTier` | `rules` (no model), `lite` (Whisper base, Qwen2.5 1.5B), `full` (Whisper small, Qwen2.5 3B) |
+| `MODEL_CATALOG`, `ModelAsset` | Hand landmarker, speech and language models with download and memory sizes, in megabytes of 1024 * 1024 bytes |
+| `PinnedFile`, `fileUrl(file)` | Repository, commit, file name, exact size, SHA-256 and license of a model Sigil downloads, and its official URL |
+| `MODEL_TIERS`, `ModelTier`, `findTier(id)` | `rules` (no model), `lite` (Whisper base, Qwen2.5 1.5B), `full` (Whisper small, Qwen2.5 3B) |
+| `languageModelOf(tier)` | The language model of a tier, or null for rules only |
 | `footprint(assetIds)` | `{ downloadMb, peakMemoryMb, residentMemoryMb }`; speech and language models take turns |
 | `recommendTier(deviceRamMb, budgetShare = 0.35)` | Largest tier that fits the phone |
+| `ramClassMb(totalMemoryBytes)` | The RAM the phone was sold with, from the total expo-device reports: 7.3 GB reported is an 8 GB phone |
 
 | Tier | Download | Peak memory | Device RAM |
 | --- | --- | --- | --- |
 | rules | about 8 MB | about 60 MB | 3 GB and up |
-| lite | about 1.07 GB | about 1.4 GB | 6 GB and up |
-| full | about 2.15 GB | about 2.6 GB | 8 GB and up |
+| lite | about 1.1 GB | about 1.4 GB | 6 GB and up |
+| full | about 2.2 GB | about 2.6 GB | 8 GB and up |
+
+The download column includes the hand landmarker and the speech model of the tier; the model settings download only the language model.
 
 ## system-control
 
@@ -245,6 +270,17 @@ Local Expo module, autolinked from `modules/`. JavaScript API (`modules/sigil-co
 Events: `onServiceStateChanged`, `onForegroundAppChanged`, `onCameraServiceStateChanged`, `onHandFrame` (63 floats per frame), `onCursorError`.
 
 Kotlin classes: `SigilControlModule` (Expo module), `SigilAccessibilityService`, `CursorOverlay`, `SigilCameraService`, `HandLandmarkPipeline` (interface; CameraX and MediaPipe come next), `SigilRuntime` (bridge between the services and the module). Manifest: camera, microphone, foreground service camera and microphone, notifications and overlay permissions; the accessibility service bound by `BIND_ACCESSIBILITY_SERVICE`; the camera service with `foregroundServiceType="camera|microphone"`; a `<queries>` entry for launcher activities.
+
+## modules/sigil-memory (Android, Kotlin)
+
+Local Expo module for the on device model, autolinked from `modules/`. React Native does not forward Android's trim memory callbacks to JavaScript, so this module does. JavaScript API (`modules/sigil-memory/index.ts`, null where the module is absent):
+
+| Function | Returns | Description |
+| --- | --- | --- |
+| `cpuCores()` | number | `Runtime.availableProcessors()`, for the llama.cpp thread count |
+| `memoryInfo()` | `MemoryInfo` | `{ totalBytes, availableBytes, thresholdBytes, lowMemory }` from `ActivityManager.getMemoryInfo`; the model does not load while `lowMemory` is true |
+
+Event: `onMemoryPressure` with `{ level }`, a `ComponentCallbacks2` trim level, registered while JavaScript listens. The model releases its weights from `TRIM_MEMORY_RUNNING_LOW` (10) up. No permissions.
 
 ## cursor-overlay
 

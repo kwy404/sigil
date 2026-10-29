@@ -14,13 +14,29 @@ Works and is tested without a device:
 - App profiles: JSON gesture profiles for WhatsApp, Instagram, YouTube, TikTok, Chrome, Messages, Settings and a general profile, validated with a schema. In the general profile a pinched circle turns the volume and a pinched drag up or down changes the brightness.
 - Sigil core: intent tools for a local model with a rule based fallback in eight languages, an action planner, a confirmation policy that blocks bulk automation and reads confirm and cancel words the same way in every language, and a plan executor.
 - System controls: volume up, down, to a percent, mute and unmute (media by default, ring and alarm when named), play, pause, next and previous for any player, skipping seconds and changing the playback speed, likes, brightness, back, home, recent apps, notifications, quick settings, lock screen, screenshot, power menu, and the Wi-Fi, Bluetooth and Do Not Disturb panels. The Control Sphere has volume and brightness quick actions with live level rings.
-- Voice and model adapters with mocks, and the download and memory budget of the candidate models.
+- On device language model (milestone M4): llama.rn (llama.cpp) runs Qwen2.5 1.5B Instruct on phones with 6 GB of RAM (lite tier) or Qwen2.5 3B Instruct with 8 GB (full tier), picked from the RAM expo-device reports. The settings section "On device model" shows the recommended tier, its size and memory, and downloads the model once from Hugging Face over Wi-Fi, resumable and checked against a SHA-256 pinned in the code; it can pause, cancel and delete. The planner uses the model when it is loaded and falls back to the rules on a timeout, an invalid call or no model; without a model the rule parser still understands the built in commands. See [On device model](#on-device-model).
+- Voice adapter with a mock speech engine.
 
 Needs a device or the next milestones:
 
 - Live hand tracking (MediaPipe Hand Landmarker through a frame processor and inside the camera service).
-- The Android control module (accessibility service, cursor overlay, camera foreground service, volume, brightness and media session control) is written but has to be built with EAS and tried on a phone.
-- On device speech (whisper.rn or the system recognizer) and a local model (llama.rn).
+- The Android control module (accessibility service, cursor overlay, camera foreground service, volume, brightness and media session control) and the llama.rn runtime build in the release APK, but have not run on a phone yet.
+- Speed, memory and the quality of the model's tool calls on real phones, in the eight languages.
+- On device speech (whisper.rn or the system recognizer).
+
+## On device model
+
+| Tier | Model | File (Q4_K_M GGUF) | Phones |
+| --- | --- | --- | --- |
+| Rules only | none | none | all |
+| Lite | Qwen2.5 1.5B Instruct | 1.12 GB, Apache 2.0 | 6 GB of RAM and more |
+| Full | Qwen2.5 3B Instruct | 2.10 GB, Qwen Research License | 8 GB of RAM and more |
+
+- The files come from the official Qwen repositories on Hugging Face, pinned to a commit, with their size and SHA-256 in `src/adapters/catalog.ts`. A file that does not match is deleted.
+- Downloads use Wi-Fi only unless the user allows mobile data, check the free storage first, continue after a pause, a lost connection or a restart, and can be cancelled. The model file is the only thing Sigil downloads; requests never leave the phone, and there is no backend.
+- The model runs on the CPU with a 2,048 token context and about half the cores. It loads when the user starts to speak or at the first request, and is released in the background, under memory pressure and after a minute without requests.
+- The answer is constrained by a JSON schema to exactly one call to one of the 17 intent tools, through the model's own chat template, and then goes through the same validation and confirmation rules as the rule parser's.
+- The full tier's license allows research and evaluation; commercial use of Qwen2.5 3B needs a license from Alibaba Cloud.
 
 ## Languages
 
@@ -63,18 +79,19 @@ After installing the build, open Settings, Accessibility and enable "Sigil hands
 ```
 src/
   app/               screens (Expo Router)
-  features/          home screen sections
+  features/          home screen sections, the on device model settings included
   i18n/              typed messages in eight languages, language detection and picker
   gesture-engine/    landmarks, One Euro filter, classifier, synthetic hands
   app-profiles/      JSON gesture profiles and their registry
   sigil-core/        intents, voice parser in eight languages, planner, confirmation policy, executor
-  adapters/          speech to text and local model ports, model catalog
+  adapters/          speech to text port, on device model (llama.rn engine, downloader, tiers), model catalog
   system-control/    device controllers, gesture dispatch, volume and brightness levels
   cursor-overlay/    holographic cursor (Skia, Reanimated)
   control-sphere/    Control Sphere hub and level rings (Skia, Reanimated)
   ui/                design tokens and primitives
 modules/
   sigil-control/     Android native module (Kotlin) and its config plugin
+  sigil-memory/      Android native module (Kotlin): CPU cores, free memory and memory pressure for the model
 store/
   descriptions/      store title and short description per language
 docs/

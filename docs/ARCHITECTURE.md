@@ -22,6 +22,7 @@ Sigil turns two inputs, hand landmarks from the front camera and speech, into ac
 | Per app meaning | `src/app-profiles` | JS thread |
 | Intents, plans, safety | `src/sigil-core` | JS thread |
 | Speech and model ports | `src/adapters/voice`, `src/adapters/model`, `src/adapters/catalog.ts` | JS thread, native engines on their own threads |
+| On device language model | `src/adapters/model` (llama.rn engine, downloader, tiers) + `modules/sigil-memory` (Kotlin) | JS thread; llama.cpp, the download and the SHA-256 on native worker threads |
 | Device actions | `src/system-control` + `modules/sigil-control` (Kotlin) | JS thread calling native, Android main and binder threads |
 | Visuals | `src/cursor-overlay`, `src/control-sphere`, `src/ui` | UI thread through Reanimated and Skia |
 | Screens | `src/app`, `src/features` | React |
@@ -46,7 +47,7 @@ The rule between layers: the core never imports React Native, Expo or native mod
 ## Voice path, from speech to a confirmed plan
 
 1. **Speech to text** produces a transcript in the spoken language (`SpeechToText` port; mock today).
-2. **Intent.** The planner asks the `LanguageModel` for exactly one call to one of 17 fixed intent tools: `open_app`, `send_message`, `search`, `scroll`, `navigate`, `tap`, `type_text`, `media`, `seek`, `playback_speed`, `like`, `volume`, `brightness`, `settings_panel`, `control_sphere`, `create_post`, `clarify`. The arguments are validated with zod. If no model is loaded, the call times out (4 s), fails or is invalid, the deterministic rule parser produces the same tool call shape. Only the first call is used.
+2. **Intent.** The planner asks the `LanguageModel` for exactly one call to one of 17 fixed intent tools: `open_app`, `send_message`, `search`, `scroll`, `navigate`, `tap`, `type_text`, `media`, `seek`, `playback_speed`, `like`, `volume`, `brightness`, `settings_panel`, `control_sphere`, `create_post`, `clarify`. The arguments are validated with zod. If no model is downloaded or loaded, the call times out (4 s by default; 6 s for the lite model and 9 s for the full one), fails or is invalid, the deterministic rule parser produces the same tool call shape. On a timeout the planner aborts the model's signal, so llama.cpp stops generating. A model that is downloaded but not loaded starts loading at the first request, which the rules answer. Only the first call is used.
 3. **Steps.** `expandIntent` turns the intent into a flat list of steps: `open_app`, `wait`, `find`, `tap`, `type`, `scroll`, `navigate`, `media`, `confirm`. App knowledge (search buttons, message fields, send buttons, deep links) comes from the profile selectors and links, never from the model. The step language has no loops or branches, so every plan is finite and can be shown before it runs.
 4. **Policy.** `ConfirmationPolicy` refuses bulk requests (all contacts, everyone, repeated or scheduled actions), refuses messages to several people, marks commit steps (selectors flagged `commit`, or labels such as send, post, share, call, pay, delete, in English and Portuguese) and inserts a `confirm` step right before each one. A plan may contain at most one commit.
 5. **Execution.** `PlanExecutor` runs one visible step at a time against the `DeviceController`. It checks the policy again before starting, so a hand built plan cannot skip it; a commit runs only right after a confirmation the user accepted within 30 seconds; the user can stop the plan at any step.
@@ -119,9 +120,50 @@ iOS has no equivalent of the accessibility service for third party apps: an app 
 
 The native module declares only the Android platform, so iOS builds skip it and `getSystemControl()` reports `in-app` mode. Expo Go behaves the same on both platforms.
 
-## On device models
+## On device language model
 
-See `docs/MODULES.md` for the candidates. Lifecycle rules for the download manager (next milestone): download only with consent, on Wi-Fi by default, with the size shown; resumable; verified with a pinned SHA-256; stored outside backups and removable from settings. Models load on the first voice request and unload after about a minute idle or when Android signals memory pressure. The tier (rules only, lite, full) is chosen from the device RAM with `recommendTier`.
+The planner can use a small language model that runs on the phone through llama.rn (llama.cpp), sized by the phone's memory. Without it, the rule parser plans every request; the model only adds requests said in the user's own words.
+
+```
+ settings: On device model ----> OnDeviceModel ----> ModelDownloader --(once, Wi-Fi)--> Hugging Face, pinned commit
+   tier, download, cancel,        tier from RAM        .part file, resume, SHA-256          models/<file>.gguf
+   delete, mobile data            settings file
+                                       |
+ planner ----> ToolCallingModel ----> LlamaChatEngine ----> llama.rn context (n_ctx 2048, CPU threads)
+   timeout per tier, abort            lazy load, one call     JSON schema grammar: one tool call
+   falls back to the rules            at a time, release      cached system prompt and tool list
+```
+
+**Tiers.** `recommendTier` picks the largest tier whose minimum RAM the phone meets and whose peak memory stays under 35 percent of it. The RAM comes from expo-device (`totalMemory`); Android keeps part of the memory for itself (an 8 GB phone reports about 7.3 GB), so `ramClassMb` rounds the report up to the size the phone was sold with before comparing.
+
+| Tier | Language model | File | Phones |
+| --- | --- | --- | --- |
+| rules | none | none | all |
+| lite | Qwen2.5 1.5B Instruct, Q4_K_M | 1.12 GB | 6 GB of RAM and more |
+| full | Qwen2.5 3B Instruct, Q4_K_M | 2.10 GB | 8 GB of RAM and more |
+
+The user can switch to any tier the phone holds; tiers above its memory cannot be selected. The choice and the mobile data setting are saved in `sigil-model.json` in the app's document folder.
+
+**Download.** One file per model, pinned in `src/adapters/catalog.ts` to the official Qwen repository at a fixed commit, with its exact size and SHA-256:
+
+- the download only starts on Wi-Fi or Ethernet, unless the user allows mobile data, and only when the storage holds the rest of the file plus 300 MB;
+- it writes `models/<file>.part` through an expo-file-system `DownloadTask`, with progress in the settings, and can be paused, resumed and cancelled (cancel deletes the partial file);
+- it pauses when the phone leaves Wi-Fi and continues when Wi-Fi is back; after a network error the next try continues from the partial file;
+- if the app closes during the download, it continues from the bytes already on disk at the next start (Android resumes from a byte offset; iOS starts over unless the download was paused);
+- once complete, the native SHA-256 of the file is compared with the pinned one: a mismatch, or a wrong size, deletes the file; a match moves it to `models/<file>` and writes a `.sha256` marker, so the check runs once;
+- Android backups are off for Sigil (`allowBackup` in `app.json`), so the models never go to the cloud; the settings delete them on request.
+
+The only network request Sigil makes for the model is the download of that file. Requests, transcripts and plans never leave the phone.
+
+**Engine.** `LlamaChatEngine` implements the `ChatEngine` port over llama.rn:
+
+- the weights load lazily, when the user starts to speak (`ActionPlanner.prepareModel`) or at the first request, which the rules answer while the model loads; the file is memory mapped, not locked in RAM;
+- the context holds 2,048 tokens, with a batch of 512 and one sequence; the thread count comes from the CPU cores (about half of them, at most four, which llama.rn pins to the fastest cores);
+- llama.rn runs on the CPU: the OpenCL and Hexagon backends are switched off in its config plugin;
+- the messages go through the model's own chat template (the Jinja template in the GGUF file). The 17 tools are listed compactly in the first system message (rendered as JSON by the template they would take about 2,200 tokens, more than the whole context; the list takes about a third), and a JSON schema that only accepts one call to one of the tools becomes a llama.cpp grammar, so the answer is always a well formed call. sigil-core still validates it with zod, and the policy still guards it;
+- the first system message never changes, so llama.cpp keeps it in the KV cache: after a warm up at load time a request only evaluates a short context note (app on screen, language) and the request itself;
+- one operation runs at a time; aborting the signal calls `stopCompletion`;
+- the weights are released when the app goes to the background, when Android reports memory pressure (`TRIM_MEMORY_RUNNING_LOW` and above, through `modules/sigil-memory`; React Native does not forward these callbacks on Android) or iOS sends a memory warning, after a minute without requests, and before the model is deleted or the tier changes. Loading is refused while Android reports low memory.
 
 ## Testing without a device
 
@@ -129,6 +171,7 @@ See `docs/MODULES.md` for the candidates. Lifecycle rules for the download manag
 - Sample recordings cover every gesture of the vocabulary, plus negative recordings for false positives (idle jitter, slow drags, a hand that appears briefly).
 - The classifier test replays every recording at 15, 30 and 60 fps with tracker noise of 0.002 and 0.004 frame widths and three seeds. A wider sweep of 3840 replays only failed at noise of 0.005 and above.
 - The planner and policy are tested on requests in all eight languages, model outputs (valid, invalid, slow, several calls) and bulk requests; the executor runs plans against an in memory WhatsApp.
+- The on device model is tested with fakes of its ports (`src/adapters/__tests__/fakes.ts`): an in memory file system with a transfer the test drives byte by byte, a network that switches between Wi-Fi, mobile data and nothing, and a llama.rn runtime. The tests cover the tier choice, every download state, resume after a pause, a network change or a restart, checksum failures, the engine parameters, warm up, abort, release and the planner fallback.
 
 ## Open risks
 
@@ -136,3 +179,5 @@ See `docs/MODULES.md` for the candidates. Lifecycle rules for the download manag
 - Battery and heat of continuous camera and inference; the service must lower the frame rate when the hand is absent.
 - Selectors in third party apps change with app updates and languages; plans fail cleanly when a control is not found, and selectors need on device verification (WhatsApp, Instagram, Messages).
 - JavaScript in the background under aggressive OEM battery managers; see the Kotlin classifier fallback above.
+- The language model has only run against fakes. Load time, tokens per second, memory, heat and the quality of the tool calls in all eight languages need real phones, and the planner timeouts per tier (6 s and 9 s) must be tuned from those numbers. Releasing the weights in the background means a voice request made while another app is in front loads the model again.
+- The full tier's Qwen2.5 3B weights use the Qwen Research License, which needs a license from Alibaba Cloud for commercial use; the lite tier's Qwen2.5 1.5B is Apache 2.0.
