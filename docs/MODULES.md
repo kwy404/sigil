@@ -296,6 +296,7 @@ The API the screens use (`src/session`). The session is shared state: the screen
 | `planRequest(text, { dryRun })` | Plans a typed or spoken request. A dry run (the default) only plans; with `dryRun: false` the voice session carries it out with the same questions and confirmations, and the result comes back too |
 | `getSigil()` | The app wide `Sigil` runtime, created on first use |
 | `setSessionHandlers({ openSphere?, openTutorial? })` | Where the Control Sphere and the tour are; both lead home until the screens set them |
+| `openControlSphere()` | Shows the Control Sphere through that handler, as the bubble's link and the open palm do |
 
 The checklist and the levels are read every 1.5 seconds while a screen is subscribed and the app is in front, and again when the accessibility service changes or the app comes back. The links `sigil://control/start`, `stop`, `sphere`, `home` and `demo` (`src/app/control/[action].tsx`) are what the tile, the widget, the bubble and the smoke test open.
 
@@ -308,7 +309,7 @@ The checklist and the levels are read every 1.5 seconds while a screen is subscr
 | `current`, `subscribe(listener)` | `SigilState`: `running`, `paused`, `starting`, `handVisible`, `hand`, `lastGesture`, `lastCommand`, `demo`, `microphone`, `needsAccess`, `error` |
 | `start()` | Asks for the camera (and the microphone when voice over other apps is on), then starts the camera service; returns `camera_permission`, `unavailable`, `failed` or null |
 | `stop()`, `pause(paused)` | Stops the service and hides the cursor; pauses or resumes tracking |
-| `setMicrophone(on)` | Voice over other apps: asks for the microphone, saves the choice and restarts the service with or without it |
+| `setMicrophone(on)` | Voice over other apps (on unless the user turned it off): asks for the microphone, saves the choice and restarts the service with or without it. If Android refuses the microphone type, the service keeps running with the camera alone |
 | `startDemo()`, `stopDemo()` | The demo hand: sample recordings at 30 frames a second through `HandControl`, marked synthetic, so they never act |
 | `profiles`, `planner`, `speech`, `voice`, `native` | The profile registry, the planner (with the launcher's apps), the speech engine, the voice session and the native module |
 
@@ -336,4 +337,4 @@ The guided tour (`src/tutorial`). `machine.ts` is a pure reducer over the steps:
 
 ## settings
 
-`readSettings()` and `updateSettings(change)` (`src/settings/store.ts`): one JSON file in the app's document folder with the language, the tour progress, `voice.microphone` (voice over other apps) and `speech.allowOffDevice` (consent to a recognizer that may use the network), kept in memory so a change counts at once.
+`readSettings()` and `updateSettings(change)` (`src/settings/store.ts`): one JSON file in the app's document folder with the language, the tour progress, `voice.microphone` (voice over other apps, on unless false) and `speech.allowOffDevice` (consent to a recognizer that may use the network), kept in memory so a change counts at once.

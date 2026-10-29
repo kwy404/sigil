@@ -11,8 +11,8 @@ Preview build of Sigil for Android phones with a 64 bit processor (arm64), which
 
 **Good to know**
 - Android lets an app turn on the camera only from its own screen, so the tile and the widget open Sigil to start.
-- The bubble needs "Display over other apps". Voice while other apps are open needs the microphone in the camera service; turn it on from the bubble menu.
-- Speech stays on the phone. If your phone only has a recognizer that may use the network, Sigil asks before using it, and you can type instead.
+- The bubble needs "Display over other apps". Voice while other apps are open uses the microphone permission and is on by default; turn it off from the bubble menu.
+- Speech stays on the phone. If your phone only has a recognizer that may use the network, Sigil uses it only after you allow it in Sigil's settings, and you can always type instead.
 - Hand tracking and voice have been tried on an emulator with a recorded hand, not yet on many phones. Please report what does not work in the issues of this repository.
 
 **Install**
