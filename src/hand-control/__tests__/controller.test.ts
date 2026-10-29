@@ -1,0 +1,142 @@
+import { describe, expect, it } from '@jest/globals';
+
+import { ProfileRegistry } from '../../app-profiles';
+import { flattenLandmarks, sampleRecordings, type HandRecording } from '../../gesture-engine';
+import { HandControl, type HandControlNative, type NativeHandFrame } from '../controller';
+import { beginPractice, subscribeGestures } from '../feed';
+
+const profiles = ProfileRegistry.withBuiltins();
+
+function recording(id: string): HandRecording {
+  const found = sampleRecordings().find((sample) => sample.id === id);
+  if (!found) throw new Error(id);
+  return found;
+}
+
+/** The recording as the native module sends it: flat landmarks, empty when the hand is lost. */
+function nativeFrames(sample: HandRecording): NativeHandFrame[] {
+  return sample.frames.map((frame) => ({
+    t: frame.t,
+    landmarks: frame.landmarks ? flattenLandmarks(frame.landmarks) : [],
+    score: frame.score ?? 1,
+    handedness: null,
+  }));
+}
+
+function fakeNative(log: string[]): HandControlNative {
+  const record =
+    (name: string) =>
+    async (...args: unknown[]) => {
+      log.push(`${name} ${args.map((a) => (typeof a === 'number' ? Math.round(a) : String(a))).join(' ')}`.trim());
+      return true;
+    };
+  return {
+    tap: record('tap'),
+    doubleTap: record('doubleTap'),
+    longPress: record('longPress'),
+    swipe: record('swipe'),
+    scroll: record('scroll'),
+    globalAction: record('globalAction'),
+    mediaKey: record('mediaKey'),
+    adjustVolume: record('adjustVolume'),
+    changeBrightness: async () => 'done',
+    openApp: record('openApp'),
+    moveCursor: () => undefined,
+    hideCursor: () => log.push('hideCursor'),
+    showCursor: () => {
+      log.push('showCursor');
+      return true;
+    },
+  };
+}
+
+function control(log: string[], voiceGesture?: (kind: 'pinch' | 'fist') => boolean) {
+  const ui = {
+    sphere: (action: string) => log.push(`sphere ${action}`),
+    listen: () => log.push('listen'),
+    cursor: (action: string) => log.push(`cursor ${action}`),
+    pause: () => log.push('pause'),
+    needsAccess: (access: string) => log.push(`needsAccess ${access}`),
+  };
+  return new HandControl({
+    native: fakeNative(log),
+    profiles,
+    ui,
+    screen: { width: 1080, height: 2400 },
+    foreground: () => 'com.example.app',
+    voiceGesture,
+  });
+}
+
+describe('HandControl', () => {
+  it('taps where the cursor is when the hand pinches', () => {
+    const log: string[] = [];
+    const hands = control(log);
+    const events = nativeFrames(recording('pinch')).flatMap((frame) => hands.push(frame));
+    expect(events.map((event) => event.kind)).toEqual(['point', 'pinch']);
+    const taps = log.filter((entry) => entry.startsWith('tap'));
+    expect(taps).toHaveLength(1);
+    const [, x, y] = taps[0].split(' ').map(Number);
+    expect(x).toBeGreaterThan(0);
+    expect(x).toBeLessThan(1080);
+    expect(y).toBeGreaterThan(0);
+    expect(y).toBeLessThan(2400);
+    expect(log[0]).toBe('showCursor');
+  });
+
+  it('opens the sphere with an open palm and listens on a fist', () => {
+    const log: string[] = [];
+    const hands = control(log);
+    const palm = nativeFrames(recording('open-palm'));
+    palm.forEach((frame) => hands.push(frame));
+    // The second recording continues in time after the first.
+    const offset = palm[palm.length - 1].t + 500;
+    nativeFrames(recording('fist')).forEach((frame) => hands.push({ ...frame, t: frame.t + offset }));
+    expect(log).toContain('sphere toggle');
+    expect(log).toContain('listen');
+  });
+
+  it('gives a pinch to an open voice question instead of tapping', () => {
+    const log: string[] = [];
+    const used: string[] = [];
+    const hands = control(log, (kind) => {
+      used.push(kind);
+      return true;
+    });
+    nativeFrames(recording('pinch')).forEach((frame) => hands.push(frame));
+    expect(used).toEqual(['pinch']);
+    expect(log.some((entry) => entry.startsWith('tap'))).toBe(false);
+  });
+
+  it('only reports gestures while a practice screen is open', () => {
+    const log: string[] = [];
+    const seen: string[] = [];
+    const hands = control(log);
+    const unsubscribe = subscribeGestures(({ event }) => seen.push(event.kind));
+    const end = beginPractice();
+    nativeFrames(recording('pinch')).forEach((frame) => hands.push(frame));
+    end();
+    unsubscribe();
+    expect(seen).toEqual(['point', 'pinch']);
+    expect(log.some((entry) => entry.startsWith('tap'))).toBe(false);
+  });
+
+  it('moves the cursor but never acts on frames from the demo hand', () => {
+    const log: string[] = [];
+    const moves: number[] = [];
+    const hands = control(log);
+    const native = (hands as unknown as { options: { native: HandControlNative } }).options.native;
+    native.moveCursor = () => moves.push(1);
+    nativeFrames(recording('pinch')).forEach((frame) => hands.push({ ...frame, synthetic: true }));
+    expect(moves.length).toBeGreaterThan(10);
+    expect(log.some((entry) => entry.startsWith('tap'))).toBe(false);
+  });
+
+  it('ignores gestures while paused', () => {
+    const log: string[] = [];
+    const hands = control(log);
+    hands.togglePause();
+    nativeFrames(recording('pinch')).forEach((frame) => hands.push(frame));
+    expect(log.some((entry) => entry.startsWith('tap'))).toBe(false);
+  });
+});
