@@ -13,6 +13,8 @@ export interface SigilControlStatus {
   /** Sigil's media listener is enabled, so it can seek and change the speed of the player in front. */
   mediaAccess: boolean;
   sdkInt: number;
+  /** Sigil's own package, so a request made while Sigil is in front does not close or drive Sigil itself. */
+  packageName: string;
 }
 
 export interface ScreenSize {
@@ -48,7 +50,9 @@ export type GlobalActionName =
   | 'quick_settings'
   | 'lock_screen'
   | 'screenshot'
-  | 'power_menu';
+  | 'power_menu'
+  | 'previous_app'
+  | 'split_screen';
 
 export type MediaKeyName = 'play_pause' | 'play' | 'pause' | 'next' | 'previous';
 
@@ -62,10 +66,39 @@ export type SettingsPanelName = 'wifi' | 'bluetooth' | 'do_not_disturb' | 'displ
 
 /**
  * Outcome of a system control: done, the special access that is missing
- * (write_settings or media_access), unsupported on this Android version, or
- * failed.
+ * (write_settings or media_access), unsupported on this phone, busy (the
+ * camera holds the flashlight), or failed.
  */
-export type ControlOutcome = 'done' | 'write_settings' | 'media_access' | 'unsupported' | 'failed';
+export type ControlOutcome = 'done' | 'write_settings' | 'media_access' | 'unsupported' | 'busy' | 'failed';
+
+/** An app the launcher lists. */
+export interface LaunchableApp {
+  label: string;
+  packageName: string;
+}
+
+/** The default app of a kind, opened without knowing its package. */
+export type AppRoleName =
+  | 'camera'
+  | 'phone'
+  | 'contacts'
+  | 'calculator'
+  | 'calendar'
+  | 'clock'
+  | 'gallery'
+  | 'music'
+  | 'email'
+  | 'maps'
+  | 'files'
+  | 'messages'
+  | 'browser';
+
+export interface InstallSource {
+  /** Package of the app that installed Sigil, null when Android does not say (adb, some file managers). */
+  installer: string | null;
+  /** Android 13 or later and not from the Play Store: the accessibility service needs "Allow restricted settings" first. */
+  restrictedSettings: boolean;
+}
 
 export interface VolumeLevel {
   /** Position from 0 to 1 between the lowest and the highest index of the stream. */
@@ -92,4 +125,6 @@ export type SigilControlEvents = {
   /** 21 landmarks packed as x, y, z triples, mirrored to the user's view. */
   onHandFrame: (event: { t: number; landmarks: number[]; score: number }) => void;
   onCursorError: (event: { message: string }) => void;
+  /** An app was installed, removed or updated; read getLaunchableApps again. */
+  onAppsChanged: () => void;
 };

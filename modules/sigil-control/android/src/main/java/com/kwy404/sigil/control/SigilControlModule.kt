@@ -1,6 +1,7 @@
 package com.kwy404.sigil.control
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
@@ -35,14 +36,19 @@ class SigilControlModule : Module() {
       "onCameraServiceStateChanged",
       "onHandFrame",
       "onCursorError",
+      "onAppsChanged",
     )
 
     OnCreate {
       SigilRuntime.eventSink = { name, body -> this@SigilControlModule.sendEvent(name, body) }
+      appContext.reactContext?.let { ctx ->
+        LaunchableApps.watch(ctx) { SigilRuntime.emit("onAppsChanged", emptyMap()) }
+      }
     }
 
     OnDestroy {
       SigilRuntime.eventSink = null
+      appContext.reactContext?.let { LaunchableApps.unwatch(it) }
       appCursor?.hide()
       appCursor = null
     }
@@ -64,6 +70,13 @@ class SigilControlModule : Module() {
     }
 
     Function("openMediaAccessSettings") { openActivity(SigilMediaListener.settingsIntent(context)) }
+
+    /** Sigil's App info screen, where Android 13 and later hide "Allow restricted settings". */
+    Function("openAppInfo") {
+      openActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
+    }
+
+    Function("getInstallSource") { installSource() }
 
     Function("openPanel") { panel: String -> openPanel(panel) }
 
@@ -135,6 +148,52 @@ class SigilControlModule : Module() {
     AsyncFunction("openApp") { packageName: String?, url: String?, label: String? ->
       openApp(packageName, url, label)
     }
+
+    AsyncFunction("getLaunchableApps") { LaunchableApps.list(context) }
+
+    AsyncFunction("openRole") { role: String -> SystemActions.roleIntents(role).any { openActivity(it) } }
+
+    AsyncFunction("setTimer") { seconds: Int -> startOutcome(SystemActions.timerIntent(seconds)) }
+
+    AsyncFunction("setAlarm") { hour: Int, minute: Int -> startOutcome(SystemActions.alarmIntent(hour, minute)) }
+
+    AsyncFunction("setTorch") { on: Boolean -> SystemActions.setTorch(context, on) }
+  }
+
+  /**
+   * Who installed Sigil. On Android 13 and later, an app installed outside an
+   * app store needs "Allow restricted settings" in App info before its
+   * accessibility service can be turned on.
+   */
+  private fun installSource(): Map<String, Any?> {
+    val packages = context.packageManager
+    val installer = try {
+      if (Build.VERSION.SDK_INT >= 30) {
+        packages.getInstallSourceInfo(context.packageName).installingPackageName
+      } else {
+        @Suppress("DEPRECATION")
+        packages.getInstallerPackageName(context.packageName)
+      }
+    } catch (error: Exception) {
+      null
+    }
+    return mapOf(
+      "installer" to installer,
+      "restrictedSettings" to (Build.VERSION.SDK_INT >= 33 && installer != PLAY_STORE),
+    )
+  }
+
+  /** Starts the activity of a system feature: done, unsupported when no app handles it, or failed. */
+  private fun startOutcome(intent: Intent): String {
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    return try {
+      launchContext().startActivity(intent)
+      "done"
+    } catch (error: ActivityNotFoundException) {
+      "unsupported"
+    } catch (error: RuntimeException) {
+      "failed"
+    }
   }
 
   private fun status(): Map<String, Any?> = mapOf(
@@ -145,6 +204,7 @@ class SigilControlModule : Module() {
     "writeSettings" to Settings.System.canWrite(context),
     "mediaAccess" to SigilMediaListener.isEnabled(context),
     "sdkInt" to Build.VERSION.SDK_INT,
+    "packageName" to context.packageName,
   )
 
   @Suppress("DEPRECATION")
@@ -278,6 +338,10 @@ class SigilControlModule : Module() {
       else -> null
     } ?: return false
     return openActivity(intent)
+  }
+
+  companion object {
+    private const val PLAY_STORE = "com.android.vending"
   }
 
   /** Finds an installed app by the name shown under its launcher icon. */
