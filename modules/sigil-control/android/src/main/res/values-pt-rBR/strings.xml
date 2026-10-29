@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">A câmera frontal e o microfone estão ligados para gestos e voz.</string>
   <string name="sigil_stop">Parar</string>
   <string name="sigil_media_access_label">Sigil: controle de mídia</string>
+  <string name="sigil_start">Iniciar</string>
+  <string name="sigil_pause">Pausar</string>
+  <string name="sigil_resume">Retomar</string>
+  <string name="sigil_state_on">Ligado</string>
+  <string name="sigil_state_off">Desligado</string>
+  <string name="sigil_state_paused">Pausado</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">Inicie ou pare o controle sem as mãos e veja se o Sigil está ligado.</string>
+  <string name="sigil_widget_running">Seguindo a sua mão</string>
+  <string name="sigil_widget_paused">Pausado</string>
+  <string name="sigil_widget_stopped">Parado</string>
+  <string name="sigil_bubble_pause">Pausar o rastreamento</string>
+  <string name="sigil_bubble_resume">Retomar o rastreamento</string>
+  <string name="sigil_bubble_mic_on">Ligar o microfone</string>
+  <string name="sigil_bubble_mic_off">Desligar o microfone</string>
+  <string name="sigil_bubble_open">Abrir o Sigil</string>
+  <string name="sigil_bubble_stop">Parar o Sigil</string>
+  <string name="sigil_camera_notification_paused">Pausado. A câmera fica desligada até você retomar.</string>
 </resources>

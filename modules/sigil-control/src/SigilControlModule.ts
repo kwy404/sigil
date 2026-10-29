@@ -3,17 +3,21 @@ import { NativeModule, requireOptionalNativeModule } from 'expo';
 import type {
   AppRoleName,
   BrightnessChange,
+  BubbleStateName,
   BrightnessLevel,
   ControlOutcome,
   CursorState,
   GlobalActionName,
   InstallSource,
   LaunchableApp,
+  ListenProblem,
   MediaKeyName,
+  PromptTone,
   ScreenSize,
   SettingsPanelName,
   SigilControlEvents,
   SigilControlStatus,
+  SpeechSupport,
   VolumeChange,
   VolumeLevel,
   VolumeStreamName,
@@ -37,6 +41,10 @@ declare class SigilControlNativeModule extends NativeModule<SigilControlEvents> 
   /** Needs the CAMERA permission and Sigil on screen. Returns false when it cannot start. */
   startCameraService(withMicrophone: boolean): boolean;
   stopCameraService(): void;
+  /** Pauses or resumes hand tracking. False when the camera service is not running. */
+  setTrackingPaused(paused: boolean): boolean;
+  /** What the floating bubble shows. False when the camera service is not running. */
+  setBubbleState(state: BubbleStateName): boolean;
   showCursor(): boolean;
   hideCursor(): void;
   /** Screen pixel coordinates. Cheap enough to call on every camera frame. */
@@ -72,6 +80,23 @@ declare class SigilControlNativeModule extends NativeModule<SigilControlEvents> 
   /** Opens the clock app with this alarm set. */
   setAlarm(hour: number, minute: number): Promise<ControlOutcome>;
   setTorch(on: boolean): Promise<ControlOutcome>;
+  /** What on device recognition can do for this BCP 47 language. */
+  getSpeechSupport(locale: string): Promise<SpeechSupport>;
+  /** Asks Android to download its on device speech model for the language. Android 13 and later. */
+  downloadSpeechModel(locale: string): boolean;
+  /**
+   * Listens for one request with the on device recognizer, or, only when
+   * allowOffDevice is true, with a recognizer asked to prefer offline. Returns
+   * null when listening started, or why it could not. Results arrive as events.
+   */
+  startListening(locale: string, allowOffDevice: boolean, maxMs: number, noSpeechMs: number): ListenProblem | null;
+  /** Stops waiting for more speech and asks for the transcript. */
+  stopListening(): void;
+  cancelListening(): void;
+  /** The panel at the top of the screen for voice requests made over other apps. level is 0 to 1, or -1 without a meter. */
+  showPrompt(title: string, message: string, level: number, tone: PromptTone): boolean;
+  setPromptLevel(level: number): void;
+  hidePrompt(): void;
 }
 
 /**

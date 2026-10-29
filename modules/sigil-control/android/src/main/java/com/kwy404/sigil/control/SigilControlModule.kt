@@ -8,10 +8,13 @@ import android.hardware.display.DisplayManager
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.KeyEvent
+import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -27,6 +30,13 @@ class SigilControlModule : Module() {
   /** Cursor window used while the accessibility service is off. */
   private var appCursor: CursorOverlay? = null
 
+  /** Prompt panel used while the accessibility service is off. */
+  private var appPrompt: PromptOverlay? = null
+
+  /** The voice request in progress, if any. */
+  @Volatile
+  private var speech: SpeechSession? = null
+
   override fun definition() = ModuleDefinition {
     Name("SigilControl")
 
@@ -37,6 +47,12 @@ class SigilControlModule : Module() {
       "onHandFrame",
       "onCursorError",
       "onAppsChanged",
+      "onControlAction",
+      "onSpeechState",
+      "onSpeechLevel",
+      "onSpeechPartial",
+      "onSpeechResult",
+      "onSpeechError",
     )
 
     OnCreate {
@@ -51,7 +67,14 @@ class SigilControlModule : Module() {
       appContext.reactContext?.let { LaunchableApps.unwatch(it) }
       appCursor?.hide()
       appCursor = null
+      appPrompt?.hide()
+      appPrompt = null
+      speech?.cancel()
+      speech = null
     }
+
+    /** The live camera view with the hand landmarks, for tuning distance and light. */
+    View(HandPreviewView::class) {}
 
     Function("getStatus") { status() }
 
@@ -83,6 +106,20 @@ class SigilControlModule : Module() {
     Function("startCameraService") { withMicrophone: Boolean -> startCameraService(withMicrophone) }
 
     Function("stopCameraService") { stopCameraService() }
+
+    /** Pauses or resumes hand tracking; the service, the bubble and the notification stay. */
+    Function("setTrackingPaused") { paused: Boolean ->
+      val service = SigilCameraService.instance ?: return@Function false
+      Handler(Looper.getMainLooper()).post { service.setPaused(paused) }
+      true
+    }
+
+    /** What the floating bubble shows: tracking, hand, listening or paused. */
+    Function("setBubbleState") { state: String ->
+      val service = SigilCameraService.instance ?: return@Function false
+      Handler(Looper.getMainLooper()).post { service.setBubbleState(BubbleState.from(state)) }
+      true
+    }
 
     Function("showCursor") { activeCursor().show() }
 
@@ -158,6 +195,55 @@ class SigilControlModule : Module() {
     AsyncFunction("setAlarm") { hour: Int, minute: Int -> startOutcome(SystemActions.alarmIntent(hour, minute)) }
 
     AsyncFunction("setTorch") { on: Boolean -> SystemActions.setTorch(context, on) }
+
+    AsyncFunction("getSpeechSupport") { locale: String, promise: Promise ->
+      SpeechSession.checkSupport(context.applicationContext, locale) { answer -> promise.resolve(answer) }
+    }
+
+    Function("downloadSpeechModel") { locale: String -> SpeechSession.downloadModel(context.applicationContext, locale) }
+
+    Function("startListening") { locale: String, allowOffDevice: Boolean, maxMs: Int, noSpeechMs: Int ->
+      startListening(locale, allowOffDevice, maxMs, noSpeechMs)
+    }
+
+    Function("stopListening") { speech?.stop() }
+
+    Function("cancelListening") { speech?.cancel() }
+
+    Function("showPrompt") { title: String, message: String, level: Double, tone: String ->
+      activePrompt().show(title, message, level.toFloat(), tone)
+    }
+
+    Function("setPromptLevel") { level: Double -> activePrompt().setLevel(level.toFloat()) }
+
+    Function("hidePrompt") {
+      SigilRuntime.service?.prompt?.hide()
+      appPrompt?.hide()
+    }
+  }
+
+  /** Starts a voice request. Returns null, or why it cannot start: busy, permission, on_device_unavailable, no_recognizer. */
+  private fun startListening(locale: String, allowOffDevice: Boolean, maxMs: Int, noSpeechMs: Int): String? {
+    if (speech != null) return "busy"
+    val session = SpeechSession(
+      context.applicationContext,
+      SpeechSession.Options(locale, allowOffDevice, maxMs, noSpeechMs),
+    ) { name, body -> SigilRuntime.emit(name, body) }
+    session.onEnded = { if (speech === session) speech = null }
+    val problem = session.start()
+    if (problem == null) speech = session
+    return problem
+  }
+
+  /** The service prompt when the accessibility service runs, the application overlay otherwise. */
+  private fun activePrompt(): PromptOverlay {
+    val service = SigilRuntime.service
+    if (service != null) {
+      appPrompt?.hide()
+      appPrompt = null
+      return service.prompt
+    }
+    return appPrompt ?: PromptOverlay(context.applicationContext).also { appPrompt = it }
   }
 
   /**
@@ -200,6 +286,7 @@ class SigilControlModule : Module() {
     "accessibilityEnabled" to (SigilRuntime.service != null),
     "overlayPermission" to Settings.canDrawOverlays(context),
     "cameraServiceRunning" to SigilCameraService.running,
+    "trackingPaused" to SigilCameraService.paused,
     "foregroundPackage" to SigilRuntime.foregroundPackage,
     "writeSettings" to Settings.System.canWrite(context),
     "mediaAccess" to SigilMediaListener.isEnabled(context),

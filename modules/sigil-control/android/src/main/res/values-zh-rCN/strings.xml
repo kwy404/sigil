@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">前置摄像头和麦克风已开启，用于手势和语音。</string>
   <string name="sigil_stop">停止</string>
   <string name="sigil_media_access_label">Sigil 媒体控制</string>
+  <string name="sigil_start">开始</string>
+  <string name="sigil_pause">暂停</string>
+  <string name="sigil_resume">继续</string>
+  <string name="sigil_state_on">已开启</string>
+  <string name="sigil_state_off">已关闭</string>
+  <string name="sigil_state_paused">已暂停</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">开始或停止隔空操控，并查看 Sigil 是否开启。</string>
+  <string name="sigil_widget_running">正在跟踪你的手</string>
+  <string name="sigil_widget_paused">已暂停</string>
+  <string name="sigil_widget_stopped">已停止</string>
+  <string name="sigil_bubble_pause">暂停跟踪</string>
+  <string name="sigil_bubble_resume">继续跟踪</string>
+  <string name="sigil_bubble_mic_on">打开麦克风</string>
+  <string name="sigil_bubble_mic_off">关闭麦克风</string>
+  <string name="sigil_bubble_open">打开 Sigil</string>
+  <string name="sigil_bubble_stop">停止 Sigil</string>
+  <string name="sigil_camera_notification_paused">已暂停。继续之前摄像头保持关闭。</string>
 </resources>

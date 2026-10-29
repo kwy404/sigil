@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">La caméra avant et le micro sont actifs pour les gestes et la voix.</string>
   <string name="sigil_stop">Arrêter</string>
   <string name="sigil_media_access_label">Sigil : contrôle des médias</string>
+  <string name="sigil_start">Démarrer</string>
+  <string name="sigil_pause">Pause</string>
+  <string name="sigil_resume">Reprendre</string>
+  <string name="sigil_state_on">Activé</string>
+  <string name="sigil_state_off">Désactivé</string>
+  <string name="sigil_state_paused">En pause</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">Démarrez ou arrêtez le contrôle mains libres et voyez si Sigil est actif.</string>
+  <string name="sigil_widget_running">Suit votre main</string>
+  <string name="sigil_widget_paused">En pause</string>
+  <string name="sigil_widget_stopped">Arrêté</string>
+  <string name="sigil_bubble_pause">Mettre le suivi en pause</string>
+  <string name="sigil_bubble_resume">Reprendre le suivi</string>
+  <string name="sigil_bubble_mic_on">Activer le micro</string>
+  <string name="sigil_bubble_mic_off">Couper le micro</string>
+  <string name="sigil_bubble_open">Ouvrir Sigil</string>
+  <string name="sigil_bubble_stop">Arrêter Sigil</string>
+  <string name="sigil_camera_notification_paused">En pause. La caméra reste éteinte jusqu\u2019à la reprise.</string>
 </resources>

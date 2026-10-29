@@ -13,30 +13,61 @@ import android.content.pm.ServiceInfo
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.IBinder
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import java.lang.ref.WeakReference
 
 /**
  * Foreground service that keeps the camera (and the microphone when voice is
  * on) available while the user works in other apps. Android shows its
- * notification for as long as it runs, and the camera privacy indicator stays
- * on. It must be started while Sigil is on screen: Android does not let a
- * camera service start from the background.
+ * notification, with Pause and Stop, for as long as it runs, and the camera
+ * privacy indicator stays on. It also owns the floating bubble and keeps the
+ * Quick Settings tile and the home screen widget current. It must be started
+ * while Sigil is on screen: Android does not let a camera service start from
+ * the background.
  */
-class SigilCameraService : Service() {
+class SigilCameraService : Service(), LifecycleOwner {
   private var pipeline: HandLandmarkPipeline? = null
+  private var microphone = false
+  private var bubble: FloatingBubble? = null
+
+  /** CameraX binds the camera to this lifecycle: it runs while the service is started. */
+  private val registry = LifecycleRegistry(this)
+
+  override val lifecycle: Lifecycle
+    get() = registry
+
+  override fun onCreate() {
+    super.onCreate()
+    registry.currentState = Lifecycle.State.CREATED
+    current = WeakReference(this)
+  }
 
   override fun onBind(intent: Intent?): IBinder? = null
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    if (intent?.action == ACTION_STOP) {
-      stopSelf()
-      return START_NOT_STICKY
+    when (intent?.action) {
+      ACTION_STOP -> {
+        SigilRuntime.emit("onControlAction", mapOf("action" to "stop"))
+        stopSelf()
+        return START_NOT_STICKY
+      }
+      ACTION_PAUSE -> {
+        setPaused(true)
+        return START_NOT_STICKY
+      }
+      ACTION_RESUME -> {
+        setPaused(false)
+        return START_NOT_STICKY
+      }
     }
-    val microphone = intent?.getBooleanExtra(EXTRA_MICROPHONE, false) == true &&
+    microphone = intent?.getBooleanExtra(EXTRA_MICROPHONE, false) == true &&
       hasPermission(this, Manifest.permission.RECORD_AUDIO)
 
     try {
       ensureChannel()
-      val notification = buildNotification(microphone)
+      val notification = buildNotification()
       if (Build.VERSION.SDK_INT >= 30) {
         var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
         if (microphone) {
@@ -58,22 +89,88 @@ class SigilCameraService : Service() {
 
     if (!running) {
       running = true
-      pipeline = HandLandmarkPipelines.create(this).also { tracker ->
-        tracker.start { timestampMs, landmarks, score ->
-          SigilRuntime.reportHandFrame(timestampMs, landmarks, score)
-        }
-      }
+      paused = false
+      registry.currentState = Lifecycle.State.RESUMED
+      startPipeline()
+      bubble = FloatingBubble(this, bubbleActions).also { it.show() }
     }
-    SigilRuntime.emit("onCameraServiceStateChanged", mapOf("running" to true, "microphone" to microphone))
+    publish()
     return START_NOT_STICKY
   }
 
   override fun onDestroy() {
     pipeline?.stop()
     pipeline = null
+    bubble?.hide()
+    bubble = null
     running = false
-    SigilRuntime.emit("onCameraServiceStateChanged", mapOf("running" to false))
+    paused = false
+    registry.currentState = Lifecycle.State.DESTROYED
+    if (current?.get() === this) current = null
+    publish()
     super.onDestroy()
+  }
+
+  private fun startPipeline() {
+    pipeline = HandLandmarkPipelines.create(this, this).also { tracker ->
+      tracker.start { timestampMs, landmarks, score, handedness ->
+        SigilRuntime.reportHandFrame(timestampMs, landmarks, score, handedness)
+      }
+    }
+  }
+
+  /** Pausing releases the camera; the service, the bubble and the notification stay so the user can resume. */
+  fun setPaused(value: Boolean) {
+    if (!running || paused == value) return
+    paused = value
+    if (value) {
+      pipeline?.stop()
+      pipeline = null
+      bubble?.setState(BubbleState.PAUSED)
+    } else {
+      startPipeline()
+      bubble?.setState(BubbleState.TRACKING)
+    }
+    SigilRuntime.emit("onControlAction", mapOf("action" to if (value) "pause" else "resume"))
+    getSystemService(NotificationManager::class.java)?.notify(NOTIFICATION_ID, buildNotification())
+    publish()
+  }
+
+  fun setBubbleState(state: BubbleState) {
+    if (!paused) bubble?.setState(state)
+  }
+
+  private val bubbleActions = object : FloatingBubble.Actions {
+    override fun onBubbleTap() {
+      FloatingBubble.openSigil(this@SigilCameraService, "control/sphere")
+    }
+
+    override fun onMenuAction(action: String) {
+      when (action) {
+        "pause" -> setPaused(true)
+        "resume" -> setPaused(false)
+        "open" -> FloatingBubble.openSigil(this@SigilCameraService, "control/home")
+        "stop" -> {
+          SigilRuntime.emit("onControlAction", mapOf("action" to "stop"))
+          stopSelf()
+        }
+        else -> SigilRuntime.emit("onControlAction", mapOf("action" to action))
+      }
+    }
+
+    override fun isPaused(): Boolean = paused
+
+    override fun microphoneOn(): Boolean = microphone
+  }
+
+  /** Tells JavaScript, the tile and the widget what changed. */
+  private fun publish() {
+    SigilRuntime.emit(
+      "onCameraServiceStateChanged",
+      mapOf("running" to running, "paused" to paused, "microphone" to microphone),
+    )
+    SigilTileService.update(this)
+    SigilWidgetProvider.update(this)
   }
 
   private fun ensureChannel() {
@@ -89,15 +186,15 @@ class SigilCameraService : Service() {
     manager.createNotificationChannel(channel)
   }
 
-  @Suppress("DEPRECATION")
-  private fun buildNotification(microphone: Boolean): Notification {
+  private fun action(action: String, label: Int, code: Int): Notification.Action {
     val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-    val stopIntent = PendingIntent.getService(
-      this,
-      1,
-      Intent(this, SigilCameraService::class.java).setAction(ACTION_STOP),
-      flags,
-    )
+    val intent = PendingIntent.getService(this, code, Intent(this, SigilCameraService::class.java).setAction(action), flags)
+    return Notification.Action.Builder(Icon.createWithResource(this, R.drawable.sigil_notification_icon), getString(label), intent).build()
+  }
+
+  @Suppress("DEPRECATION")
+  private fun buildNotification(): Notification {
+    val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     val openIntent = packageManager.getLaunchIntentForPackage(packageName)?.let { launch ->
       PendingIntent.getActivity(this, 2, launch, flags)
     }
@@ -106,23 +203,19 @@ class SigilCameraService : Service() {
     } else {
       Notification.Builder(this)
     }
+    val text = when {
+      paused -> R.string.sigil_camera_notification_paused
+      microphone -> R.string.sigil_camera_notification_text_voice
+      else -> R.string.sigil_camera_notification_text
+    }
     builder
       .setSmallIcon(R.drawable.sigil_notification_icon)
       .setContentTitle(getString(R.string.sigil_camera_notification_title))
-      .setContentText(
-        getString(
-          if (microphone) R.string.sigil_camera_notification_text_voice else R.string.sigil_camera_notification_text,
-        ),
-      )
+      .setContentText(getString(text))
       .setOngoing(true)
       .setCategory(Notification.CATEGORY_SERVICE)
-      .addAction(
-        Notification.Action.Builder(
-          Icon.createWithResource(this, R.drawable.sigil_notification_icon),
-          getString(R.string.sigil_stop),
-          stopIntent,
-        ).build(),
-      )
+      .addAction(if (paused) action(ACTION_RESUME, R.string.sigil_resume, 3) else action(ACTION_PAUSE, R.string.sigil_pause, 3))
+      .addAction(action(ACTION_STOP, R.string.sigil_stop, 1))
     if (openIntent != null) {
       builder.setContentIntent(openIntent)
     }
@@ -135,6 +228,8 @@ class SigilCameraService : Service() {
   companion object {
     const val ACTION_START = "com.kwy404.sigil.control.action.START"
     const val ACTION_STOP = "com.kwy404.sigil.control.action.STOP"
+    const val ACTION_PAUSE = "com.kwy404.sigil.control.action.PAUSE"
+    const val ACTION_RESUME = "com.kwy404.sigil.control.action.RESUME"
     const val EXTRA_MICROPHONE = "microphone"
     private const val CHANNEL_ID = "sigil_hands_free"
     private const val NOTIFICATION_ID = 4041
@@ -142,6 +237,17 @@ class SigilCameraService : Service() {
     @Volatile
     var running = false
       private set
+
+    @Volatile
+    var paused = false
+      private set
+
+    @Volatile
+    private var current: WeakReference<SigilCameraService>? = null
+
+    /** The running service, for the module to reach the bubble and the pause switch. */
+    val instance: SigilCameraService?
+      get() = current?.get()
 
     fun hasPermission(context: Context, permission: String): Boolean =
       context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED

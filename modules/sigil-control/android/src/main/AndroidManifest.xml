@@ -29,6 +29,10 @@
       <action android:name="android.intent.action.MAIN" />
       <category android:name="android.intent.category.LAUNCHER" />
     </intent>
+    <!-- The speech recognizers of the phone, on device first. -->
+    <intent>
+      <action android:name="android.speech.RecognitionService" />
+    </intent>
   </queries>
 
   <application>
@@ -65,5 +69,29 @@
         <action android:name="android.service.notification.NotificationListenerService" />
       </intent-filter>
     </service>
+    <!-- The Sigil Quick Settings tile: stops Sigil, or opens it to start. -->
+    <service
+      android:name="com.kwy404.sigil.control.SigilTileService"
+      android:exported="true"
+      android:icon="@drawable/sigil_notification_icon"
+      android:label="@string/sigil_tile_label"
+      android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+      <intent-filter>
+        <action android:name="android.service.quicksettings.action.QS_TILE" />
+      </intent-filter>
+    </service>
+
+    <!-- The home screen widget with Sigil's state and Start or Stop. -->
+    <receiver
+      android:name="com.kwy404.sigil.control.SigilWidgetProvider"
+      android:exported="true"
+      android:label="@string/sigil_widget_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/sigil_widget_info" />
+    </receiver>
   </application>
 </manifest>

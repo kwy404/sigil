@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">Frontkamera und Mikrofon sind für Gesten und Stimme an.</string>
   <string name="sigil_stop">Stopp</string>
   <string name="sigil_media_access_label">Sigil: Mediensteuerung</string>
+  <string name="sigil_start">Starten</string>
+  <string name="sigil_pause">Pausieren</string>
+  <string name="sigil_resume">Fortsetzen</string>
+  <string name="sigil_state_on">An</string>
+  <string name="sigil_state_off">Aus</string>
+  <string name="sigil_state_paused">Pausiert</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">Freihändige Steuerung starten oder beenden und sehen, ob Sigil an ist.</string>
+  <string name="sigil_widget_running">Folgt deiner Hand</string>
+  <string name="sigil_widget_paused">Pausiert</string>
+  <string name="sigil_widget_stopped">Beendet</string>
+  <string name="sigil_bubble_pause">Erkennung pausieren</string>
+  <string name="sigil_bubble_resume">Erkennung fortsetzen</string>
+  <string name="sigil_bubble_mic_on">Mikrofon einschalten</string>
+  <string name="sigil_bubble_mic_off">Mikrofon ausschalten</string>
+  <string name="sigil_bubble_open">Sigil öffnen</string>
+  <string name="sigil_bubble_stop">Sigil beenden</string>
+  <string name="sigil_camera_notification_paused">Pausiert. Die Kamera bleibt aus, bis du fortsetzt.</string>
 </resources>

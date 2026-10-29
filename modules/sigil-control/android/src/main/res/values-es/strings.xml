@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">La cámara frontal y el micrófono están activos para los gestos y la voz.</string>
   <string name="sigil_stop">Detener</string>
   <string name="sigil_media_access_label">Sigil: control multimedia</string>
+  <string name="sigil_start">Iniciar</string>
+  <string name="sigil_pause">Pausar</string>
+  <string name="sigil_resume">Reanudar</string>
+  <string name="sigil_state_on">Activado</string>
+  <string name="sigil_state_off">Desactivado</string>
+  <string name="sigil_state_paused">En pausa</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">Inicia o detén el control sin manos y mira si Sigil está activo.</string>
+  <string name="sigil_widget_running">Siguiendo tu mano</string>
+  <string name="sigil_widget_paused">En pausa</string>
+  <string name="sigil_widget_stopped">Detenido</string>
+  <string name="sigil_bubble_pause">Pausar el seguimiento</string>
+  <string name="sigil_bubble_resume">Reanudar el seguimiento</string>
+  <string name="sigil_bubble_mic_on">Activar el micrófono</string>
+  <string name="sigil_bubble_mic_off">Desactivar el micrófono</string>
+  <string name="sigil_bubble_open">Abrir Sigil</string>
+  <string name="sigil_bubble_stop">Detener Sigil</string>
+  <string name="sigil_camera_notification_paused">En pausa. La cámara está apagada hasta que reanudes.</string>
 </resources>
