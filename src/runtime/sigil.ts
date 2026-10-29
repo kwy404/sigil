@@ -1,9 +1,7 @@
 import { AppState, PermissionsAndroid, Platform } from 'react-native';
 
 import type { ControlAction } from '../../modules/sigil-control';
-import { MockSpeechToText } from '../adapters/voice/mock-speech';
-import { NativeSpeechToText } from '../adapters/voice/native-speech';
-import { SpeechUnavailableError, type SpeechToText } from '../adapters/voice/speech-to-text';
+import { MockSpeechToText, NativeSpeechToText, SpeechUnavailableError, type SpeechToText } from '../adapters/voice';
 import { ProfileRegistry } from '../app-profiles/registry';
 import { gestureKey } from '../gesture-engine/gestures';
 import { sampleRecordings, type HandRecording } from '../gesture-engine/samples';

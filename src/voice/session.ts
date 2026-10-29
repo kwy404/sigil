@@ -6,7 +6,7 @@ import {
   type Transcript,
   type UnavailableReason,
   type UnclearReason,
-} from '../adapters/voice/speech-to-text';
+} from '../adapters/voice';
 import { pickApp } from '../sigil-core/apps';
 import { parseAnswer } from '../sigil-core/answers';
 import type { ConfirmationRequest, ExecutionResult, StepEvent } from '../sigil-core/executor';
