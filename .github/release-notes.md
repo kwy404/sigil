@@ -1,4 +1,4 @@
-Preview build of Sigil for Android phones (arm64 and armv7). GitHub Actions built it from this tag, and it is signed with a development key.
+Preview build of Sigil for Android phones with a 64 bit processor (arm64), which covers nearly every phone of recent years. GitHub Actions built it from this tag, and it is signed with a development key.
 
 **In this build**
 - The app in English, Portuguese, Spanish, French, German, Italian, Japanese and Chinese, following the phone language, with a language picker.

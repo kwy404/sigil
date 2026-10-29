@@ -39,6 +39,25 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # The native C++ builds need more disk than the runner has free, so
+      # remove preinstalled toolchains this build does not use.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/.ghcup /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/share/powershell /usr/local/julia* /opt/microsoft /opt/google/chrome /usr/lib/jvm/java-8* /usr/lib/jvm/java-11*
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          df -h /
+
+      # Give the parallel C++ compilers room on the runner.
+      - name: Add swap space
+        run: |
+          sudo fallocate -l 6G /swapfile-build
+          sudo chmod 600 /swapfile-build
+          sudo mkswap /swapfile-build
+          sudo swapon /swapfile-build
+          free -h
+          nproc
+
       - run: npm ci
 
       - name: Generate the native project
@@ -48,7 +67,9 @@ jobs:
       # debug key, which makes an installable preview without any secret.
       - name: Build the release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        run: |
+          (while true; do free -m | awk 'NR == 2 { print "memory used " $3 " of " $2 " MB" }'; sleep 60; done) &
+          ./gradlew assembleRelease --no-daemon --max-workers=3 -PreactNativeArchitectures=arm64-v8a
 
       - run: cp android/app/build/outputs/apk/release/app-release.apk sigil-android.apk
 
