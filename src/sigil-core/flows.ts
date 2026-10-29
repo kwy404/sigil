@@ -1,6 +1,7 @@
 import { GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles/registry';
 import type { AppProfile } from '../app-profiles/schema';
 import { isSensitiveLabel, namesSeveralPeople } from './confirmation';
+import { noticeText, type Notice } from './notices';
 import { describeStep, type PlanStep, type StepTarget } from './steps';
 import type { Intent } from './tools';
 
@@ -16,7 +17,7 @@ export interface FlowContext {
 
 export type FlowResult =
   | { ok: true; steps: PlanStep[]; summary: string }
-  | { ok: false; reason: 'unknown_app' | 'unsupported' | 'blocked'; message: string };
+  | { ok: false; reason: 'unknown_app' | 'unsupported' | 'blocked'; message: string; notice: Notice };
 
 const APP_TIMEOUT_MS = 8000;
 const NODE_TIMEOUT_MS = 6000;
@@ -34,8 +35,12 @@ function openSteps(app: AppProfile, url?: string): PlanStep[] {
   ];
 }
 
+function refuse(reason: 'unknown_app' | 'unsupported' | 'blocked', notice: Notice): FlowResult {
+  return { ok: false, reason, message: noticeText(notice), notice };
+}
+
 function unknownApp(name: string): FlowResult {
-  return { ok: false, reason: 'unknown_app', message: `Sigil does not know an app called "${name}" yet.` };
+  return refuse('unknown_app', { code: 'unknown_app', app: name });
 }
 
 /** Turns an intent into concrete steps. Pure and deterministic: the same intent always gives the same plan. */
@@ -64,14 +69,10 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
         return unknownApp(intent.args.app ?? ctx.defaultMessagingApp);
       }
       if (namesSeveralPeople(contact)) {
-        return {
-          ok: false,
-          reason: 'blocked',
-          message: 'Sigil sends a message to one person at a time. Ask again for each person.',
-        };
+        return refuse('blocked', { code: 'several_people' });
       }
       if (!has(app, 'messageInput') || !has(app, 'send')) {
-        return { ok: false, reason: 'unsupported', message: `Sigil cannot send messages in ${app.name} yet.` };
+        return refuse('unsupported', { code: 'cannot_send', app: app.name, appId: app.id });
       }
       const steps: PlanStep[] = [...openSteps(app)];
       if (has(app, 'startChat')) {
@@ -95,7 +96,7 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
           },
         );
       } else {
-        return { ok: false, reason: 'unsupported', message: `Sigil cannot find contacts in ${app.name} yet.` };
+        return refuse('unsupported', { code: 'cannot_find_contacts', app: app.name, appId: app.id });
       }
       steps.push(
         { kind: 'find', target: { by: 'text', value: contact }, scroll: false, timeoutMs: NODE_TIMEOUT_MS },
@@ -120,7 +121,7 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
         return { ok: true, steps: openSteps(app, url), summary: `Search ${app.name} for ${query}` };
       }
       if (!has(app, 'search')) {
-        return { ok: false, reason: 'unsupported', message: `Sigil cannot search in ${app.name} yet.` };
+        return refuse('unsupported', { code: 'cannot_search', app: app.name, appId: app.id });
       }
       return {
         ok: true,
@@ -214,10 +215,10 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
       }
       const app = named ?? profiles.forPackage(ctx.foregroundPackage);
       if (app.id === GENERAL_PROFILE_ID) {
-        return { ok: false, reason: 'unsupported', message: 'Open the post or video first, or say which app it is in.' };
+        return refuse('unsupported', { code: 'like_needs_app' });
       }
       if (!has(app, 'like')) {
-        return { ok: false, reason: 'unsupported', message: `Sigil cannot like in ${app.name} yet.` };
+        return refuse('unsupported', { code: 'cannot_like', app: app.name, appId: app.id });
       }
       return {
         ok: true,
@@ -236,7 +237,7 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
         return unknownApp(intent.args.app);
       }
       if (!has(app, 'create') || !has(app, 'captionInput') || !has(app, 'share')) {
-        return { ok: false, reason: 'unsupported', message: `Sigil cannot post on ${app.name} yet.` };
+        return refuse('unsupported', { code: 'cannot_post', app: app.name, appId: app.id });
       }
       return {
         ok: true,
@@ -255,6 +256,6 @@ export function expandIntent(intent: Intent, ctx: FlowContext): FlowResult {
     }
 
     case 'clarify':
-      return { ok: false, reason: 'unsupported', message: intent.args.question };
+      return refuse('unsupported', { code: 'question', question: intent.args.question });
   }
 }

@@ -38,6 +38,7 @@ export {
 } from './executor';
 export { expandIntent, type FlowContext, type FlowResult } from './flows';
 export { RuleBasedModel, type LanguageModel, type ModelContext, type ModelReply } from './model';
+export { noticeText, type Notice, type NoticeCode } from './notices';
 export {
   ActionPlanner,
   type IntentSource,

@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { describeAction, GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles';
-import { describeGesture } from '../gesture-engine';
+import { GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles';
+import { describeAction, describeGesture, useDescribeContext } from '../i18n';
 import { Card, Chip, textStyles } from '../ui/primitives';
 import { tokens } from '../ui/tokens';
 
 /** Lists the gesture profile of every app and, on tap, what each gesture does there. */
 export function ProfilesPanel({ registry }: { registry: ProfileRegistry }) {
+  const ctx = useDescribeContext(registry);
+  const { m } = ctx;
   const [openId, setOpenId] = useState<string | null>(null);
   const profiles = registry.list();
 
   return (
-    <Card
-      title="App profiles"
-      caption="A gesture means what the app in front needs. Profiles are JSON files validated at startup; apps without one use General.">
+    <Card title={m.profiles.title} caption={m.profiles.caption}>
       {profiles.map((profile) => {
         const bindings = registry.bindings(profile.id);
         const own = bindings.filter((b) => !b.inherited).length;
@@ -27,22 +27,22 @@ export function ProfilesPanel({ registry }: { registry: ProfileRegistry }) {
               onPress={() => setOpenId(expanded ? null : profile.id)}
               style={styles.header}>
               <View style={styles.titles}>
-                <Text style={styles.name}>{profile.name}</Text>
+                <Text style={styles.name}>{ctx.appName(profile.id)}</Text>
                 <Text style={textStyles.muted} numberOfLines={2}>
-                  {profile.packages.length > 0 ? profile.packages.join(', ') : 'Every app without its own profile'}
+                  {profile.packages.length > 0 ? profile.packages.join(', ') : m.profiles.everyApp}
                 </Text>
               </View>
               <Chip
-                label={profile.id === GENERAL_PROFILE_ID ? `${own} gestures` : `${own} own, ${bindings.length - own} shared`}
+                label={profile.id === GENERAL_PROFILE_ID ? m.profiles.gestures(own) : m.profiles.ownShared(own, bindings.length - own)}
                 tone="accent"
               />
             </Pressable>
             {expanded
               ? bindings.map((binding) => (
                   <View key={binding.key} style={styles.binding}>
-                    <Text style={styles.gesture}>{describeGesture(binding.key)}</Text>
+                    <Text style={styles.gesture}>{describeGesture(binding.key, m)}</Text>
                     <Text style={[styles.action, binding.inherited ? styles.inherited : null]}>
-                      {describeAction(binding.action)}
+                      {describeAction(binding.action, ctx)}
                     </Text>
                   </View>
                 ))

@@ -25,9 +25,30 @@ interface SampleScript {
   options?: RenderOptions;
 }
 
+/** Ids of the sample recordings, one per gesture of the vocabulary, in the order they are shown. */
+export const SAMPLE_IDS = [
+  'open-palm',
+  'point',
+  'fist',
+  'pinch',
+  'double-pinch',
+  'pinch-hold',
+  'swipe-two-right',
+  'swipe-three-up',
+  'circle-cw',
+  'circle-ccw',
+  'flick-up',
+] as const;
+
+export type SampleId = (typeof SAMPLE_IDS)[number];
+
+export function isSampleId(id: string): id is SampleId {
+  return (SAMPLE_IDS as readonly string[]).includes(id);
+}
+
 const CENTER = { x: 0.5, y: 0.62 };
 
-const SCRIPTS: SampleScript[] = [
+const SCRIPTS: (SampleScript & { id: SampleId })[] = [
   {
     id: 'open-palm',
     label: 'Open palm',

@@ -2,29 +2,27 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { DEFAULT_CONTROL_BOX, mapToScreen, sampleRecordings, traceRecording } from '../gesture-engine';
-import {
-  describeMode,
-  getNativeControl,
-  getSystemControl,
-  requestControlPermissions,
-  type SystemControl,
-} from '../system-control';
+import { useI18n, type Messages } from '../i18n';
+import { getNativeControl, getSystemControl, requestControlPermissions, type ControlMode } from '../system-control';
 import { Button, Card, Chip, Row, textStyles } from '../ui/primitives';
 import { tokens } from '../ui/tokens';
 
-const MODE_LABEL: Record<SystemControl['mode'], string> = {
-  'android-system': 'system wide',
-  'android-setup': 'setup needed',
-  'in-app': 'in app only',
-};
+function modeText(mode: ControlMode, m: Messages): string {
+  if (mode === 'in-app') {
+    return Platform.OS === 'ios' ? m.system.modes.inAppIos : m.system.modes.inAppOther;
+  }
+  return m.system.modes[mode];
+}
 
 /** Shows what this build can control and, on Android, the switches to turn system control on. */
 export function SystemPanel() {
+  const { messages: m } = useI18n();
   const [control, setControl] = useState(() => getSystemControl());
   const [status, setStatus] = useState(() => control.native?.getStatus() ?? null);
   const [message, setMessage] = useState<string | null>(null);
   const demo = useRef<ReturnType<typeof setInterval> | null>(null);
   const native = control.native;
+  const v = m.system.values;
 
   const refresh = useCallback(() => {
     const next = getSystemControl();
@@ -42,7 +40,7 @@ export function SystemPanel() {
           module.addListener('onServiceStateChanged', refresh),
           module.addListener('onForegroundAppChanged', refresh),
           module.addListener('onCameraServiceStateChanged', (event) => {
-            if (event.error) setMessage(`Camera service: ${event.error}`);
+            if (event.error) setMessage(m.system.errors.cameraService(event.error));
             refresh();
           }),
         ]
@@ -52,17 +50,17 @@ export function SystemPanel() {
       subscriptions.forEach((s) => s.remove());
       if (demo.current) clearInterval(demo.current);
     };
-  }, [refresh]);
+  }, [refresh, m]);
 
   const startCamera = async () => {
     if (!native) return;
     const granted = await requestControlPermissions({ microphone: false });
     if (!granted.camera) {
-      setMessage('Gesture control needs the camera permission.');
+      setMessage(m.system.errors.cameraPermission);
       return;
     }
     if (!native.startCameraService(false)) {
-      setMessage('The camera service could not start.');
+      setMessage(m.system.errors.cameraStart);
     }
     refresh();
   };
@@ -70,7 +68,7 @@ export function SystemPanel() {
   const cursorDemo = () => {
     if (!native) return;
     if (!native.showCursor()) {
-      setMessage('Turn on the accessibility service, or allow Sigil to display over other apps, to see the cursor.');
+      setMessage(m.system.errors.cursor);
       native.openOverlaySettings();
       return;
     }
@@ -96,37 +94,41 @@ export function SystemPanel() {
 
   return (
     <Card
-      title="System control"
-      caption={describeMode(control.mode)}
-      right={<Chip label={MODE_LABEL[control.mode]} tone={control.mode === 'android-system' ? 'success' : 'warning'} />}>
+      title={m.system.title}
+      caption={modeText(control.mode, m)}
+      right={<Chip label={m.system.modeLabels[control.mode]} tone={control.mode === 'android-system' ? 'success' : 'warning'} />}>
       {native && status ? (
         <>
           <View style={styles.rows}>
-            <Row label="Accessibility service" value={status.accessibilityEnabled ? 'on' : 'off'} tone={status.accessibilityEnabled ? 'success' : 'warning'} />
-            <Row label="Camera service" value={status.cameraServiceRunning ? 'running' : 'stopped'} />
-            <Row label="Display over other apps" value={status.overlayPermission ? 'allowed' : 'not allowed'} />
-            <Row label="App in front" value={status.foregroundPackage ?? 'unknown'} />
+            <Row
+              label={m.system.rows.accessibility}
+              value={status.accessibilityEnabled ? v.on : v.off}
+              tone={status.accessibilityEnabled ? 'success' : 'warning'}
+            />
+            <Row label={m.system.rows.camera} value={status.cameraServiceRunning ? v.running : v.stopped} />
+            <Row label={m.system.rows.overlay} value={status.overlayPermission ? v.allowed : v.notAllowed} />
+            <Row label={m.system.rows.foreground} value={status.foregroundPackage ?? v.unknown} />
           </View>
           <View style={styles.buttons}>
-            <Button label="Open accessibility settings" onPress={() => native.openAccessibilitySettings()} />
+            <Button label={m.system.buttons.accessibility} onPress={() => native.openAccessibilitySettings()} />
             {status.cameraServiceRunning ? (
-              <Button label="Stop camera service" tone="warning" onPress={() => { native.stopCameraService(); refresh(); }} />
+              <Button
+                label={m.system.buttons.stopCamera}
+                tone="warning"
+                onPress={() => {
+                  native.stopCameraService();
+                  refresh();
+                }}
+              />
             ) : (
-              <Button label="Start camera service" onPress={startCamera} />
+              <Button label={m.system.buttons.startCamera} onPress={startCamera} />
             )}
-            <Button label="Show the cursor over apps" onPress={cursorDemo} />
+            <Button label={m.system.buttons.cursor} onPress={cursorDemo} />
           </View>
-          <Text style={textStyles.muted}>
-            On Android 13 and later, a build installed outside the Play Store must first allow restricted settings in
-            App info before its accessibility service can be turned on.
-          </Text>
+          <Text style={textStyles.muted}>{m.system.restricted}</Text>
         </>
       ) : (
-        <Text style={textStyles.muted}>
-          {Platform.OS === 'ios'
-            ? 'On iOS, Sigil reads gestures and voice inside its own screens, opens apps through links and runs Shortcuts. It cannot tap or draw inside other apps.'
-            : 'Build a development client with EAS to include the Android control module. Expo Go only has the JavaScript side.'}
-        </Text>
+        <Text style={textStyles.muted}>{Platform.OS === 'ios' ? m.system.iosOnly : m.system.devClient}</Text>
       )}
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </Card>

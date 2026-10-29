@@ -34,6 +34,15 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "pt-BR", "es", "fr", "de", "it", "ja", "zh-Hans"],
+            "android": ["en", "pt-BR", "es", "fr", "de", "it", "ja", "zh-Hans"]
+          }
+        }
       ]
     ],
     "experiments": {

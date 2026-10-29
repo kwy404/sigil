@@ -2,6 +2,7 @@ import { GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles/regist
 import { ConfirmationPolicy } from './confirmation';
 import { expandIntent } from './flows';
 import { RuleBasedModel, type LanguageModel, type ModelContext } from './model';
+import { noticeText, type Notice } from './notices';
 import type { PlanStep } from './steps';
 import { parseToolCall, toolDefinitions, type Intent } from './tools';
 
@@ -26,12 +27,16 @@ export interface Plan {
   needsConfirmation: boolean;
 }
 
+/**
+ * What the planner made of a request. message is an English text for logs;
+ * notice says the same as data, for the screens to translate.
+ */
 export type PlanOutcome =
   | { status: 'planned'; plan: Plan; notes: string[] }
   | { status: 'clarify'; question: string; source: IntentSource }
-  | { status: 'blocked'; message: string }
-  | { status: 'unsupported'; message: string; intent: Intent }
-  | { status: 'not_understood'; message: string; notes: string[] };
+  | { status: 'blocked'; message: string; notice: Notice }
+  | { status: 'unsupported'; message: string; intent: Intent; notice: Notice }
+  | { status: 'not_understood'; message: string; notes: string[]; notice: Notice };
 
 export interface PlannerOptions {
   profiles: ProfileRegistry;
@@ -99,11 +104,12 @@ export class ActionPlanner {
     const text = request.text.trim();
     const notes: string[] = [];
     if (!text) {
-      return { status: 'not_understood', message: 'Nothing was heard.', notes };
+      const notice: Notice = { code: 'nothing_heard' };
+      return { status: 'not_understood', message: noticeText(notice), notes, notice };
     }
     const refusal = this.policy.screenRequest(text);
     if (refusal) {
-      return { status: 'blocked', message: refusal };
+      return { status: 'blocked', message: refusal, notice: { code: 'bulk' } };
     }
 
     const foreground = request.foregroundPackage ? this.profiles.forPackage(request.foregroundPackage) : null;
@@ -115,11 +121,8 @@ export class ActionPlanner {
 
     const proposal = await this.propose(text, context, notes, signal);
     if (!proposal) {
-      return {
-        status: 'not_understood',
-        message: 'Sigil did not understand that. Try "open YouTube" or "send I am on my way to Ana on WhatsApp".',
-        notes,
-      };
+      const notice: Notice = { code: 'not_understood' };
+      return { status: 'not_understood', message: noticeText(notice), notes, notice };
     }
     const { intent, source } = proposal;
     if (intent.tool === 'clarify') {
@@ -134,12 +137,12 @@ export class ActionPlanner {
     });
     if (!flow.ok) {
       return flow.reason === 'blocked'
-        ? { status: 'blocked', message: flow.message }
-        : { status: 'unsupported', message: flow.message, intent };
+        ? { status: 'blocked', message: flow.message, notice: flow.notice }
+        : { status: 'unsupported', message: flow.message, intent, notice: flow.notice };
     }
     const guarded = this.policy.apply(flow.steps);
     if (!guarded.ok) {
-      return { status: 'blocked', message: guarded.reason };
+      return { status: 'blocked', message: guarded.reason, notice: guarded.notice };
     }
     return {
       status: 'planned',

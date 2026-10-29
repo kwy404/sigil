@@ -2,9 +2,10 @@ import type { ProfileRegistry } from '../app-profiles/registry';
 import { foldText } from '../app-profiles/text';
 import { LANGUAGE_PACKS } from './languages';
 import { loose } from './languages/helpers';
+import { noticeText, type Notice } from './notices';
 import { describeTarget, type PlanStep } from './steps';
 
-const CJK = /[぀-ヿ㐀-鿿豈-﫿]/u;
+const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/u;
 
 // The policy is the same in every language: every request and every control
 // label is checked against the words and patterns of all eight languages, so
@@ -42,7 +43,9 @@ export function namesSeveralPeople(contact: string): boolean {
   return SEVERAL_PEOPLE.some((pattern) => pattern.test(contact.trim()));
 }
 
-export type PolicyResult = { ok: true; steps: PlanStep[]; commits: number } | { ok: false; reason: string };
+export type PolicyResult =
+  | { ok: true; steps: PlanStep[]; commits: number }
+  | { ok: false; reason: string; notice: Notice };
 
 export interface PolicyOptions {
   /** Most commit steps (send, post, share) a single plan may contain. */
@@ -68,7 +71,7 @@ export class ConfirmationPolicy {
   /** Returns why a request is refused, or null when it may be planned. */
   screenRequest(text: string): string | null {
     if (BULK_PATTERNS.some((pattern) => pattern.test(text))) {
-      return 'Sigil acts once per request, for one person, while you watch. It does not repeat actions, message many people or follow and like in bulk.';
+      return noticeText({ code: 'bulk' });
     }
     return null;
   }
@@ -110,10 +113,8 @@ export class ConfirmationPolicy {
       }
     }
     if (commits > this.maxCommitsPerPlan) {
-      return {
-        ok: false,
-        reason: `This plan would send or post ${commits} times. Sigil does at most ${this.maxCommitsPerPlan} per request.`,
-      };
+      const notice: Notice = { code: 'too_many_commits', count: commits, limit: this.maxCommitsPerPlan };
+      return { ok: false, reason: noticeText(notice), notice };
     }
     return { ok: true, steps: out, commits };
   }

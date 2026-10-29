@@ -16,8 +16,9 @@ export const DEMO_UTTERANCES: readonly string[] = [
 /**
  * Returns the speech engine for this build. Only the mock exists today; a
  * native engine (whisper.rn or the platform recognizer) replaces it once its
- * module is installed, without changes to the callers.
+ * module is installed, without changes to the callers. The mock "hears" the
+ * given sentences, so the app can pass examples in the user's language.
  */
-export function createSpeechToText(): SpeechToText {
-  return new MockSpeechToText(DEMO_UTTERANCES);
+export function createSpeechToText(script: readonly string[] = DEMO_UTTERANCES): SpeechToText {
+  return new MockSpeechToText(script.length > 0 ? script : DEMO_UTTERANCES);
 }

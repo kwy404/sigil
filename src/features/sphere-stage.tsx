@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { cancelAnimation, Easing, useDerivedValue, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { ControlSphere } from '../control-sphere';
+import { ControlSphere, DEFAULT_SEGMENTS } from '../control-sphere';
 import { HoloCursor } from '../cursor-overlay';
 import {
   DEFAULT_CONTROL_BOX,
-  describeGesture,
   gestureKey,
+  isSampleId,
   mapToScreen,
   traceRecording,
+  type GestureKey,
   type HandRecording,
 } from '../gesture-engine';
+import { describeGesture, useI18n } from '../i18n';
 import { tokens } from '../ui/tokens';
 
 /** Pause at the end of each loop, in milliseconds. */
@@ -25,7 +27,7 @@ interface CursorPath {
   press: number[];
   shown: number[];
   durationMs: number;
-  events: { at: number; label: string }[];
+  events: { at: number; key: GestureKey }[];
 }
 
 function buildPath(recording: HandRecording, size: number): CursorPath {
@@ -42,7 +44,7 @@ function buildPath(recording: HandRecording, size: number): CursorPath {
   }
   path.events = trace.events
     .filter((event) => event.phase !== 'end')
-    .map((event) => ({ at: event.t - first, label: describeGesture(gestureKey(event)) }));
+    .map((event) => ({ at: event.t - first, key: gestureKey(event) }));
   return path;
 }
 
@@ -62,8 +64,14 @@ export function SphereStage({
   activeSegment: string | null;
   onSelectSegment: (id: string) => void;
 }) {
+  const { messages: m } = useI18n();
   const path = useMemo(() => (recording ? buildPath(recording, size) : null), [recording, size]);
-  const [caption, setCaption] = useState<string | null>(null);
+  const [caption, setCaption] = useState<GestureKey | null>(null);
+  const segments = useMemo(
+    () => DEFAULT_SEGMENTS.map((segment) => ({ id: segment.id, label: m.sphere.segments[segment.id] })),
+    [m],
+  );
+  const recordingLabel = recording && isSampleId(recording.id) ? m.samples[recording.id].label : recording?.label;
 
   const xs = path?.xs ?? [];
   const ys = path?.ys ?? [];
@@ -83,7 +91,7 @@ export function SphereStage({
     const timer = setInterval(() => {
       const elapsed = (Date.now() - started) % loop;
       const recent = [...path.events].reverse().find((e) => e.at <= elapsed && elapsed - e.at < CAPTION_MS);
-      setCaption(recent ? recent.label : null);
+      setCaption(recent ? recent.key : null);
     }, 100);
     return () => {
       clearInterval(timer);
@@ -110,11 +118,11 @@ export function SphereStage({
 
   return (
     <View style={styles.stage}>
-      <ControlSphere size={size} activeId={activeSegment} onSelect={onSelectSegment}>
+      <ControlSphere size={size} segments={segments} activeId={activeSegment} onSelect={onSelectSegment}>
         {path ? <HoloCursor x={x} y={y} press={pressed} visible={visible} /> : null}
       </ControlSphere>
       <Text style={styles.caption} accessibilityLiveRegion="polite">
-        {recording ? (caption ?? recording.label) : 'Pick a sample in the gesture lab to replay it here.'}
+        {recording ? (caption ? describeGesture(caption, m) : recordingLabel) : m.sphere.pickSample}
       </Text>
     </View>
   );

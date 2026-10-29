@@ -154,12 +154,20 @@ describe('ActionPlanner with the rule based fallback', () => {
 
   it('refuses one message to several people', async () => {
     const outcome = await planner.plan({ text: 'send hi to Ana and Bruno on WhatsApp' });
-    expect(outcome).toEqual({ status: 'blocked', message: 'Sigil sends a message to one person at a time. Ask again for each person.' });
+    expect(outcome).toEqual({
+      status: 'blocked',
+      message: 'Sigil sends a message to one person at a time. Ask again for each person.',
+      notice: { code: 'several_people' },
+    });
   });
 
   it('explains what it cannot do yet', async () => {
     const outcome = await planner.plan({ text: 'post hello on TikTok' });
-    expect(outcome).toMatchObject({ status: 'unsupported', message: 'Sigil cannot post on TikTok yet.' });
+    expect(outcome).toMatchObject({
+      status: 'unsupported',
+      message: 'Sigil cannot post on TikTok yet.',
+      notice: { code: 'cannot_post', app: 'TikTok', appId: 'tiktok' },
+    });
     const unsupported = await planner.plan({ text: 'search for cats on Settings' });
     expect(unsupported.status).toBe('planned');
     const noMessaging = await planner.plan({ text: 'send hi to Ana on YouTube' });

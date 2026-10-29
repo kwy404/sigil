@@ -1,12 +1,18 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { describeGesture, replayRecording, sampleRecordings } from '../gesture-engine';
+import { isSampleId, replayRecording, sampleRecordings, type HandRecording } from '../gesture-engine';
+import { describeGesture, useI18n, type Messages } from '../i18n';
 import { Card, Chip, textStyles } from '../ui/primitives';
 import { tokens } from '../ui/tokens';
 
+function sampleText(recording: HandRecording, m: Messages): { label: string; description: string } {
+  return isSampleId(recording.id) ? m.samples[recording.id] : { label: recording.label, description: recording.description };
+}
+
 /** Runs the gesture classifier over every sample recording and lists what it recognized. */
 export function GestureLab({ selectedId, onSelect }: { selectedId: string | null; onSelect: (id: string) => void }) {
+  const { messages: m, format } = useI18n();
   const results = useMemo(
     () => sampleRecordings().map((recording) => ({ recording, result: replayRecording(recording) })),
     [],
@@ -15,11 +21,12 @@ export function GestureLab({ selectedId, onSelect }: { selectedId: string | null
 
   return (
     <Card
-      title="Gesture lab"
-      caption={`The classifier replays ${results.length} hand recordings made with the synthetic hand rig, the same ones the unit tests use. Tap one to replay it on the sphere.`}
-      right={<Chip label={`${matched}/${results.length} match`} tone={matched === results.length ? 'success' : 'warning'} />}>
+      title={m.lab.title}
+      caption={m.lab.caption(results.length)}
+      right={<Chip label={m.lab.matched(matched, results.length)} tone={matched === results.length ? 'success' : 'warning'} />}>
       {results.map(({ recording, result }) => {
         const selected = recording.id === selectedId;
+        const text = sampleText(recording, m);
         return (
           <Pressable
             key={recording.id}
@@ -28,15 +35,15 @@ export function GestureLab({ selectedId, onSelect }: { selectedId: string | null
             onPress={() => onSelect(recording.id)}
             style={[styles.sample, selected ? styles.sampleSelected : null]}>
             <View style={styles.sampleHeader}>
-              <Text style={styles.sampleTitle}>{recording.label}</Text>
-              <Chip label={result.passed ? 'match' : 'mismatch'} tone={result.passed ? 'success' : 'danger'} />
+              <Text style={styles.sampleTitle}>{text.label}</Text>
+              <Chip label={result.passed ? m.lab.match : m.lab.mismatch} tone={result.passed ? 'success' : 'danger'} />
             </View>
-            <Text style={textStyles.muted}>{recording.description}</Text>
+            <Text style={textStyles.muted}>{text.description}</Text>
             <Text style={textStyles.mono}>
-              {result.keys.length > 0 ? result.keys.map(describeGesture).join(', ') : 'no gesture'}
+              {result.keys.length > 0 ? result.keys.map((key) => describeGesture(key, m)).join(', ') : m.lab.noGesture}
             </Text>
             <Text style={textStyles.muted}>
-              {`${result.frameCount} frames, ${(result.durationMs / 1000).toFixed(1)} s at ${recording.fps} fps`}
+              {m.lab.stats(result.frameCount, format.number(result.durationMs / 1000, 1), recording.fps)}
             </Text>
           </Pressable>
         );

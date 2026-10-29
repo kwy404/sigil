@@ -10,8 +10,10 @@ export interface SphereSegment {
   label: string;
 }
 
-/** The hub's default ring of actions. */
-export const DEFAULT_SEGMENTS: readonly SphereSegment[] = [
+export type DefaultSegmentId = 'apps' | 'voice' | 'cursor' | 'profiles' | 'pause' | 'settings';
+
+/** The hub's default ring of actions, with English labels; the screens pass translated ones. */
+export const DEFAULT_SEGMENTS: readonly (SphereSegment & { id: DefaultSegmentId })[] = [
   { id: 'apps', label: 'Apps' },
   { id: 'voice', label: 'Voice' },
   { id: 'cursor', label: 'Cursor' },

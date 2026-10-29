@@ -4,11 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileRegistry } from '@/app-profiles';
 import { GestureLab } from '@/features/gesture-lab';
+import { LanguagePanel } from '@/features/language-panel';
 import { PlannerPanel } from '@/features/planner-panel';
 import { ProfilesPanel } from '@/features/profiles-panel';
 import { SphereStage } from '@/features/sphere-stage';
 import { SystemPanel } from '@/features/system-panel';
 import { sampleRecordings } from '@/gesture-engine';
+import { useI18n } from '@/i18n';
 import { Card } from '@/ui/primitives';
 import { tokens } from '@/ui/tokens';
 
@@ -17,6 +19,7 @@ const SIDE = tokens.space.xl;
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { messages: m } = useI18n();
   const registry = useMemo(() => ProfileRegistry.withBuiltins(), []);
   const samples = useMemo(() => sampleRecordings(), []);
   const [sampleId, setSampleId] = useState<string | null>('circle-cw');
@@ -36,12 +39,10 @@ export default function HomeScreen() {
         <Text style={styles.brand} accessibilityRole="header">
           Sigil
         </Text>
-        <Text style={styles.tagline}>Your phone, moved by your hands and your voice. Everything stays on the device.</Text>
+        <Text style={styles.tagline}>{m.home.tagline}</Text>
       </View>
 
-      <Card
-        title="Control Sphere"
-        caption="Show an open palm to open the hub, point to move the cursor and pinch to choose. The cursor replays the selected recording through the gesture classifier.">
+      <Card title={m.home.sphereTitle} caption={m.home.sphereCaption}>
         <SphereStage size={stageSize} recording={recording} activeSegment={segment} onSelectSegment={setSegment} />
       </Card>
 
@@ -49,6 +50,7 @@ export default function HomeScreen() {
       <PlannerPanel registry={registry} />
       <ProfilesPanel registry={registry} />
       <SystemPanel />
+      <LanguagePanel />
     </ScrollView>
   );
 }
