@@ -19,7 +19,7 @@ android {
 // official MediaPipe samples do, and its SHA-256 is checked, so every build
 // bundles the same file. See docs/MODULES.md.
 def handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'
-def handModelSha256 = ''
+def handModelSha256 = 'fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1'
 def handModelFile = file('src/main/assets/hand_landmarker.task')
 
 def downloadHandModel = tasks.register('downloadHandLandmarker') {
