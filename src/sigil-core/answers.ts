@@ -3,7 +3,7 @@ import { LANGUAGE_PACKS } from './languages';
 
 export type Answer = 'yes' | 'no';
 
-const CJK = /[぀-ヿ㐀-鿿豈-﫿]/u;
+const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/u;
 
 /** Polite words that may come with a yes without changing it. */
 const POLITE = ['please', 'por favor', "s'il te plait", "s'il vous plait", 'bitte', 'per favore', '谢谢', 'thanks'];

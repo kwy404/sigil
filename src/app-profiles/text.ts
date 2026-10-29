@@ -34,6 +34,6 @@ export function foldText(value: string): string {
 export function normalizeName(value: string): string {
   return foldText(value)
     .replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9぀-ヿ㐀-鿿豈-﫿]+/gu, ' ')
+    .replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]+/gu, ' ')
     .trim();
 }

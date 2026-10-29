@@ -21,7 +21,7 @@ export interface RuleMatch {
 
 /** Full width digits, percent sign and point, as Japanese and Chinese input methods write them. */
 function halfWidth(text: string): string {
-  return text.replace(/[０-９％．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+  return text.replace(/[\uff10-\uff19\uff05\uff0e]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
 }
 
 const PREFIXES = LANGUAGE_PACKS.flatMap((pack) => pack.prefixes);
@@ -32,7 +32,7 @@ export function cleanRequest(text: string): string {
   let s = halfWidth(text)
     .replace(/[“”«»]/g, '"')
     .replace(/[‘’]/g, "'")
-    .replace(/　/g, ' ')
+    .replace(/\u3000/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/^[¿¡]+/u, '');
