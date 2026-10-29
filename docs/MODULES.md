@@ -240,12 +240,12 @@ Kotlin classes: `SigilControlModule` (Expo module), `SigilAccessibilityService`,
 
 ## cursor-overlay
 
-`HoloCursor({ x, y, press, visible, radius?, color? })`: Skia drawing of the cursor inside a parent view, driven by Reanimated shared values (`x`, `y` in points, `press` and `visible` from 0 to 1). Ignores touches.
+`HoloCursor({ x, y, press, visible, scale? })`: Skia drawing of the cursor inside a parent view, driven by Reanimated shared values (`x`, `y` in points, `press` and `visible` from 0 to 1). Sizes and colors come from the `light.cursor` tokens, the same metrics as the native cursor. Ignores touches; the pulse stops with reduced motion.
 
 ## control-sphere
 
-`ControlSphere({ size, segments?, activeId?, onSelect?, children? })`: the hub with a breathing core, an orbit and one arc per segment. Segments are accessible buttons. `DEFAULT_SEGMENTS`: Apps, Voice, Cursor, Profiles, Pause, Settings. `children` draw above the sphere, for example a `HoloCursor`.
+`ControlSphere({ size, segments?, activeId?, onSelect?, children? })`: the hub with a breathing core (one breath every 5.2 s), an orbit (one turn every 12 s) and one arc per segment, in the lumen colors. Both motions stop with reduced motion. Segments are accessible buttons. `DEFAULT_SEGMENTS`: Apps, Voice, Cursor, Profiles, Pause, Settings. `children` draw above the sphere, for example a `HoloCursor`.
 
 ## ui
 
-`tokens` (placeholder colors, spacing, radii and fonts until the design tokens land), `Card`, `Chip`, `Button`, `Row`, `textStyles`.
+`tokens` (colors, spacing, radii, cursor metrics and motion durations from `design/tokens.json`, dark theme; the Sora, Inter and DM Mono fonts, glass, trails and particles are not wired in yet), `withAlpha`, `Card`, `Chip`, `Button`, `Row`, `textStyles`.

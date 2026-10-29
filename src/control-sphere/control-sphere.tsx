@@ -1,7 +1,7 @@
 import { BlurMask, Canvas, Circle, Group, Path, RadialGradient, Skia, useClock, vec } from '@shopify/react-native-skia';
 import { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useDerivedValue } from 'react-native-reanimated';
+import { useDerivedValue, useReducedMotion } from 'react-native-reanimated';
 
 import { tokens } from '../ui/tokens';
 
@@ -31,13 +31,18 @@ export interface ControlSphereProps {
 
 const GAP_DEGREES = 7;
 
+const BREATH_MS = tokens.motion.breathMs;
+const ORBIT_MS = tokens.motion.ambientMs;
+
 /**
  * The Control Sphere: Sigil's hub, opened with an open palm. A breathing core,
- * a slow orbit and one arc per action around it. Segments are real buttons for
- * touch and screen readers; with gestures the user points at one and pinches.
- * This is the placeholder look until the design tokens and effects land.
+ * a slow orbit and one arc per action around it, in the lumen colors of the
+ * design tokens. Segments are real buttons for touch and screen readers; with
+ * gestures the user points at one and pinches. Breathing and orbit stop when
+ * the system asks for reduced motion. Glass and particles come later.
  */
 export function ControlSphere({ size, segments = DEFAULT_SEGMENTS, activeId, onSelect, children }: ControlSphereProps) {
+  const reduceMotion = useReducedMotion();
   const clock = useClock();
   const c = size / 2;
   const coreRadius = size * 0.19;
@@ -62,8 +67,10 @@ export function ControlSphere({ size, segments = DEFAULT_SEGMENTS, activeId, onS
     });
   }, [segments, c, ringRadius]);
 
-  const orbit = useDerivedValue(() => [{ rotate: (clock.get() / 14000) * Math.PI * 2 }]);
-  const core = useDerivedValue(() => coreRadius * (1 + 0.035 * Math.sin(clock.get() / 650)));
+  const orbit = useDerivedValue(() => [{ rotate: reduceMotion ? 0 : ((clock.get() % ORBIT_MS) / ORBIT_MS) * Math.PI * 2 }]);
+  const core = useDerivedValue(() =>
+    reduceMotion ? coreRadius : coreRadius * (1 + 0.035 * Math.sin((clock.get() / BREATH_MS) * Math.PI * 2)),
+  );
 
   const accent = tokens.color.accent;
 
@@ -73,7 +80,7 @@ export function ControlSphere({ size, segments = DEFAULT_SEGMENTS, activeId, onS
         <Group origin={vec(c, c)} transform={orbit}>
           <Circle cx={c} cy={c} r={orbitRadius} style="stroke" strokeWidth={1} color={tokens.color.border} />
           <Circle cx={c + orbitRadius} cy={c} r={3} color={accent} />
-          <Circle cx={c - orbitRadius} cy={c} r={2} color={tokens.color.violet} />
+          <Circle cx={c - orbitRadius} cy={c} r={2} color={tokens.color.accentDeep} />
         </Group>
         {arcs.map((arc) => (
           <Path
@@ -89,7 +96,7 @@ export function ControlSphere({ size, segments = DEFAULT_SEGMENTS, activeId, onS
           <RadialGradient
             c={vec(c - coreRadius * 0.35, c - coreRadius * 0.45)}
             r={coreRadius * 1.7}
-            colors={['#E8FDFF', accent, tokens.color.violet, tokens.color.surface]}
+            colors={[tokens.color.accentBright, accent, tokens.color.accentDeep, tokens.color.surface]}
             positions={[0, 0.25, 0.72, 1]}
           />
         </Circle>
@@ -128,5 +135,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   labelText: { color: tokens.color.text, fontSize: 12, fontWeight: '600' },
-  labelActive: { color: tokens.color.background },
+  labelActive: { color: tokens.color.onAccent },
 });

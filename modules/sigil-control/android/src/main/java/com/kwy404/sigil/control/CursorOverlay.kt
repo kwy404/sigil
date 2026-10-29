@@ -121,12 +121,12 @@ private class CursorView(context: Context) : View(context) {
   private val glow = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
   private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     style = Paint.Style.STROKE
-    strokeWidth = 2.5f * density
+    strokeWidth = RING_STROKE_DP * density
     color = ACCENT
   }
   private val core = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     style = Paint.Style.FILL
-    color = Color.WHITE
+    color = CORE
   }
 
   fun place(x: Float, y: Float, newState: CursorState) {
@@ -139,22 +139,27 @@ private class CursorView(context: Context) : View(context) {
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
     if (cx < 0f || cy < 0f) return
-    val radius = density * when (state) {
-      CursorState.PRESS -> 13f
-      CursorState.DRAG -> 17f
-      CursorState.HOVER -> 22f
-      CursorState.IDLE -> 19f
+    val radius = density * RING_RADIUS_DP * when (state) {
+      CursorState.PRESS -> 0.7f
+      CursorState.DRAG -> 0.85f
+      CursorState.HOVER -> 1.15f
+      CursorState.IDLE -> 1f
     }
-    val halo = radius * 2.2f
-    glow.shader = RadialGradient(cx, cy, halo, ACCENT_GLOW, Color.TRANSPARENT, Shader.TileMode.CLAMP)
+    val halo = radius * HALO_RADIUS_DP / RING_RADIUS_DP
+    glow.shader = RadialGradient(cx, cy, halo, ACCENT_HALO, Color.TRANSPARENT, Shader.TileMode.CLAMP)
     canvas.drawCircle(cx, cy, halo, glow)
     canvas.drawCircle(cx, cy, radius, ring)
-    canvas.drawCircle(cx, cy, 3.5f * density, core)
+    canvas.drawCircle(cx, cy, CORE_RADIUS_DP * density, core)
   }
 
   companion object {
-    // Placeholder colors until the design tokens are wired in.
-    private val ACCENT = Color.argb(255, 92, 225, 230)
-    private val ACCENT_GLOW = Color.argb(110, 92, 225, 230)
+    // light.cursor and lumen colors from the SIGIL design tokens, the same values as src/ui/tokens.ts.
+    private const val RING_RADIUS_DP = 14f
+    private const val RING_STROKE_DP = 1.5f
+    private const val CORE_RADIUS_DP = 3f
+    private const val HALO_RADIUS_DP = 26f
+    private val ACCENT = Color.rgb(94, 242, 223)
+    private val ACCENT_HALO = Color.argb(89, 94, 242, 223)
+    private val CORE = Color.rgb(239, 255, 252)
   }
 }

@@ -57,7 +57,7 @@ src/
   system-control/    device controllers and gesture dispatch
   cursor-overlay/    holographic cursor (Skia, Reanimated)
   control-sphere/    Control Sphere hub (Skia, Reanimated)
-  ui/                placeholder tokens and primitives
+  ui/                design tokens and primitives
 modules/
   sigil-control/     Android native module (Kotlin)
 docs/
