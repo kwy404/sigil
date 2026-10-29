@@ -1,98 +1,62 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { ProfileRegistry } from '@/app-profiles';
+import { GestureLab } from '@/features/gesture-lab';
+import { PlannerPanel } from '@/features/planner-panel';
+import { ProfilesPanel } from '@/features/profiles-panel';
+import { SphereStage } from '@/features/sphere-stage';
+import { SystemPanel } from '@/features/system-panel';
+import { sampleRecordings } from '@/gesture-engine';
+import { Card } from '@/ui/primitives';
+import { tokens } from '@/ui/tokens';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+const SIDE = tokens.space.xl;
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const registry = useMemo(() => ProfileRegistry.withBuiltins(), []);
+  const samples = useMemo(() => sampleRecordings(), []);
+  const [sampleId, setSampleId] = useState<string | null>('circle-cw');
+  const [segment, setSegment] = useState<string | null>(null);
+
+  const stageSize = Math.min(width - 2 * SIDE - 2 * tokens.space.lg, 340);
+  const recording = samples.find((sample) => sample.id === sampleId) ?? null;
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + tokens.space.lg, paddingBottom: insets.bottom + tokens.space.xxl },
+      ]}>
+      <View style={styles.hero}>
+        <Text style={styles.brand} accessibilityRole="header">
+          Sigil
+        </Text>
+        <Text style={styles.tagline}>Your phone, moved by your hands and your voice. Everything stays on the device.</Text>
+      </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <Card
+        title="Control Sphere"
+        caption="Show an open palm to open the hub, point to move the cursor and pinch to choose. The cursor replays the selected recording through the gesture classifier.">
+        <SphereStage size={stageSize} recording={recording} activeSegment={segment} onSelectSegment={setSegment} />
+      </Card>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <GestureLab selectedId={sampleId} onSelect={setSampleId} />
+      <PlannerPanel registry={registry} />
+      <ProfilesPanel registry={registry} />
+      <SystemPanel />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  screen: { flex: 1, backgroundColor: tokens.color.background },
+  content: { paddingHorizontal: SIDE, gap: tokens.space.lg },
+  hero: { gap: tokens.space.xs, paddingBottom: tokens.space.sm },
+  brand: { color: tokens.color.text, fontSize: tokens.font.size.hero, fontWeight: '700', letterSpacing: 1 },
+  tagline: { color: tokens.color.textMuted, fontSize: tokens.font.size.body, lineHeight: 21 },
 });

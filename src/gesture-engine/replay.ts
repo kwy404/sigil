@@ -1,5 +1,7 @@
 import { GestureClassifier, type ClassifierOverrides } from './classifier';
 import { gestureKey, type GestureEvent, type GestureKey } from './gestures';
+import type { Vec2 } from './landmarks';
+import type { HandPose } from './pose';
 import type { HandRecording } from './samples';
 
 export interface ReplayResult {
@@ -33,4 +35,39 @@ export function replayRecording(recording: HandRecording, overrides: ClassifierO
     durationMs: last - first,
     frameCount: recording.frames.length,
   };
+}
+
+export interface TracePoint {
+  t: number;
+  /** Filtered cursor in normalized camera coordinates, null without a hand. */
+  cursor: Vec2 | null;
+  pose: HandPose;
+  pinching: boolean;
+  holding: boolean;
+}
+
+export interface RecordingTrace {
+  points: TracePoint[];
+  events: GestureEvent[];
+}
+
+/** Replays a recording and keeps the classifier snapshot of every frame, for drawing the cursor path. */
+export function traceRecording(recording: HandRecording, overrides: ClassifierOverrides = {}): RecordingTrace {
+  const classifier = new GestureClassifier({ frameAspect: recording.frameAspect, ...overrides });
+  const points: TracePoint[] = [];
+  const events: GestureEvent[] = [];
+  for (const frame of recording.frames) {
+    events.push(...classifier.push(frame));
+    const snapshot = classifier.snapshot;
+    points.push({
+      t: frame.t,
+      cursor: snapshot.cursor,
+      pose: snapshot.pose,
+      pinching: snapshot.pinching,
+      holding: snapshot.holding,
+    });
+  }
+  const last = recording.frames.length > 0 ? recording.frames[recording.frames.length - 1].t : 0;
+  events.push(...classifier.flush(last, true));
+  return { points, events };
 }

@@ -8,6 +8,7 @@ import {
   replayRecording,
   rigPose,
   sampleRecordings,
+  traceRecording,
   type GestureEvent,
   type HandFrame,
   type RigSegment,
@@ -201,5 +202,16 @@ describe('GestureClassifier', () => {
     expect(classifier.push({ t: 0, landmarks: frame.landmarks!.slice(0, 20) })).toEqual([]);
     expect(classifier.push({ t: 33, landmarks: broken })).toEqual([]);
     expect(classifier.snapshot.handVisible).toBe(false);
+  });
+});
+
+describe('traceRecording', () => {
+  it('keeps one classifier snapshot per frame', () => {
+    const recording = sampleRecordings().find((r) => r.id === 'pinch-hold')!;
+    const trace = traceRecording(recording);
+    expect(trace.points).toHaveLength(recording.frames.length);
+    expect(trace.points.some((p) => p.holding)).toBe(true);
+    expect(trace.points[0].cursor).not.toBeNull();
+    expect(trace.events.map((e) => e.kind)).toEqual(['point', 'pinch_hold', 'pinch_hold']);
   });
 });
