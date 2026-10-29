@@ -39,6 +39,15 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # Native C++ builds can run out of memory on the smaller runners.
+      - name: Add swap space
+        run: |
+          sudo fallocate -l 8G /swapfile-build
+          sudo chmod 600 /swapfile-build
+          sudo mkswap /swapfile-build
+          sudo swapon /swapfile-build
+          free -h
+
       - run: npm ci
 
       - name: Generate the native project
@@ -48,7 +57,7 @@ jobs:
       # debug key, which makes an installable preview without any secret.
       - name: Build the release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=arm64-v8a
 
       - run: cp android/app/build/outputs/apk/release/app-release.apk sigil-android.apk
 
