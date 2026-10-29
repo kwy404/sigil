@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -11,9 +11,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useI18n } from '../i18n';
 import { Glass } from './glass';
 import { Glyph } from './glyph';
 import { NAV_BAR, useBottomChrome } from './layout';
+import { usePageTitle } from './page-titles';
 import { PressableScale } from './press';
 import { color, GUTTER } from './theme';
 import { Txt } from './type';
@@ -23,7 +25,10 @@ export interface ScreenProps {
   title: string;
   /** Hide the large title, for pages whose hero carries the title (gesture, app). */
   hideLargeTitle?: boolean;
-  /** The parent page, for the back button. Without it the screen is a tab root. */
+  /**
+   * The back button. Its label names the page below when that page is known,
+   * else this label (the tab). Without it the screen is a tab root.
+   */
   back?: { label: string; onPress?: () => void };
   /** Right of the large title (status chips). */
   accessory?: ReactNode;
@@ -38,6 +43,9 @@ export interface ScreenProps {
 }
 
 const LARGE_TITLE = 56;
+const BAR_PAD = 8;
+/** The chevron and the padding around the back label. */
+const BACK_CHROME = 28;
 
 /**
  * Every page of the app: a large title that collapses into a compact glass
@@ -56,6 +64,9 @@ export function Screen({
   children,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const { messages: m } = useI18n();
+  const previousTitle = usePageTitle(title);
   const chromeBottom = useBottomChrome();
   const reduceMotion = useReducedMotion();
   const scrollY = useSharedValue(0);
@@ -79,6 +90,23 @@ export function Screen({
     const stretch = interpolate(scrollY.get(), [-160, 0], [1.08, 1], Extrapolation.CLAMP);
     return { transform: [{ scale: stretch }] };
   });
+
+  // The compact title sits centered on the screen when it fits between the
+  // back button and the right items, and moves into the free space beside
+  // them when it does not, so a long title is never cut.
+  const [leftWidth, setLeftWidth] = useState(0);
+  const [rightWidth, setRightWidth] = useState(0);
+  const [titleWidth, setTitleWidth] = useState(0);
+  const [labelWidth, setLabelWidth] = useState(0);
+  const backMax = Math.round(width * 0.42);
+  const parentLabel = previousTitle ?? back?.label ?? '';
+  // A parent title too long for the button becomes a plain Back, like iOS.
+  const backText = labelWidth > 0 && labelWidth + BACK_CHROME > backMax ? m.ui.common.back : parentLabel;
+  const side = Math.max(leftWidth, rightWidth) + BAR_PAD * 2;
+  const centered = titleWidth > 0 && titleWidth <= width - side * 2;
+  const titleBox = centered
+    ? { left: side, right: side }
+    : { left: leftWidth + BAR_PAD * 2, right: rightWidth + BAR_PAD * 2 };
 
   const goBack = () => {
     if (back?.onPress) {
@@ -120,29 +148,55 @@ export function Screen({
           <Glass style={StyleSheet.absoluteFill} />
           <View style={styles.hairline} />
         </Animated.View>
+        <Txt
+          variant="headline"
+          aria-hidden
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          onLayout={(event) => setTitleWidth(Math.ceil(event.nativeEvent.layout.width))}
+          style={styles.measure}>
+          {title}
+        </Txt>
+        {back ? (
+          <Txt
+            variant="subhead"
+            aria-hidden
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            onLayout={(event) => setLabelWidth(Math.ceil(event.nativeEvent.layout.width))}
+            style={styles.measure}>
+            {parentLabel}
+          </Txt>
+        ) : null}
+        <Animated.View
+          style={[styles.barTitle, { top: insets.top, height: hasBar ? NAV_BAR : 44 }, titleBox, compactTitle]}
+          pointerEvents="none">
+          <Txt variant="headline" numberOfLines={1} align="center" adjustsFontSizeToFit minimumFontScale={0.8}>
+            {title}
+          </Txt>
+        </Animated.View>
         <View style={[styles.barRow, { marginTop: insets.top, height: hasBar ? NAV_BAR : 44 }]} pointerEvents="box-none">
           <View style={styles.barSide} pointerEvents="box-none">
             {back ? (
               <PressableScale
                 accessibilityRole="button"
-                accessibilityLabel={back.label}
+                accessibilityLabel={parentLabel}
                 onPress={goBack}
                 hitSlop={8}
                 scaleTo={0.94}
-                style={styles.back}>
+                onLayout={(event) => setLeftWidth(Math.ceil(event.nativeEvent.layout.width))}
+                style={[styles.back, { maxWidth: backMax }]}>
                 <Glyph name="chevron-left" size={24} color={color.accent} />
                 <Txt variant="subhead" tone="accent" numberOfLines={1} style={styles.backLabel}>
-                  {back.label}
+                  {backText}
                 </Txt>
               </PressableScale>
             ) : null}
           </View>
-          <Animated.View style={[styles.barTitle, compactTitle]} pointerEvents="none">
-            <Txt variant="headline" numberOfLines={1} align="center">
-              {title}
-            </Txt>
-          </Animated.View>
-          <View style={[styles.barSide, styles.barRight]} pointerEvents="box-none">
+          <View
+            style={[styles.barSide, styles.barRight]}
+            pointerEvents="box-none"
+            onLayout={(event) => setRightWidth(headerRight ? Math.ceil(event.nativeEvent.layout.width) : 0)}>
             {headerRight}
           </View>
         </View>
@@ -218,11 +272,12 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: color.hairlineStrong,
   },
-  barRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
-  barSide: { width: 132, flexDirection: 'row', alignItems: 'center' },
-  barRight: { justifyContent: 'flex-end', paddingRight: 8 },
-  barTitle: { flex: 1, alignItems: 'center' },
-  back: { flexDirection: 'row', alignItems: 'center', gap: 0, minHeight: 44, paddingRight: 6, maxWidth: 132 },
+  barRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: BAR_PAD },
+  barSide: { flexDirection: 'row', alignItems: 'center' },
+  barRight: { justifyContent: 'flex-end', paddingRight: BAR_PAD },
+  barTitle: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  measure: { position: 'absolute', left: 0, top: -400, opacity: 0 },
+  back: { flexDirection: 'row', alignItems: 'center', gap: 0, minHeight: 44, paddingRight: 6 },
   backLabel: { flexShrink: 1, marginLeft: -2 },
   section: { marginTop: 32, gap: 14 },
   sectionHeader: { gap: 2, paddingHorizontal: GUTTER },
