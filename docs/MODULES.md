@@ -246,6 +246,7 @@ Local Expo module, autolinked from `modules/`. JavaScript API (`modules/sigil-co
 | `openPanel(panel)` | boolean | Wi-Fi, Bluetooth, Do Not Disturb or display settings |
 | `startCameraService(withMicrophone)`, `stopCameraService()` | boolean, void | Foreground service with the hand tracker, the cursor, the bubble and the notification; needs the camera permission and Sigil on screen |
 | `setTrackingPaused(paused)`, `setBubbleState(state)` | boolean | Pause or resume tracking (the service, the bubble and the notification stay); what the bubble shows: `tracking`, `hand`, `listening` or `paused` |
+| `setKeepAlive(on)` | boolean | Starts or finishes the `SigilKeepAlive` headless task, which keeps JavaScript timers running in the background; JavaScript registers the task first |
 | `showCursor()`, `hideCursor()`, `moveCursor(x, y, state)` | boolean, void, void | Cursor window; `state` is idle, hover, press or drag |
 | `tap`, `doubleTap`, `longPress`, `swipe` | `Promise<boolean>` | Gestures through the accessibility service |
 | `globalAction(name)`, `typeText(text, submit)`, `scroll(direction)` | `Promise<boolean>` | Navigation (also the power menu, the previous app and split screen), typing into the focused field, scrolling |
@@ -311,7 +312,7 @@ The checklist and the levels are read every 1.5 seconds while a screen is subscr
 | `startDemo()`, `stopDemo()` | The demo hand: sample recordings at 30 frames a second through `HandControl`, marked synthetic, so they never act |
 | `profiles`, `planner`, `speech`, `voice`, `native` | The profile registry, the planner (with the launcher's apps), the speech engine, the voice session and the native module |
 
-The runtime keeps the bubble in step with the state (tracking, hand, listening, paused) and handles the microphone and stop items of the bubble menu.
+The runtime keeps the bubble in step with the state (tracking, hand, listening, paused) and handles the microphone and stop items of the bubble menu. While the camera service runs it keeps the `SigilKeepAlive` headless task, so JavaScript timers keep running over other apps. When a voice request runs while another app is in front, it shows the voice panel at the top of the screen (`voicePanel(state, busy, ctx)` in `src/runtime/voice-panel.ts`): what Sigil heard, its question with the microphone level and the time left, the too noisy hint, and for 3.5 seconds how the request ended.
 
 ## voice
 

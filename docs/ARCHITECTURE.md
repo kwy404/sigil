@@ -81,6 +81,7 @@ Today the camera foreground service is the only hand tracker, in Sigil and over 
 - `MediaPipeHandPipeline` runs Hand Landmarker in live stream mode on a background executor, on the CPU, for one hand. Each frame is turned upright and mirrored to the user's view before detection, so the landmarks need no further transform.
 - Landmarks reach JavaScript as `onHandFrame` events: 63 floats, a score and the handedness, at the camera rate while a hand is in view, and an empty frame at most every 100 ms while none is. The foreground service keeps the process and the JavaScript runtime alive.
 - *JavaScript thread.* `HandControl` runs the TypeScript classifier on each frame, moves the cursor window with `moveCursor` and dispatches the gestures. Gesture semantics stay in TypeScript; the cursor could later be driven natively from the landmarks to take the JavaScript hop off the hot path.
+- React Native pauses JavaScript timers while its activity is paused, unless a headless JS task runs. While the camera service runs, Sigil keeps a task that does no work (`SigilKeepAlive`, see `JsKeepAlive`), so plan steps, voice questions and the demo hand keep their timing while other apps are in front.
 - If the JavaScript runtime proves unreliable in the background on some devices, the fallback is a Kotlin port of the classifier, checked against the same recordings.
 - Pausing (from the bubble, the notification or the pause gesture) stops the camera and hides the cursor; the service, the bubble and the notification stay, so resuming is one tap.
 
