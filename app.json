@@ -22,7 +22,7 @@
       "package": "com.kwy404.sigil"
     },
     "web": {
-      "output": "server",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
