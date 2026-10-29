@@ -51,16 +51,35 @@ export interface PlannerOptions {
   defaultSearchApp?: string;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+/**
+ * Runs work with its own abort signal, and aborts that signal when the time
+ * runs out or when the outer signal aborts, so a model that is too slow stops
+ * generating instead of holding the phone's CPU after the rules answered.
+ */
+function withTimeout<T>(work: (signal: AbortSignal) => Promise<T>, ms: number, outer?: AbortSignal): Promise<T> {
+  const controller = new AbortController();
+  const forward = () => controller.abort();
+  if (outer?.aborted) {
+    controller.abort();
+  } else {
+    outer?.addEventListener('abort', forward);
+  }
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`no answer after ${ms} ms`)), ms);
-    promise.then(
+    const timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`no answer after ${ms} ms`));
+    }, ms);
+    const settle = () => {
+      clearTimeout(timer);
+      outer?.removeEventListener('abort', forward);
+    };
+    work(controller.signal).then(
       (value) => {
-        clearTimeout(timer);
+        settle();
         resolve(value);
       },
       (error: unknown) => {
-        clearTimeout(timer);
+        settle();
         reject(error);
       },
     );
@@ -112,13 +131,7 @@ export class ActionPlanner {
       return { status: 'blocked', message: refusal, notice: { code: 'bulk' } };
     }
 
-    const foreground = request.foregroundPackage ? this.profiles.forPackage(request.foregroundPackage) : null;
-    const context: ModelContext = {
-      locale: request.locale ?? 'en-US',
-      foregroundApp: foreground && foreground.id !== GENERAL_PROFILE_ID ? foreground.name : null,
-      knownApps: this.knownApps(),
-    };
-
+    const context = this.modelContext(request);
     const proposal = await this.propose(text, context, notes, signal);
     if (!proposal) {
       const notice: Notice = { code: 'not_understood' };
@@ -158,6 +171,25 @@ export class ActionPlanner {
     };
   }
 
+  /**
+   * Lets an on device model start loading before the request arrives, for
+   * example when the user starts to speak. Does nothing without a model.
+   */
+  prepareModel(request: Omit<VoiceRequest, 'text'> = {}): void {
+    if (this.model && !this.model.isReady()) {
+      this.model.prepare?.(this.modelContext(request), toolDefinitions());
+    }
+  }
+
+  private modelContext(request: Omit<VoiceRequest, 'text'>): ModelContext {
+    const foreground = request.foregroundPackage ? this.profiles.forPackage(request.foregroundPackage) : null;
+    return {
+      locale: request.locale ?? 'en-US',
+      foregroundApp: foreground && foreground.id !== GENERAL_PROFILE_ID ? foreground.name : null,
+      knownApps: this.knownApps(),
+    };
+  }
+
   private async propose(
     text: string,
     context: ModelContext,
@@ -165,9 +197,15 @@ export class ActionPlanner {
     signal?: AbortSignal,
   ): Promise<{ intent: Intent; source: IntentSource } | null> {
     const tools = toolDefinitions();
-    if (this.model && this.model.isReady()) {
+    const model = this.model;
+    if (model && !model.isReady()) {
+      // An installed model that is not loaded starts loading now; this request
+      // goes to the rules instead of waiting for the weights.
+      model.prepare?.(context, tools);
+      notes.push('The model is not loaded yet. The rules planned this request.');
+    } else if (model) {
       try {
-        const reply = await withTimeout(this.model.propose(text, context, tools, signal), this.modelTimeoutMs);
+        const reply = await withTimeout((inner) => model.propose(text, context, tools, inner), this.modelTimeoutMs, signal);
         if (reply.toolCalls.length > 1) {
           notes.push(`The model proposed ${reply.toolCalls.length} actions. Sigil runs one per request.`);
         }

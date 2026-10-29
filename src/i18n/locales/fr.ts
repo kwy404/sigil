@@ -319,4 +319,86 @@ export const fr: Messages = {
       cameraService: (error) => `Service de caméra${NB}: ${error}`,
     },
   },
+  model: {
+    title: 'Modèle sur l’appareil',
+    caption:
+      'Un petit modèle de langage, sur le téléphone lui-même, comprend les demandes formulées avec vos propres mots et choisit une action pour elles. Sans lui, l’analyseur de règles comprend toujours les commandes intégrées.',
+    privacy: `Le modèle se télécharge une seule fois depuis Hugging Face et il est vérifié par son SHA-256. Ensuite il fonctionne hors ligne${NB}: vos demandes ne quittent jamais le téléphone.`,
+    unsupported:
+      'Cette version n’a pas le moteur du modèle (Expo Go ou le web), donc Sigil utilise l’analyseur de règles. Installez la version Android pour télécharger un modèle.',
+    rows: {
+      memory: 'Mémoire du téléphone',
+      recommended: 'Recommandé pour ce téléphone',
+      model: 'Modèle',
+      size: 'Téléchargement',
+      peak: 'Mémoire pendant l’utilisation',
+      license: 'Licence',
+    },
+    tiers: {
+      rules: { name: 'Règles seules', description: 'Aucun téléchargement. L’analyseur de règles comprend les commandes intégrées dans huit langues.' },
+      lite: {
+        name: 'Léger',
+        description: `Qwen2.5 1.5B. Comprend les demandes formulées avec vos propres mots. Téléphones avec 6${NB}Go de mémoire ou plus.`,
+      },
+      full: {
+        name: 'Complet',
+        description: `Qwen2.5 3B. Meilleur avec les demandes indirectes et plus longues. Téléphones avec 8${NB}Go de mémoire ou plus.`,
+      },
+    },
+    auto: (tier) => `Automatique${NB}: ${tier}`,
+    chips: {
+      recommended: 'recommandé',
+      downloaded: 'téléchargé',
+      partial: 'téléchargé en partie',
+      needsMemory: (size) => `${size} nécessaires`,
+    },
+    status: {
+      absent: 'Pas téléchargé.',
+      downloading: (done, total, percent) => `Téléchargement${NB}: ${done} sur ${total} (${percent}).`,
+      paused: {
+        user: (done, total) => `En pause à ${done} sur ${total}.`,
+        network: (done, total) => `En attente du Wi-Fi à ${done} sur ${total}.`,
+        interrupted: (done, total) => `Arrêté à ${done} sur ${total} à la fermeture de Sigil.`,
+      },
+      verifying: 'Vérification du fichier par son SHA-256.',
+      ready: 'Téléchargé et vérifié.',
+      failed: {
+        offline: 'Pas de connexion. Connectez-vous à Internet et réessayez.',
+        wifi_required: 'En attente du Wi-Fi. Connectez-vous à un Wi-Fi, ou autorisez les données mobiles ci-dessous.',
+        no_space: (size) => `Pas assez d’espace libre. Le téléchargement a besoin de ${size}.`,
+        network: 'Le téléchargement s’est arrêté. Réessayez pour reprendre là où il s’est arrêté.',
+        checksum: 'Le fichier ne correspondait pas à son SHA-256, Sigil l’a donc supprimé. Réessayez.',
+        storage: 'Le stockage du téléphone n’a pas pu enregistrer le fichier.',
+      },
+    },
+    engine: {
+      none: 'Se charge en mémoire à la première demande vocale.',
+      idle: 'Pas en mémoire. Se recharge à la prochaine demande vocale.',
+      loading: 'Chargement en mémoire.',
+      ready: 'En mémoire. Libéré après une minute sans demande, en arrière-plan ou quand le téléphone a besoin de mémoire.',
+      failed: 'Le modèle n’a pas pu se charger, Sigil utilise donc l’analyseur de règles pour le moment.',
+    },
+    buttons: {
+      download: (size) => `Télécharger (${size})`,
+      resume: 'Reprendre le téléchargement',
+      pause: 'Pause',
+      cancel: 'Annuler le téléchargement',
+      retry: 'Réessayer',
+      delete: 'Supprimer le modèle',
+    },
+    confirmDelete: {
+      title: `Supprimer le modèle${NB}?`,
+      message: (size) => `Cela libère ${size}. Vous pourrez le télécharger à nouveau plus tard.`,
+      confirm: 'Supprimer',
+      keep: 'Garder',
+    },
+    cellular: {
+      label: 'Utiliser les données mobiles',
+      caption: `Désactivé${NB}: le modèle se télécharge uniquement en Wi-Fi.`,
+    },
+    units: {
+      gb: (value) => `${value}${NB}Go`,
+      mb: (value) => `${value}${NB}Mo`,
+    },
+  },
 };

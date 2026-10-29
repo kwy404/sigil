@@ -7,6 +7,7 @@ import { describeNotice, describePlan, describeStep, useDescribeContext, useI18n
 import { ActionPlanner, type PlanOutcome } from '../sigil-core';
 import { Button, Card, Chip, textStyles } from '../ui/primitives';
 import { tokens, type Tone } from '../ui/tokens';
+import { useOnDeviceModel } from './use-on-device-model';
 
 function statusTone(outcome: PlanOutcome): Tone {
   switch (outcome.status) {
@@ -22,15 +23,25 @@ function statusTone(outcome: PlanOutcome): Tone {
 }
 
 /**
- * Turns a request into a plan with the rule based fallback (no model is
- * installed yet) and shows the steps in the app language. Plans are only
- * displayed here, not run. The examples and the mock speech follow the
- * language, and requests are planned with its locale.
+ * Turns a request into a plan with the on device model when one is
+ * downloaded and loaded, or with the rule based fallback, and shows the steps
+ * in the app language. Plans are only displayed here, not run. The examples
+ * and the mock speech follow the language, and requests are planned with its
+ * locale.
  */
 export function PlannerPanel({ registry }: { registry: ProfileRegistry }) {
   const { messages: m, speechLocale } = useI18n();
   const ctx = useDescribeContext(registry);
-  const planner = useMemo(() => new ActionPlanner({ profiles: registry }), [registry]);
+  const { model: onDevice, snapshot } = useOnDeviceModel();
+  const planner = useMemo(
+    () =>
+      new ActionPlanner({
+        profiles: registry,
+        model: onDevice.languageModel(snapshot.tier),
+        modelTimeoutMs: onDevice.plannerTimeoutMs(snapshot.tier),
+      }),
+    [registry, onDevice, snapshot.tier],
+  );
   const speech = useMemo(() => createSpeechToText(m.planner.presets), [m]);
   const [request, setRequest] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<PlanOutcome | null>(null);
@@ -42,6 +53,8 @@ export function PlannerPanel({ registry }: { registry: ProfileRegistry }) {
   };
 
   const listen = async () => {
+    // The model loads while the user speaks, so the request may find it ready.
+    planner.prepareModel({ locale: speechLocale });
     setListening(true);
     setOutcome(null);
     try {

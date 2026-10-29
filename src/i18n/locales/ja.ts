@@ -317,4 +317,81 @@ export const ja: Messages = {
       cameraService: (error) => `カメラサービス：${error}`,
     },
   },
+  model: {
+    title: '端末上のモデル',
+    caption:
+      'スマートフォン上で動く小さな言語モデルが、あなた自身の言葉で話したリクエストを理解し、実行する操作を 1 つ選びます。モデルがなくても、ルールパーサーが組み込みのコマンドを理解します。',
+    privacy:
+      'モデルは Hugging Face から一度だけダウンロードされ、SHA-256 で検証されます。その後はオフラインで動作し、リクエストがスマートフォンの外に出ることはありません。',
+    unsupported:
+      'このビルドにはモデルの実行環境がありません（Expo Go または Web）。そのため Sigil はルールパーサーを使います。モデルをダウンロードするには Android 版をインストールしてください。',
+    rows: {
+      memory: '端末のメモリ',
+      recommended: 'この端末へのおすすめ',
+      model: 'モデル',
+      size: 'ダウンロード',
+      peak: '動作中のメモリ',
+      license: 'ライセンス',
+    },
+    tiers: {
+      rules: { name: 'ルールのみ', description: 'ダウンロード不要。ルールパーサーが 8 つの言語で組み込みのコマンドを理解します。' },
+      lite: { name: 'ライト', description: 'Qwen2.5 1.5B。自分の言葉で話したリクエストを理解します。メモリ 6 GB 以上の端末向けです。' },
+      full: { name: 'フル', description: 'Qwen2.5 3B。遠回しなリクエストや長いリクエストに強くなります。メモリ 8 GB 以上の端末向けです。' },
+    },
+    auto: (tier) => `自動：${tier}`,
+    chips: {
+      recommended: 'おすすめ',
+      downloaded: 'ダウンロード済み',
+      partial: '一部ダウンロード済み',
+      needsMemory: (size) => `${size} 必要`,
+    },
+    status: {
+      absent: 'まだダウンロードしていません。',
+      downloading: (done, total, percent) => `ダウンロード中：${total} 中 ${done}（${percent}）。`,
+      paused: {
+        user: (done, total) => `${total} 中 ${done} で一時停止しています。`,
+        network: (done, total) => `${total} 中 ${done} で Wi-Fi を待っています。`,
+        interrupted: (done, total) => `Sigil が閉じたため、${total} 中 ${done} で止まりました。`,
+      },
+      verifying: 'SHA-256 でファイルを検証しています。',
+      ready: 'ダウンロードと検証が完了しました。',
+      failed: {
+        offline: '接続がありません。インターネットに接続して、もう一度お試しください。',
+        wifi_required: 'Wi-Fi を待っています。Wi-Fi に接続するか、下でモバイルデータを許可してください。',
+        no_space: (size) => `空き容量が足りません。ダウンロードには ${size} 必要です。`,
+        network: 'ダウンロードが止まりました。もう一度試すと、止まったところから続きます。',
+        checksum: 'ファイルが SHA-256 と一致しなかったため、Sigil が削除しました。もう一度お試しください。',
+        storage: '端末のストレージにファイルを保存できませんでした。',
+      },
+    },
+    engine: {
+      none: '最初の音声リクエストでメモリに読み込まれます。',
+      idle: 'メモリにはありません。次の音声リクエストで再び読み込まれます。',
+      loading: 'メモリに読み込んでいます。',
+      ready: 'メモリ上にあります。1 分間リクエストがないとき、バックグラウンドに移ったとき、端末のメモリが足りないときに解放されます。',
+      failed: 'モデルを読み込めなかったため、Sigil は当面ルールパーサーを使います。',
+    },
+    buttons: {
+      download: (size) => `ダウンロード（${size}）`,
+      resume: 'ダウンロードを再開',
+      pause: '一時停止',
+      cancel: 'ダウンロードを中止',
+      retry: 'もう一度試す',
+      delete: 'モデルを削除',
+    },
+    confirmDelete: {
+      title: 'モデルを削除しますか？',
+      message: (size) => `${size} の空きができます。あとでもう一度ダウンロードできます。`,
+      confirm: '削除',
+      keep: '残す',
+    },
+    cellular: {
+      label: 'モバイルデータを使う',
+      caption: 'オフ：モデルは Wi-Fi でのみダウンロードされます。',
+    },
+    units: {
+      gb: (value) => `${value} GB`,
+      mb: (value) => `${value} MB`,
+    },
+  },
 };

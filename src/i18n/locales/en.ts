@@ -1,3 +1,6 @@
+import type { TierId } from '../../adapters/catalog';
+import type { DownloadError, PauseReason } from '../../adapters/model/downloader';
+import type { EngineStatus } from '../../adapters/model/llama-engine';
 import type { GlobalAction, MediaAction, SystemPanel, VolumeStream } from '../../app-profiles/schema';
 import type { GestureKey, SampleId } from '../../gesture-engine';
 import type { NoticeCode } from '../../sigil-core/notices';
@@ -322,6 +325,83 @@ export const en = {
       cameraStart: 'The camera service could not start.',
       cursor: 'Turn on the accessibility service, or allow Sigil to display over other apps, to see the cursor.',
       cameraService: (error: string) => `Camera service: ${error}`,
+    },
+  },
+  model: {
+    title: 'On device model',
+    caption:
+      'A small language model on the phone understands requests in your own words and picks one action for them. Without it, the rule parser still understands the built in commands.',
+    privacy:
+      'The model downloads once from Hugging Face and is checked against its SHA-256. After that it runs offline: your requests never leave the phone.',
+    unsupported:
+      'This build has no model runtime (Expo Go or the web), so Sigil uses the rule parser. Install the Android build to download a model.',
+    rows: {
+      memory: 'Phone memory',
+      recommended: 'Recommended for this phone',
+      model: 'Model',
+      size: 'Download',
+      peak: 'Memory while it runs',
+      license: 'License',
+    },
+    tiers: {
+      rules: { name: 'Rules only', description: 'No download. The rule parser understands the built in commands in eight languages.' },
+      lite: { name: 'Lite', description: 'Qwen2.5 1.5B. Understands requests in your own words. Phones with 6 GB of memory or more.' },
+      full: { name: 'Full', description: 'Qwen2.5 3B. Better with indirect and longer requests. Phones with 8 GB of memory or more.' },
+    } satisfies Record<TierId, { name: string; description: string }>,
+    auto: (tier: string) => `Automatic: ${tier}`,
+    chips: {
+      recommended: 'recommended',
+      downloaded: 'downloaded',
+      partial: 'partly downloaded',
+      needsMemory: (size: string) => `needs ${size}`,
+    },
+    status: {
+      absent: 'Not downloaded.',
+      downloading: (done: string, total: string, percent: string) => `Downloading: ${done} of ${total} (${percent}).`,
+      paused: {
+        user: (done: string, total: string) => `Paused at ${done} of ${total}.`,
+        network: (done: string, total: string) => `Waiting for Wi-Fi at ${done} of ${total}.`,
+        interrupted: (done: string, total: string) => `Stopped at ${done} of ${total} when Sigil closed.`,
+      } satisfies Record<PauseReason, (done: string, total: string) => string>,
+      verifying: 'Checking the file against its SHA-256.',
+      ready: 'Downloaded and verified.',
+      failed: {
+        offline: 'No connection. Connect to the internet and try again.',
+        wifi_required: 'Waiting for Wi-Fi. Connect to Wi-Fi, or allow mobile data below.',
+        no_space: (size: string) => `Not enough free storage. The download needs ${size}.`,
+        network: 'The download stopped. Try again to continue where it stopped.',
+        checksum: 'The file did not match its SHA-256, so Sigil deleted it. Try again.',
+        storage: 'The phone storage could not save the file.',
+      } satisfies Record<DownloadError, string | ((size: string) => string)>,
+    },
+    engine: {
+      none: 'Loads into memory on the first voice request.',
+      idle: 'Not in memory. Loads again on the next voice request.',
+      loading: 'Loading into memory.',
+      ready: 'In memory. Released after a minute without requests, in the background or when the phone needs memory.',
+      failed: 'The model could not load, so Sigil uses the rule parser for now.',
+    } satisfies Record<EngineStatus | 'none', string>,
+    buttons: {
+      download: (size: string) => `Download (${size})`,
+      resume: 'Resume download',
+      pause: 'Pause',
+      cancel: 'Cancel download',
+      retry: 'Try again',
+      delete: 'Delete the model',
+    },
+    confirmDelete: {
+      title: 'Delete the model?',
+      message: (size: string) => `This frees ${size}. You can download it again later.`,
+      confirm: 'Delete',
+      keep: 'Keep',
+    },
+    cellular: {
+      label: 'Use mobile data',
+      caption: 'Off: the model downloads over Wi-Fi only.',
+    },
+    units: {
+      gb: (value: string) => `${value} GB`,
+      mb: (value: string) => `${value} MB`,
     },
   },
 };
