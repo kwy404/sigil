@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Linking, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { createSpeechToText } from '../adapters/voice';
 import { useI18n } from '../i18n';
 import { PlanView } from '../screens/command/plan-view';
-import { dryRunPlanner } from '../screens/shared';
+import { openSpecialAccess, type SpecialAccess } from '../screens/special-access';
 import { CHECKLIST_GLYPH } from '../screens/status';
+import { getSigil, planRequest } from '../session';
 import type { SessionActions, SessionState } from '../session/types';
 import type { PlanOutcome } from '../sigil-core';
 import { GridBackdrop, Glow } from '../ui/backdrop';
@@ -17,7 +18,7 @@ import { HandPreview } from '../ui/hand-preview';
 import { SigilMark } from '../ui/sigil-mark';
 import { alpha, color, continuous } from '../ui/theme';
 import { Txt } from '../ui/type';
-import { PERMISSION_ITEMS, type PermissionStep, type PracticeStep, type TourState } from './machine';
+import { OPTIONAL_STEPS, PERMISSION_ITEMS, type PermissionStep, type PracticeStep, type SpecialStep, type TourState } from './machine';
 
 type Session = SessionState & SessionActions;
 
@@ -84,14 +85,27 @@ function IconHero({ glyph, tone = 'accent' }: { glyph: GlyphName; tone?: 'accent
   );
 }
 
-export function PermissionPage({ step, session, state }: { step: PermissionStep; session: Session; state: TourState }) {
+const SPECIAL_GLYPH: Record<SpecialStep, GlyphName> = { mediaAccess: 'play', writeSettings: 'sun-high' };
+
+export function PermissionPage({
+  step,
+  session,
+  state,
+  special,
+}: {
+  step: PermissionStep;
+  session: Session;
+  state: TourState;
+  special: SpecialAccess;
+}) {
   const { messages: m } = useI18n();
   const t = m.ui.tour.permission;
   const item = PERMISSION_ITEMS[step];
-  const text = step === 'writeSettings' ? m.ui.checklist.writeSettings : m.ui.checklist[step];
-  const granted = item !== null && session.checklist[item];
-  const optional = step === 'notifications' || step === 'writeSettings';
-  const glyph: GlyphName = step === 'writeSettings' ? 'sun-high' : CHECKLIST_GLYPH[step];
+  const text = m.ui.checklist[step];
+  const known = item !== null ? session.checklist[item] : special[step as SpecialStep];
+  const granted = known === true;
+  const optional = (OPTIONAL_STEPS as readonly string[]).includes(step);
+  const glyph: GlyphName = item !== null ? CHECKLIST_GLYPH[item] : SPECIAL_GLYPH[step as SpecialStep];
   const [helpOpen, setHelpOpen] = useState(false);
   const success = state.success === step;
 
@@ -104,10 +118,10 @@ export function PermissionPage({ step, session, state }: { step: PermissionStep;
         </Txt>
       </View>
       <View style={styles.chips}>
-        {item !== null ? (
-          <StatusChip tone={granted ? 'success' : 'warning'} label={granted ? m.ui.common.allowed : m.ui.common.missing} />
-        ) : (
+        {known === null ? (
           <StatusChip tone="neutral" label={m.ui.common.unknown} />
+        ) : (
+          <StatusChip tone={granted ? 'success' : 'warning'} label={granted ? m.ui.common.allowed : m.ui.common.missing} />
         )}
         {optional ? <StatusChip tone="neutral" label={m.ui.common.optional} /> : null}
       </View>
@@ -163,16 +177,14 @@ export function PermissionPage({ step, session, state }: { step: PermissionStep;
   );
 }
 
-/** Opens the Android screen of a permission. Write settings has no session action, so it opens the system list directly. */
+/** Opens the Android screen of a permission: the session fixes checklist items, the special accesses open their own screens. */
 export function askPermission(step: PermissionStep, session: Session): void {
   const item = PERMISSION_ITEMS[step];
   if (item) {
     session.fix(item);
     return;
   }
-  if (Platform.OS === 'android') {
-    void Linking.sendIntent('android.settings.action.MANAGE_WRITE_SETTINGS').catch(() => Linking.openSettings());
-  }
+  openSpecialAccess(step as SpecialStep);
 }
 
 export function permissionAction(step: PermissionStep, m: ReturnType<typeof useI18n>['messages']): string {
@@ -187,7 +199,9 @@ export function permissionAction(step: PermissionStep, m: ReturnType<typeof useI
     case 'overlay':
       return t.openOverlay;
     case 'notifications':
-      return t.openNotifications;
+      return t.allowNotifications;
+    case 'mediaAccess':
+      return t.openMediaAccess;
     case 'writeSettings':
       return t.openWriteSettings;
   }
@@ -290,22 +304,32 @@ export function VoicePracticePage({ onPlanned }: { onPlanned: () => void }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ request: string; outcome: PlanOutcome } | null>(null);
 
+  const [heardNothing, setHeardNothing] = useState(false);
+
   const plan = async (request: string) => {
     const clean = request.trim();
     if (!clean) return;
     setBusy(true);
-    const outcome = await dryRunPlanner.plan({ text: clean, locale: speechLocale });
-    setBusy(false);
-    setResult({ request: clean, outcome });
-    if (outcome.status === 'planned') onPlanned();
+    try {
+      const { outcome } = await planRequest(clean, { dryRun: true });
+      setResult({ request: clean, outcome });
+      if (outcome.status === 'planned') onPlanned();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const say = async () => {
     setListening(true);
+    setHeardNothing(false);
     try {
-      const transcript = await createSpeechToText([t.sample]).listen({ locale: speechLocale, onPartial: setText });
+      // The phone's recognizer where there is one; elsewhere a scripted engine that hears the sample.
+      const engine = getSigil().native ? getSigil().speech : createSpeechToText([t.sample]);
+      const transcript = await engine.listen({ locale: speechLocale, onPartial: setText });
       setText(transcript.text);
       await plan(transcript.text);
+    } catch {
+      setHeardNothing(true);
     } finally {
       setListening(false);
     }
@@ -329,6 +353,11 @@ export function VoicePracticePage({ onPlanned }: { onPlanned: () => void }) {
           <Txt variant="headline">{m.quote(t.sample)}</Txt>
         </View>
       </View>
+      {heardNothing ? (
+        <Txt variant="footnote" tone="warning">
+          {m.ui.common.heardNothing}
+        </Txt>
+      ) : null}
       <Txt variant="monoTag" tone="tertiary">
         {t.type}
       </Txt>

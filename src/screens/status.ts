@@ -65,7 +65,8 @@ export function sessionStatus(session: SessionState, m: Messages): SessionStatus
 export function errorText(error: string | null, m: Messages): string {
   const known = m.ui.session.errors;
   if (error === 'camera_permission') return known.cameraPermission;
-  if (error === 'camera_service') return known.cameraService;
+  if (error === 'camera_service' || error === 'failed') return known.cameraService;
+  if (error === 'unavailable') return known.unavailable;
   return error ? known.generic(error) : m.ui.session.lineError;
 }
 

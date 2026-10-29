@@ -21,6 +21,7 @@ export const uiJa: UiMessages = {
     live: 'ライブ',
     tryAgain: 'もう一度',
     unavailable: '利用不可',
+    heardNothing: '何も聞こえませんでした。もう一度話すか入力してください。',
     justNow: '今',
     minutesAgo: (n) => `${n}分前`,
     hoursAgo: (n) => `${n}時間前`,
@@ -47,6 +48,7 @@ export const uiJa: UiMessages = {
     errors: {
       cameraPermission: '手を見るにはカメラが必要です。',
       cameraService: 'カメラを起動できませんでした。もう一度お試しください。',
+      unavailable: 'このビルドではカメラを起動できません。',
       generic: (error) => `停止: ${error}`,
     },
     start: '開始',
@@ -104,7 +106,8 @@ export const uiJa: UiMessages = {
     microphone: { title: 'マイク', body: '拳かタップで Sigil に話しかけます。音声は端末内に残ります。' },
     accessibility: { title: 'ユーザー補助', body: '他のアプリでのタップ、スクロール、戻る操作を Sigil が代わりに行います。' },
     overlay: { title: '他のアプリの上に表示', body: 'カーソルとバブルを他のアプリの上に表示します。' },
-    notifications: {
+    notifications: { title: '通知', body: 'Sigil の動作中に、停止ボタン付きの通知を表示します。' },
+    mediaAccess: {
       title: '通知へのアクセス',
       body: '再生中のプレーヤーで早送りや速度変更ができるようになります。通知は読みません。',
     },
@@ -254,7 +257,9 @@ export const uiJa: UiMessages = {
     },
     steps: (n) => `${n}ステップ`,
     asksFirst: '先に確認',
-    runHint: '実行するにはバーのマイクを使うか、拳を握ってください。',
+    run: '実行',
+    running: '実行中',
+    runNote: 'Sigil は話しかけたときと同じように実行し、送信や投稿の前に確認します。',
     source: { rules: 'ルール', model: '端末内モデル' },
   },
   live: {
@@ -358,7 +363,8 @@ export const uiJa: UiMessages = {
       allowMicrophone: 'マイクを許可',
       openAccessibility: 'ユーザー補助を開く',
       openOverlay: '他のアプリの上への表示を許可',
-      openNotifications: '通知へのアクセスを開く',
+      allowNotifications: '通知を許可',
+      openMediaAccess: '通知へのアクセスを開く',
       openWriteSettings: 'システム設定を開く',
       granted: '許可されました。次に進みます。',
       why: {
@@ -366,7 +372,8 @@ export const uiJa: UiMessages = {
         microphone: ['聞き取りは拳かタップのときだけ始まります。', '音声は端末内でテキストになります。'],
         accessibility: ['一覧で Sigil のハンズフリー操作をオンにします。', 'Sigil はあなたの見ている前で、サインとリクエストにだけ従います。'],
         overlay: ['カーソルがつまむ位置を示します。', 'スフィアからいつでも隠せます。'],
-        notifications: ['使うのは再生中のメディアプレーヤーだけです。', '通知を読んだり保存したりはしません。'],
+        notifications: ['Android 13 以降は、アプリが通知を出す前に確認されます。', '通知には Sigil を止めるボタンがあります。'],
+        mediaAccess: ['使うのは再生中のメディアプレーヤーだけです。', '通知を読んだり保存したりはしません。'],
         writeSettings: ['明るさを頼んだときだけ使います。', 'なくても Sigil は画面設定を開きます。'],
       },
     },

@@ -56,10 +56,17 @@ describe('steps of a run', () => {
     expect(buildSteps({ androidAccess: true, checklist: NOTHING })).toEqual([...TOUR_STEPS]);
   });
 
-  it('leaves out what is already granted, but keeps write settings, which the session cannot report', () => {
+  it('leaves out what is already granted, and keeps the special accesses the phone cannot report', () => {
     const steps = buildSteps({ androidAccess: true, checklist: EVERYTHING });
     expect(steps).not.toContain('camera');
     expect(steps).not.toContain('accessibility');
+    expect(steps).toContain('mediaAccess');
+    expect(steps).toContain('writeSettings');
+  });
+
+  it('leaves out a special access the phone reports as granted', () => {
+    const steps = buildSteps({ androidAccess: true, checklist: EVERYTHING, special: { mediaAccess: true, writeSettings: null } });
+    expect(steps).not.toContain('mediaAccess');
     expect(steps).toContain('writeSettings');
   });
 
@@ -67,7 +74,7 @@ describe('steps of a run', () => {
     const steps = buildSteps({ androidAccess: false, checklist: NOTHING });
     expect(steps).toContain('camera');
     expect(steps).toContain('microphone');
-    for (const step of ['accessibility', 'overlay', 'notifications', 'writeSettings'] as const) {
+    for (const step of ['accessibility', 'overlay', 'notifications', 'mediaAccess', 'writeSettings'] as const) {
       expect(steps).not.toContain(step);
     }
   });
@@ -152,6 +159,14 @@ describe('permissions', () => {
     expect(state.status.overlay).toBe('done');
     expect(state.success).toBeNull();
     expect(currentStep(state)).toBe('camera');
+  });
+
+  it('celebrates a special access the phone reports while its page is open', () => {
+    let state = goTo(startTour({ androidAccess: true, checklist: NOTHING }), 'mediaAccess');
+    state = tourReducer(state, { type: 'access', step: 'mediaAccess' });
+    expect(state.status.mediaAccess).toBe('done');
+    expect(state.success).toBe('mediaAccess');
+    expect(tourReducer(state, { type: 'access', step: 'mediaAccess' })).toBe(state);
   });
 
   it('does not let a later skip undo a granted permission', () => {

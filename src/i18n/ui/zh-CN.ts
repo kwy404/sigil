@@ -21,6 +21,7 @@ export const uiZhCN: UiMessages = {
     live: '实时',
     tryAgain: '重试',
     unavailable: '不可用',
+    heardNothing: '没有听到声音。请重试或直接输入。',
     justNow: '刚刚',
     minutesAgo: (n) => `${n} 分钟前`,
     hoursAgo: (n) => `${n} 小时前`,
@@ -47,6 +48,7 @@ export const uiZhCN: UiMessages = {
     errors: {
       cameraPermission: 'Sigil 需要摄像头才能看到你的手。',
       cameraService: '摄像头无法启动，请重试。',
+      unavailable: '此版本无法启动摄像头。',
       generic: (error) => `已停止：${error}`,
     },
     start: '开始',
@@ -104,7 +106,8 @@ export const uiZhCN: UiMessages = {
     microphone: { title: '麦克风', body: '握拳或点按即可对 Sigil 说话。音频只留在手机上。' },
     accessibility: { title: '无障碍', body: '让 Sigil 替你在其他应用中点按、滚动和返回。' },
     overlay: { title: '显示在其他应用上层', body: '在其他应用上方显示光标和悬浮球。' },
-    notifications: {
+    notifications: { title: '通知', body: 'Sigil 运行时显示一条通知，并带有停止按钮。' },
+    mediaAccess: {
       title: '通知使用权',
       body: '让 Sigil 在当前播放器中快进和调整倍速。它从不读取你的通知。',
     },
@@ -254,7 +257,9 @@ export const uiZhCN: UiMessages = {
     },
     steps: (n) => `${n} 步`,
     asksFirst: '先询问',
-    runHint: '要执行，请使用底栏的麦克风或握拳。',
+    run: '执行',
+    running: '正在执行',
+    runNote: 'Sigil 会像语音请求一样执行，并在发送或发布前先询问。',
     source: { rules: '规则解析', model: '设备端模型' },
   },
   live: {
@@ -352,7 +357,8 @@ export const uiZhCN: UiMessages = {
       allowMicrophone: '允许麦克风',
       openAccessibility: '打开无障碍设置',
       openOverlay: '允许显示在其他应用上层',
-      openNotifications: '打开通知使用权',
+      allowNotifications: '允许通知',
+      openMediaAccess: '打开通知使用权',
       openWriteSettings: '打开系统设置',
       granted: '已允许，继续下一步。',
       why: {
@@ -360,7 +366,8 @@ export const uiZhCN: UiMessages = {
         microphone: ['只有握拳或点按时才开始聆听。', '音频在手机上转成文字。'],
         accessibility: ['在列表中开启 Sigil 免手操控。', 'Sigil 只在你注视下，按你的手势和请求操作。'],
         overlay: ['光标显示捏合会落在哪里。', '你可以随时从控制球隐藏它。'],
-        notifications: ['只使用当前的媒体播放器。', '从不读取或保存通知。'],
+        notifications: ['从 Android 13 起，应用显示通知前系统会先询问。', '通知里有一个停止 Sigil 的按钮。'],
+        mediaAccess: ['只使用当前的媒体播放器。', '从不读取或保存通知。'],
         writeSettings: ['只在你要求调整亮度时使用。', '没有它，Sigil 会打开显示设置。'],
       },
     },

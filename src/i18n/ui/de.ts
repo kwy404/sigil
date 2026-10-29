@@ -21,6 +21,7 @@ export const uiDe: UiMessages = {
     live: 'Live',
     tryAgain: 'Erneut versuchen',
     unavailable: 'Nicht verfügbar',
+    heardNothing: 'Nichts gehört. Versuch es noch einmal oder tipp es.',
     justNow: 'jetzt',
     minutesAgo: (n) => `${n} Min.`,
     hoursAgo: (n) => `${n} Std.`,
@@ -47,6 +48,7 @@ export const uiDe: UiMessages = {
     errors: {
       cameraPermission: 'Sigil braucht die Kamera, um deine Hand zu sehen.',
       cameraService: 'Die Kamera konnte nicht starten. Versuch es noch einmal.',
+      unavailable: 'Dieser Build kann die Kamera nicht starten.',
       generic: (error) => `Gestoppt: ${error}`,
     },
     start: 'Starten',
@@ -104,7 +106,8 @@ export const uiDe: UiMessages = {
     microphone: { title: 'Mikrofon', body: 'Sprich mit Sigil per Faust oder Tippen. Der Ton bleibt auf dem Handy.' },
     accessibility: { title: 'Bedienungshilfen', body: 'Lässt Sigil in anderen Apps für dich tippen, scrollen und zurückgehen.' },
     overlay: { title: 'Über anderen Apps', body: 'Zeichnet den Cursor und die Blase über anderen Apps.' },
-    notifications: {
+    notifications: { title: 'Benachrichtigungen', body: 'Zeigt einen Hinweis, solange Sigil läuft, mit einer Taste zum Stoppen.' },
+    mediaAccess: {
       title: 'Benachrichtigungszugriff',
       body: 'Lässt Sigil im aktiven Player spulen und das Tempo ändern. Sigil liest nie deine Benachrichtigungen.',
     },
@@ -266,7 +269,9 @@ export const uiDe: UiMessages = {
     },
     steps: (n) => (n === 1 ? '1 Schritt' : `${n} Schritte`),
     asksFirst: 'Fragt zuerst',
-    runHint: 'Zum Ausführen das Mikrofon in der Leiste nutzen oder eine Faust machen.',
+    run: 'Ausführen',
+    running: 'Wird ausgeführt',
+    runNote: 'Sigil führt es wie eine gesprochene Anfrage aus und fragt vor dem Senden oder Posten.',
     source: { rules: 'Regeln', model: 'Modell auf dem Gerät' },
   },
   live: {
@@ -371,7 +376,8 @@ export const uiDe: UiMessages = {
       allowMicrophone: 'Mikrofon erlauben',
       openAccessibility: 'Bedienungshilfen öffnen',
       openOverlay: 'Über anderen Apps erlauben',
-      openNotifications: 'Benachrichtigungszugriff öffnen',
+      allowNotifications: 'Benachrichtigungen erlauben',
+      openMediaAccess: 'Benachrichtigungszugriff öffnen',
       openWriteSettings: 'Systemeinstellungen öffnen',
       granted: 'Erlaubt. Weiter geht’s.',
       why: {
@@ -382,7 +388,8 @@ export const uiDe: UiMessages = {
           'Sigil handelt nur auf deine Zeichen und Anfragen, während du zusiehst.',
         ],
         overlay: ['Der Cursor zeigt, wo ein Pinch landet.', 'Du kannst ihn jederzeit über die Kugel ausblenden.'],
-        notifications: ['Nur der aktive Mediaplayer wird genutzt.', 'Benachrichtigungen werden nie gelesen oder gespeichert.'],
+        notifications: ['Ab Android 13 fragt das System, bevor eine App Hinweise zeigt.', 'Der Hinweis hat eine Taste, die Sigil stoppt.'],
+        mediaAccess: ['Nur der aktive Mediaplayer wird genutzt.', 'Benachrichtigungen werden nie gelesen oder gespeichert.'],
         writeSettings: ['Nur genutzt, wenn du eine Helligkeit wünschst.', 'Ohne sie öffnet Sigil die Anzeigeeinstellungen.'],
       },
     },

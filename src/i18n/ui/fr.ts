@@ -21,6 +21,7 @@ export const uiFr: UiMessages = {
     live: 'En direct',
     tryAgain: 'Réessayer',
     unavailable: 'Indisponible',
+    heardNothing: 'Rien n’a été entendu. Réessayez ou tapez-le.',
     justNow: 'maintenant',
     minutesAgo: (n) => `${n} min`,
     hoursAgo: (n) => `${n} h`,
@@ -47,6 +48,7 @@ export const uiFr: UiMessages = {
     errors: {
       cameraPermission: 'Sigil a besoin de la caméra pour voir votre main.',
       cameraService: 'La caméra n’a pas pu démarrer. Réessayez.',
+      unavailable: 'Cette version ne peut pas démarrer la caméra.',
       generic: (error) => `Interrompu : ${error}`,
     },
     start: 'Démarrer',
@@ -104,7 +106,8 @@ export const uiFr: UiMessages = {
     microphone: { title: 'Micro', body: 'Parlez à Sigil d’un poing ou d’un toucher. Le son reste sur le téléphone.' },
     accessibility: { title: 'Accessibilité', body: 'Permet à Sigil de toucher, faire défiler et revenir en arrière dans les autres apps.' },
     overlay: { title: 'Afficher par-dessus', body: 'Dessine le curseur et la bulle au-dessus des autres apps.' },
-    notifications: {
+    notifications: { title: 'Notifications', body: 'Affiche un avis pendant que Sigil fonctionne, avec un bouton pour l’arrêter.' },
+    mediaAccess: {
       title: 'Accès aux notifications',
       body: 'Permet à Sigil d’avancer et de changer la vitesse du lecteur actif. Il ne lit jamais vos notifications.',
     },
@@ -258,7 +261,9 @@ export const uiFr: UiMessages = {
     },
     steps: (n) => (n === 1 ? '1 étape' : `${n} étapes`),
     asksFirst: 'Demande d’abord',
-    runHint: 'Pour l’exécuter, utilisez le micro de la barre ou fermez le poing.',
+    run: 'Exécuter',
+    running: 'Exécution',
+    runNote: 'Sigil l’exécute comme une demande parlée et demande avant d’envoyer ou de publier.',
     source: { rules: 'Règles', model: 'Modèle sur l’appareil' },
   },
   live: {
@@ -363,7 +368,8 @@ export const uiFr: UiMessages = {
       allowMicrophone: 'Autoriser le micro',
       openAccessibility: 'Ouvrir l’accessibilité',
       openOverlay: 'Autoriser l’affichage par-dessus',
-      openNotifications: 'Ouvrir l’accès aux notifications',
+      allowNotifications: 'Autoriser les notifications',
+      openMediaAccess: 'Ouvrir l’accès aux notifications',
       openWriteSettings: 'Ouvrir les paramètres système',
       granted: 'Autorisé. On continue.',
       why: {
@@ -374,7 +380,8 @@ export const uiFr: UiMessages = {
           'Sigil n’agit que sur vos signes et vos demandes, sous vos yeux.',
         ],
         overlay: ['Le curseur montre où tombera le pincement.', 'Vous pouvez le masquer à tout moment depuis la sphère.'],
-        notifications: ['Seul le lecteur multimédia actif est utilisé.', 'Les notifications ne sont jamais lues ni stockées.'],
+        notifications: ['Depuis Android 13, le système demande avant qu’une app affiche des avis.', 'L’avis a un bouton qui arrête Sigil.'],
+        mediaAccess: ['Seul le lecteur multimédia actif est utilisé.', 'Les notifications ne sont jamais lues ni stockées.'],
         writeSettings: ['Utilisé seulement quand vous demandez une luminosité.', 'Sans cela, Sigil ouvre les réglages d’affichage.'],
       },
     },

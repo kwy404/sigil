@@ -21,6 +21,7 @@ export const uiEs: UiMessages = {
     live: 'En vivo',
     tryAgain: 'Reintentar',
     unavailable: 'No disponible',
+    heardNothing: 'No se oyó nada. Inténtalo de nuevo o escríbelo.',
     justNow: 'ahora',
     minutesAgo: (n) => `${n} min`,
     hoursAgo: (n) => `${n} h`,
@@ -47,6 +48,7 @@ export const uiEs: UiMessages = {
     errors: {
       cameraPermission: 'Sigil necesita la cámara para ver tu mano.',
       cameraService: 'La cámara no pudo iniciarse. Inténtalo de nuevo.',
+      unavailable: 'Esta versión no puede iniciar la cámara.',
       generic: (error) => `Detenido: ${error}`,
     },
     start: 'Iniciar',
@@ -104,7 +106,8 @@ export const uiEs: UiMessages = {
     microphone: { title: 'Micrófono', body: 'Habla con Sigil con el puño o un toque. El audio se queda en el teléfono.' },
     accessibility: { title: 'Accesibilidad', body: 'Permite que Sigil toque, desplace y vuelva atrás en otras apps por ti.' },
     overlay: { title: 'Mostrar sobre otras apps', body: 'Dibuja el cursor y la burbuja encima de otras apps.' },
-    notifications: {
+    notifications: { title: 'Notificaciones', body: 'Muestra un aviso mientras Sigil funciona, con un botón para detenerlo.' },
+    mediaAccess: {
       title: 'Acceso a notificaciones',
       body: 'Permite que Sigil adelante y cambie la velocidad del reproductor activo. Nunca lee tus notificaciones.',
     },
@@ -266,7 +269,9 @@ export const uiEs: UiMessages = {
     },
     steps: (n) => (n === 1 ? '1 paso' : `${n} pasos`),
     asksFirst: 'Pregunta antes',
-    runHint: 'Para ejecutarlo, usa el micrófono de la barra o cierra el puño.',
+    run: 'Ejecutar',
+    running: 'Ejecutando',
+    runNote: 'Sigil lo ejecuta como un pedido hablado y pregunta antes de enviar o publicar.',
     source: { rules: 'Reglas', model: 'Modelo en el dispositivo' },
   },
   live: {
@@ -371,7 +376,8 @@ export const uiEs: UiMessages = {
       allowMicrophone: 'Permitir el micrófono',
       openAccessibility: 'Abrir ajustes de accesibilidad',
       openOverlay: 'Permitir mostrar sobre apps',
-      openNotifications: 'Abrir acceso a notificaciones',
+      allowNotifications: 'Permitir notificaciones',
+      openMediaAccess: 'Abrir acceso a notificaciones',
       openWriteSettings: 'Abrir ajustes del sistema',
       granted: 'Permitido. Seguimos.',
       why: {
@@ -379,7 +385,8 @@ export const uiEs: UiMessages = {
         microphone: ['Solo escucha tras un puño o un toque.', 'El audio se convierte en texto en el teléfono.'],
         accessibility: ['Activa el control sin manos de Sigil en la lista.', 'Sigil solo actúa con tus signos y pedidos, mientras miras.'],
         overlay: ['El cursor muestra dónde caerá el pellizco.', 'Puedes ocultarlo cuando quieras desde la esfera.'],
-        notifications: ['Solo se usa el reproductor activo.', 'Las notificaciones nunca se leen ni se guardan.'],
+        notifications: ['Desde Android 13, el sistema pregunta antes de que una app muestre avisos.', 'El aviso tiene un botón que detiene Sigil.'],
+        mediaAccess: ['Solo se usa el reproductor activo.', 'Las notificaciones nunca se leen ni se guardan.'],
         writeSettings: ['Solo se usa cuando pides un brillo.', 'Sin esto, Sigil abre los ajustes de pantalla.'],
       },
     },

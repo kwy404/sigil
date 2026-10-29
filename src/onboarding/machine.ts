@@ -17,6 +17,7 @@ export const TOUR_STEPS = [
   'accessibility',
   'overlay',
   'notifications',
+  'mediaAccess',
   'writeSettings',
   'practice-point',
   'practice-pinch',
@@ -30,14 +31,25 @@ export const TOUR_STEPS = [
 
 export type TourStep = (typeof TOUR_STEPS)[number];
 
-export const PERMISSION_STEPS = ['camera', 'microphone', 'accessibility', 'overlay', 'notifications', 'writeSettings'] as const;
+export const PERMISSION_STEPS = [
+  'camera',
+  'microphone',
+  'accessibility',
+  'overlay',
+  'notifications',
+  'mediaAccess',
+  'writeSettings',
+] as const;
 export type PermissionStep = (typeof PERMISSION_STEPS)[number];
 
 export const PRACTICE_STEPS = ['practice-point', 'practice-pinch', 'practice-palm', 'practice-knob', 'practice-fist'] as const;
 export type PracticeStep = (typeof PRACTICE_STEPS)[number];
 
 /** Steps the user can leave out and still use every main feature. */
-export const OPTIONAL_STEPS: readonly TourStep[] = ['notifications', 'writeSettings'];
+export const OPTIONAL_STEPS: readonly TourStep[] = ['notifications', 'mediaAccess', 'writeSettings'];
+
+/** Special accesses the session checklist does not carry; the screens read them from the Android module. */
+export type SpecialStep = 'mediaAccess' | 'writeSettings';
 
 /** The gesture keys that complete each practice step. */
 export const PRACTICE_TARGETS: Readonly<Record<PracticeStep, readonly string[]>> = {
@@ -48,18 +60,19 @@ export const PRACTICE_TARGETS: Readonly<Record<PracticeStep, readonly string[]>>
   'practice-fist': ['fist'],
 };
 
-/** The checklist item each permission step waits for. The session cannot report write settings. */
+/** The checklist item each permission step waits for; the special accesses have none. */
 export const PERMISSION_ITEMS: Readonly<Record<PermissionStep, ChecklistItem | null>> = {
   camera: 'camera',
   microphone: 'microphone',
   accessibility: 'accessibility',
   overlay: 'overlay',
   notifications: 'notifications',
+  mediaAccess: null,
   writeSettings: null,
 };
 
 /** Android special accesses; other platforms leave these steps out. */
-const ANDROID_ONLY: readonly PermissionStep[] = ['accessibility', 'overlay', 'notifications', 'writeSettings'];
+const ANDROID_ONLY: readonly PermissionStep[] = ['accessibility', 'overlay', 'notifications', 'mediaAccess', 'writeSettings'];
 
 export type StepStatus = 'done' | 'skipped';
 
@@ -68,6 +81,8 @@ export interface TourOptions {
   androidAccess: boolean;
   /** The checklist when the tutorial opens. Granted items are not asked again. */
   checklist: Readonly<Record<ChecklistItem, boolean>>;
+  /** The special accesses when the tutorial opens, where the phone can tell. Granted ones are not asked again. */
+  special?: Partial<Record<SpecialStep, boolean | null>>;
   /** Opened again from Settings rather than on the first launch. */
   replay?: boolean;
 }
@@ -95,6 +110,8 @@ export type TourEvent =
   | { type: 'gesture'; key: string }
   /** A fresh checklist from the session. */
   | { type: 'checklist'; checklist: Readonly<Record<ChecklistItem, boolean>> }
+  /** A special access the phone reports as granted. */
+  | { type: 'access'; step: SpecialStep }
   /** The voice practice showed a plan. */
   | { type: 'practiced' }
   /** The confirmation practice got an answer by touch. */
@@ -117,7 +134,8 @@ export function buildSteps(options: TourOptions): TourStep[] {
     if (!isPermissionStep(step)) return true;
     if (!options.androidAccess && ANDROID_ONLY.includes(step)) return false;
     const item = PERMISSION_ITEMS[step];
-    return item === null || !options.checklist[item];
+    if (item === null) return options.special?.[step as SpecialStep] !== true;
+    return !options.checklist[item];
   });
 }
 
@@ -216,6 +234,8 @@ export function tourReducer(state: TourState, event: TourEvent): TourState {
       }
       return next;
     }
+    case 'access':
+      return state.steps.includes(event.step) && state.status[event.step] !== 'done' ? succeed(state, event.step) : state;
     case 'practiced':
       return step === 'voice' && state.success !== step ? succeed(state, step) : state;
     case 'advance':

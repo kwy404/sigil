@@ -5,31 +5,42 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { createSpeechToText } from '../../adapters/voice';
-import { useI18n } from '../../i18n';
-import type { PlanOutcome } from '../../sigil-core';
-import { IconButton } from '../../ui/button';
-import { Tag } from '../../ui/chip';
+import { resultText } from '../../features/result-text';
+import { useDescribeContext, useI18n } from '../../i18n';
+import { getSigil, planRequest } from '../../session';
+import type { ExecutionResult, PlanOutcome } from '../../sigil-core';
+import { Button, IconButton } from '../../ui/button';
+import { StatusChip, Tag } from '../../ui/chip';
+import { haptic } from '../../ui/haptics';
 import { PressableScale } from '../../ui/press';
 import { Sheet } from '../../ui/sheet';
 import { color, continuous, family, GUTTER } from '../../ui/theme';
 import { Txt } from '../../ui/type';
-import { dryRunPlanner } from '../shared';
+import { registry } from '../shared';
 import { VOICE_CATEGORIES } from '../voice/command-card';
 import { PlanView } from './plan-view';
 
+const RUN_TONE = { completed: 'success', failed: 'danger', cancelled: 'neutral', refused: 'warning' } as const;
+const RUN_OUTCOME = { completed: 'done', failed: 'failed', cancelled: 'cancelled', refused: 'not_understood' } as const;
+
 /**
  * The command sheet: type or speak a request and see the plan Sigil would
- * follow, step by step. A dry run; nothing is executed from here.
+ * follow, step by step, as a dry run. Run it then carries it out like a
+ * spoken request, with the same confirmations before sending or posting.
  */
 export function CommandSheet() {
   const params = useLocalSearchParams<{ text?: string }>();
   const { messages: m, speechLocale } = useI18n();
   const insets = useSafeAreaInsets();
   const t = m.ui.command;
+  const ctx = useDescribeContext(registry);
   const [text, setText] = useState(params.text ?? '');
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
   const [result, setResult] = useState<{ request: string; outcome: PlanOutcome } | null>(null);
+  const [running, setRunning] = useState(false);
+  const [ran, setRan] = useState<ExecutionResult | null>(null);
+  const [heardNothing, setHeardNothing] = useState(false);
   const input = useRef<ComponentRef<typeof TextInput>>(null);
   const suggestions = VOICE_CATEGORIES.map((category) => m.ui.voice.examples[category][0]);
 
@@ -38,10 +49,25 @@ export function CommandSheet() {
     if (!clean) return;
     setText(clean);
     setBusy(true);
+    setRan(null);
     try {
-      setResult({ request: clean, outcome: await dryRunPlanner.plan({ text: clean, locale: speechLocale }) });
+      const { outcome } = await planRequest(clean, { dryRun: true });
+      setResult({ request: clean, outcome });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const run = async () => {
+    if (!result) return;
+    setRunning(true);
+    try {
+      const { result: execution } = await planRequest(result.request, { dryRun: false });
+      setRan(execution);
+      if (execution?.status === 'completed') haptic.success();
+      else if (execution) haptic.warning();
+    } finally {
+      setRunning(false);
     }
   };
 
@@ -53,9 +79,14 @@ export function CommandSheet() {
   const speak = async () => {
     setListening(true);
     setResult(null);
+    setHeardNothing(false);
     try {
-      const transcript = await createSpeechToText(suggestions).listen({ locale: speechLocale, onPartial: setText });
+      // The phone's recognizer where there is one; elsewhere a scripted engine that hears the examples.
+      const engine = getSigil().native ? getSigil().speech : createSpeechToText(suggestions);
+      const transcript = await engine.listen({ locale: speechLocale, onPartial: setText });
       await plan(transcript.text);
+    } catch {
+      setHeardNothing(true);
     } finally {
       setListening(false);
     }
@@ -110,16 +141,39 @@ export function CommandSheet() {
                 />
               </View>
             </View>
-            <Txt variant="footnote" tone="tertiary" style={styles.note}>
-              {listening ? t.listening : t.note}
+            <Txt variant="footnote" tone={heardNothing ? 'warning' : 'tertiary'} style={styles.note}>
+              {listening ? t.listening : heardNothing ? m.ui.common.heardNothing : t.note}
             </Txt>
 
             {result ? (
               <View style={styles.result}>
                 <PlanView outcome={result.outcome} request={result.request} />
-                <Txt variant="footnote" tone="tertiary">
-                  {t.runHint}
-                </Txt>
+                {result.outcome.status === 'planned' ? (
+                  <View style={styles.runRow}>
+                    <Button
+                      label={running ? t.running : t.run}
+                      icon="play"
+                      size="lg"
+                      block
+                      loading={running}
+                      onPress={() => void run()}
+                    />
+                    {ran ? (
+                      <Animated.View entering={FadeIn.duration(200)} style={styles.ran}>
+                        <StatusChip tone={RUN_TONE[ran.status]} label={m.ui.voice.outcomes[RUN_OUTCOME[ran.status]]} />
+                        {result.outcome.status === 'planned' ? (
+                          <Txt variant="footnote" tone="secondary" style={styles.flex}>
+                            {resultText(ran, result.outcome.plan, ctx)}
+                          </Txt>
+                        ) : null}
+                      </Animated.View>
+                    ) : (
+                      <Txt variant="footnote" tone="tertiary">
+                        {t.runNote}
+                      </Txt>
+                    )}
+                  </View>
+                ) : null}
               </View>
             ) : (
               <Animated.View entering={FadeIn.duration(200)} style={styles.suggestions}>
@@ -179,6 +233,8 @@ const styles = StyleSheet.create({
   fieldActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
   note: { paddingHorizontal: 4 },
   result: { gap: 10 },
+  runRow: { gap: 10, marginTop: 4 },
+  ran: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   suggestions: { gap: 10, marginTop: 6 },
   suggestion: {
     flexDirection: 'row',

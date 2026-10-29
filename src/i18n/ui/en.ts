@@ -24,6 +24,7 @@ export const uiEn = {
     live: 'Live',
     tryAgain: 'Try again',
     unavailable: 'Not here',
+    heardNothing: 'Nothing was heard. Try again or type it.',
     justNow: 'now',
     minutesAgo: (n: number) => `${n} min`,
     hoursAgo: (n: number) => `${n} h`,
@@ -50,6 +51,7 @@ export const uiEn = {
     errors: {
       cameraPermission: 'Sigil needs the camera to see your hand.',
       cameraService: 'The camera could not start. Try again.',
+      unavailable: 'This build cannot start the camera.',
       generic: (error: string) => `Stopped: ${error}`,
     },
     start: 'Start',
@@ -107,7 +109,8 @@ export const uiEn = {
     microphone: { title: 'Microphone', body: 'Talk to Sigil with a fist or a tap. Audio stays on the phone.' },
     accessibility: { title: 'Accessibility', body: 'Lets Sigil tap, scroll and go back in other apps for you.' },
     overlay: { title: 'Display over apps', body: 'Draws the cursor and the bubble above other apps.' },
-    notifications: {
+    notifications: { title: 'Notifications', body: 'Shows a notice while Sigil runs, with a button that stops it.' },
+    mediaAccess: {
       title: 'Notification access',
       body: 'Lets Sigil skip and change the speed of the player in front. It never reads your notifications.',
     },
@@ -261,7 +264,9 @@ export const uiEn = {
     } as Record<string, string>,
     steps: (n: number) => (n === 1 ? '1 step' : `${n} steps`),
     asksFirst: 'Asks first',
-    runHint: 'To run it, use the mic in the bar or make a fist.',
+    run: 'Run it',
+    running: 'Running',
+    runNote: 'Sigil runs it like a spoken request and asks before it sends or posts anything.',
     source: { rules: 'Rule parser', model: 'On device model' } as Record<string, string>,
   },
   live: {
@@ -365,7 +370,8 @@ export const uiEn = {
       allowMicrophone: 'Allow microphone',
       openAccessibility: 'Open accessibility settings',
       openOverlay: 'Allow display over apps',
-      openNotifications: 'Open notification access',
+      allowNotifications: 'Allow notifications',
+      openMediaAccess: 'Open notification access',
       openWriteSettings: 'Open system settings',
       granted: 'Allowed. Moving on.',
       why: {
@@ -379,7 +385,8 @@ export const uiEn = {
           'Sigil acts only on your signs and requests, while you watch.',
         ],
         overlay: ['The cursor shows where a pinch will land.', 'You can hide it any time from the sphere.'],
-        notifications: ['Only the active media player is used.', 'Notifications are never read or stored.'],
+        notifications: ['Android 13 and later asks before an app shows notices.', 'The notice has a button that stops Sigil.'],
+        mediaAccess: ['Only the active media player is used.', 'Notifications are never read or stored.'],
         writeSettings: ['Used only when you ask for a brightness.', 'Without it Sigil opens the display settings.'],
       },
     },

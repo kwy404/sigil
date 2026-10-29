@@ -186,7 +186,9 @@ function build(script: Script): HandClip {
     const dx = landmarks[4].x - landmarks[8].x;
     const dy = landmarks[4].y - landmarks[8].y;
     const hand = Math.hypot(landmarks[0].x - landmarks[9].x, landmarks[0].y - landmarks[9].y);
-    pinch.push(Math.hypot(dx, dy) < hand * 0.3 ? 1 : 0);
+    // A pinch has the index reaching out; in a fist the tips also meet, but folded into the palm.
+    const reach = Math.hypot(landmarks[8].x - landmarks[0].x, landmarks[8].y - landmarks[0].y);
+    pinch.push(Math.hypot(dx, dy) < hand * 0.3 && reach > hand * 1.3 ? 1 : 0);
   }
   return { fps: FPS, frameCount: frames.length, points, pinch, trailTip: script.trail ? 8 : -1 };
 }

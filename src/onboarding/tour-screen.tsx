@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../i18n';
 import { usePreferences } from '../preferences/provider';
 import { useSigilSession } from '../session';
+import { readSpecialAccess, useSpecialAccess } from '../screens/special-access';
 import { Glow, GridBackdrop } from '../ui/backdrop';
 import { Button } from '../ui/button';
 import { Glyph } from '../ui/glyph';
@@ -54,8 +55,9 @@ export function TourScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const replay = params.replay === '1';
+  const special = useSpecialAccess();
   const [state, dispatch] = useReducer(tourReducer, null, () =>
-    startTour({ androidAccess: Platform.OS !== 'ios', checklist: session.checklist, replay }),
+    startTour({ androidAccess: Platform.OS !== 'ios', checklist: session.checklist, special: readSpecialAccess(), replay }),
   );
   const [screenReader, setScreenReader] = useState(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -76,6 +78,11 @@ export function TourScreen() {
   useEffect(() => {
     dispatch({ type: 'checklist', checklist: session.checklist });
   }, [session.checklist]);
+
+  useEffect(() => {
+    if (special.mediaAccess) dispatch({ type: 'access', step: 'mediaAccess' });
+    if (special.writeSettings) dispatch({ type: 'access', step: 'writeSettings' });
+  }, [special.mediaAccess, special.writeSettings]);
 
   useEffect(() => {
     if (!state.success) return;
@@ -99,7 +106,6 @@ export function TourScreen() {
   const bar = useAnimatedStyle(() => ({ width: withSpring(`${Math.max(4, fraction * 100)}%`, springs.glide) }));
 
   const labelOf = (candidate: TourStep): string => {
-    if (candidate === 'writeSettings') return m.ui.checklist.writeSettings.title;
     if (isPermissionStep(candidate)) return m.ui.checklist[candidate].title;
     if (isPracticeStep(candidate)) {
       const album = { 'practice-point': 'point', 'practice-pinch': 'pinch', 'practice-palm': 'open-palm', 'practice-knob': 'volume-knob', 'practice-fist': 'fist' } as const;
@@ -113,7 +119,7 @@ export function TourScreen() {
   const page = () => {
     if (step === 'welcome') return <WelcomePage />;
     if (step === 'about') return <AboutPage />;
-    if (isPermissionStep(step)) return <PermissionPage step={step} session={session} state={state} />;
+    if (isPermissionStep(step)) return <PermissionPage step={step} session={session} state={state} special={special} />;
     if (isPracticeStep(step))
       return <PracticePage step={step} session={session} state={state} screenReader={screenReader} width={width - GUTTER * 2} />;
     if (step === 'voice') return <VoicePracticePage onPlanned={() => dispatch({ type: 'practiced' })} />;

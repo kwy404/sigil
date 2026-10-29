@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linking, Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { useI18n } from '../../i18n';
@@ -11,6 +11,7 @@ import { Screen } from '../../ui/screen';
 import { color, continuous, GUTTER } from '../../ui/theme';
 import { Txt } from '../../ui/type';
 import { useBackLabel } from '../shared';
+import { openSpecialAccess, useSpecialAccess, type SpecialAccess } from '../special-access';
 import { CHECKLIST_GLYPH, OPTIONAL_ITEMS } from '../status';
 
 const NEEDED: readonly ChecklistItem[] = ['camera', 'microphone', 'restrictedSettings', 'accessibility', 'overlay'];
@@ -21,7 +22,26 @@ export function PermissionsScreen() {
   const session = useSigilSession();
   const backLabel = useBackLabel();
   const [helpOpen, setHelpOpen] = useState(false);
+  const special = useSpecialAccess();
   const t = m.ui.settings.permissionsPage;
+
+  const specialRow = (which: keyof SpecialAccess) => {
+    const granted = special[which];
+    const text = m.ui.checklist[which];
+    return (
+      <ListRow
+        key={which}
+        title={text.title}
+        subtitle={text.body}
+        icon={which === 'mediaAccess' ? 'play' : 'sun-high'}
+        iconTone={granted ? 'success' : 'neutral'}
+        value={granted ? m.ui.common.allowed : m.ui.common.openSettings}
+        valueTone={granted ? 'success' : 'accent'}
+        external={!granted}
+        onPress={granted ? undefined : () => openSpecialAccess(which)}
+      />
+    );
+  };
 
   const row = (item: ChecklistItem) => {
     const granted = session.checklist[item];
@@ -47,7 +67,7 @@ export function PermissionsScreen() {
         {t.caption}
       </Txt>
       <ListGroup header={t.required} style={styles.group}>
-        {NEEDED.map(row)}
+        {NEEDED.filter((item) => item !== 'restrictedSettings' || !session.checklist.restrictedSettings).map(row)}
       </ListGroup>
 
       {!session.checklist.accessibility ? (
@@ -80,19 +100,8 @@ export function PermissionsScreen() {
 
       <ListGroup header={t.optionalHeader} footer={t.writeSettingsNote} style={styles.group}>
         {row('notifications')}
-        <ListRow
-          title={m.ui.checklist.writeSettings.title}
-          subtitle={m.ui.checklist.writeSettings.body}
-          icon="sun-high"
-          value={m.ui.common.openSettings}
-          valueTone="accent"
-          external
-          onPress={() => {
-            if (Platform.OS === 'android') {
-              void Linking.sendIntent('android.settings.action.MANAGE_WRITE_SETTINGS').catch(() => Linking.openSettings());
-            }
-          }}
-        />
+        {specialRow('mediaAccess')}
+        {specialRow('writeSettings')}
       </ListGroup>
     </Screen>
   );
