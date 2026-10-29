@@ -1,0 +1,70 @@
+name: Android APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Tag to publish the APK under, for example v0.1.0. Leave empty to only build.
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Build the APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      - name: Generate the native project
+        run: npx expo prebuild --platform android --no-install
+
+      # The release build type of the generated project is signed with its
+      # debug key, which makes an installable preview without any secret.
+      - name: Build the release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - run: cp android/app/build/outputs/apk/release/app-release.apk sigil-android.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigil-android
+          path: sigil-android.apk
+          if-no-files-found: error
+
+      - name: Publish the release
+        if: env.RELEASE_TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" sigil-android.apk --clobber
+          else
+            gh release create "$RELEASE_TAG" sigil-android.apk --target "$GITHUB_SHA" --title "Sigil ${RELEASE_TAG#v} for Android (preview)" --notes-file .github/release-notes.md
+          fi
