@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+<defs>
+<radialGradient id="ab-bg" cx="512" cy="440" r="780" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0F1E36"/><stop offset="0.42" stop-color="#0A1222"/><stop offset="0.78" stop-color="#05080F"/><stop offset="1" stop-color="#020409"/></radialGradient>
+<radialGradient id="ab-glass" cx="420" cy="330" r="460" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#BFFFF5" stop-opacity="0.10"/><stop offset="0.5" stop-color="#5EF2DF" stop-opacity="0.035"/><stop offset="1" stop-color="#5EF2DF" stop-opacity="0"/></radialGradient>
+<linearGradient id="ab-rim" x1="230" y1="200" x2="790" y2="840" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.22"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.05"/><stop offset="1" stop-color="#5EF2DF" stop-opacity="0.16"/></linearGradient>
+<radialGradient id="ab-top" cx="512" cy="-60" r="620" gradientTransform="translate(0 -60) scale(1 0.62) translate(0 60)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#6FE9FF" stop-opacity="0.10"/><stop offset="1" stop-color="#6FE9FF" stop-opacity="0"/></radialGradient>
+<filter id="ab-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>
+
+<filter id="ab-bloom" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="1.5"/></filter>
+<filter id="ab-glow" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter>
+<radialGradient id="ab-amb" cx="12" cy="12" r="11" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2FD9C8" stop-opacity="0.22"/><stop offset="0.45" stop-color="#0E968C" stop-opacity="0.08"/><stop offset="1" stop-color="#0B746F" stop-opacity="0"/></radialGradient>
+<radialGradient id="ab-dot" cx="12" cy="12" r="4.8" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.22" stop-color="#CCFFF6" stop-opacity="0.95"/><stop offset="0.5" stop-color="#5EF2DF" stop-opacity="0.35"/><stop offset="1" stop-color="#2FD9C8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1024" height="1024" fill="url(#ab-bg)"/><rect width="1024" height="1024" fill="url(#ab-top)"/><circle cx="512" cy="512" r="372" fill="url(#ab-glass)"/><circle cx="512" cy="512" r="372" fill="none" stroke="url(#ab-rim)" stroke-width="2.5"/><path d="M236 352a316 316 0 0 1 164-164" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="10" stroke-linecap="round" filter="url(#ab-soft)"/>
+</svg>
