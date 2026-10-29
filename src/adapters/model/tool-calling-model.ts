@@ -10,7 +10,7 @@ export interface ToolCallingModelOptions {
 /** System prompt for small instruction tuned models. Short on purpose: every token costs time on a phone. */
 export function buildMessages(request: string, context: ModelContext): ChatMessage[] {
   const system = [
-    'You are Sigil, a phone assistant. Turn the user request into exactly one tool call.',
+    'You are Sigil, a hands free phone companion. Turn the user request into exactly one tool call.',
     'Rules:',
     '- Call one tool only. If the request needs several actions, call the first one.',
     '- Use clarify when the request is ambiguous or misses a contact, an app or a message text.',

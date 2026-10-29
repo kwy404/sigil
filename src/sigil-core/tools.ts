@@ -73,7 +73,7 @@ export type IntentArgs<K extends ToolName> = z.infer<(typeof INTENT_TOOLS)[K]['a
 /** A validated call to one of the intent tools. */
 export type Intent = { [K in ToolName]: { tool: K; args: IntentArgs<K> } }[ToolName];
 
-/** Tool definition in the shape most chat templates expect (OpenAI style function tools). */
+/** Tool definition in the JSON schema function shape most chat templates expect. */
 export interface ToolDefinition {
   type: 'function';
   function: {

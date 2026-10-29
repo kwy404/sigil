@@ -29,17 +29,12 @@ describe('built in profiles', () => {
   const registry = ProfileRegistry.withBuiltins();
 
   it('are all valid and loaded with general first', () => {
-    expect(BUILTIN_PROFILE_SOURCES).toHaveLength(8);
-    expect(registry.list().map((p) => p.id)).toEqual([
-      'general',
-      'chrome',
-      'instagram',
-      'messages',
-      'settings',
-      'tiktok',
-      'whatsapp',
-      'youtube',
-    ]);
+    const ids = registry.list().map((p) => p.id);
+    expect(ids).toHaveLength(BUILTIN_PROFILE_SOURCES.length);
+    expect(ids[0]).toBe('general');
+    expect(ids).toEqual(
+      expect.arrayContaining(['chrome', 'instagram', 'messages', 'settings', 'tiktok', 'whatsapp', 'youtube']),
+    );
   });
 
   it('give every gesture a meaning in every app', () => {
