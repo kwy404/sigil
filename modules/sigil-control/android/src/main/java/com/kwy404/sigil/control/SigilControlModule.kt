@@ -52,11 +52,11 @@ class SigilControlModule : Module() {
     Function("getScreenSize") { screenSize() }
 
     Function("openAccessibilitySettings") {
-      launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+      openActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
     }
 
     Function("openOverlaySettings") {
-      launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
+      openActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
     }
 
     Function("startCameraService") { withMicrophone: Boolean -> startCameraService(withMicrophone) }
@@ -152,7 +152,7 @@ class SigilControlModule : Module() {
   /** Starting activities from the background is allowed for a bound accessibility service, so it goes first. */
   private fun launchContext(): Context = SigilRuntime.service ?: appContext.currentActivity ?: context
 
-  private fun launch(intent: Intent): Boolean {
+  private fun openActivity(intent: Intent): Boolean {
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     return try {
       launchContext().startActivity(intent)
@@ -226,7 +226,7 @@ class SigilControlModule : Module() {
       label != null -> launchIntentForLabel(label)
       else -> null
     } ?: return false
-    return launch(intent)
+    return openActivity(intent)
   }
 
   /** Finds an installed app by the name shown under its launcher icon. */
