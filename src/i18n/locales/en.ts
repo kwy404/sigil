@@ -378,7 +378,7 @@ export const en = {
       none: 'Loads into memory on the first voice request.',
       idle: 'Not in memory. Loads again on the next voice request.',
       loading: 'Loading into memory.',
-      ready: 'In memory. Released after a minute without requests, in the background or when the phone needs memory.',
+      ready: 'In memory. Released after five minutes without requests, in the background or when the phone needs memory.',
       failed: 'The model could not load, so Sigil uses the rule parser for now.',
     } satisfies Record<EngineStatus | 'none', string>,
     buttons: {

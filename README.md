@@ -34,7 +34,7 @@ Needs a device or the next milestones:
 
 - The files come from the official Qwen repositories on Hugging Face, pinned to a commit, with their size and SHA-256 in `src/adapters/catalog.ts`. A file that does not match is deleted.
 - Downloads use Wi-Fi only unless the user allows mobile data, check the free storage first, continue after a pause, a lost connection or a restart, and can be cancelled. The model file is the only thing Sigil downloads; requests never leave the phone, and there is no backend.
-- The model runs on the CPU with a 2,048 token context and about half the cores. It loads when the user starts to speak or at the first request, and is released in the background, under memory pressure and after a minute without requests.
+- The model runs on the CPU with a 2,048 token context and about half the cores. It loads when the user starts to speak or at the first request, and is released in the background, under memory pressure and after five minutes without requests.
 - The answer is constrained by a JSON schema to exactly one call to one of the 17 intent tools, through the model's own chat template, and then goes through the same validation and confirmation rules as the rule parser's.
 - The full tier's license allows research and evaluation; commercial use of Qwen2.5 3B needs a license from Alibaba Cloud.
 

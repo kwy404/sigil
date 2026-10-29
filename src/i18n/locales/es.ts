@@ -368,7 +368,7 @@ export const es: Messages = {
       none: 'Se carga en memoria con la primera petición de voz.',
       idle: 'Fuera de la memoria. Se carga de nuevo con la próxima petición de voz.',
       loading: 'Cargando en memoria.',
-      ready: 'En memoria. Se libera tras un minuto sin peticiones, en segundo plano o cuando el teléfono necesita memoria.',
+      ready: 'En memoria. Se libera tras cinco minutos sin peticiones, en segundo plano o cuando el teléfono necesita memoria.',
       failed: 'El modelo no se pudo cargar, así que por ahora Sigil usa el analizador de reglas.',
     },
     buttons: {

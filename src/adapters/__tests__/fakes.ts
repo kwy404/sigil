@@ -200,7 +200,7 @@ export class FakeContext implements LlamaContextLike {
     this.running++;
     this.maxRunning = Math.max(this.maxRunning, this.running);
     try {
-      if (params.n_predict === 0) return { text: '' };
+      if (params.n_predict === 0) return this.runtime.warmUp ? await this.runtime.warmUp(this) : { text: '' };
       const reply = this.runtime.reply;
       return typeof reply === 'function' ? await reply(params, this) : reply;
     } finally {
@@ -243,6 +243,8 @@ export class FakeLlama implements LlamaRuntime {
   /** Resolves pending initLlama calls when set; a pending promise makes loads slow. */
   loading: Promise<void> | null = null;
   reply: Reply = toolCallResult('navigate', { action: 'home' });
+  /** Answers the warm up (n_predict 0); by default it returns at once. */
+  warmUp: ((context: FakeContext) => Promise<LlamaCompletionResult>) | null = null;
 
   async initLlama(params: LlamaInitParams): Promise<FakeContext> {
     this.inits.push(params);

@@ -63,8 +63,13 @@ export function llamaRnRuntime(): LlamaRuntime {
 /** Context length in tokens. The prompt (system prompt and tools) plus the answer fit with room to spare. */
 export const DEFAULT_CONTEXT_SIZE = 2048;
 
-/** The weights are released after this long without a request. */
-export const DEFAULT_IDLE_RELEASE_MS = 60_000;
+/**
+ * The weights are released after this long without a request. Loading them
+ * again also evaluates the system prompt and the tool list again (about a
+ * thousand tokens), so a short idle time would make most requests fall back
+ * to the rules; the background and memory pressure release them sooner.
+ */
+export const DEFAULT_IDLE_RELEASE_MS = 5 * 60_000;
 
 /**
  * CPU threads for a phone with this many cores. Phones mix fast and slow
@@ -204,7 +209,7 @@ export interface LlamaEngineOptions {
   threads?: number;
   /** Layers on the GPU: Metal on iOS. Android runs on the CPU. */
   gpuLayers?: number;
-  /** Release the weights after this long without a request; 0 keeps them. Defaults to one minute. */
+  /** Release the weights after this long without a request; 0 keeps them. Defaults to five minutes. */
   idleReleaseMs?: number;
   /** Asked before every load; a reason refuses it, for example when the phone is low on memory. */
   canLoad?: () => string | null;
@@ -215,7 +220,7 @@ export interface LlamaEngineOptions {
  * ChatEngine over llama.rn (llama.cpp). It loads the GGUF file lazily, on the
  * first prepare or request, runs one operation at a time, constrains the
  * answer to exactly one tool call with a JSON schema grammar, and releases
- * the weights when told to (background, memory pressure) or after a minute
+ * the weights when told to (background, memory pressure) or after five minutes
  * idle.
  */
 export class LlamaChatEngine implements ChatEngine {
@@ -251,12 +256,14 @@ export class LlamaChatEngine implements ChatEngine {
     this.exclusive(async () => {
       const context = await this.load();
       if (!this.warmed) {
+        this.generating = true;
         try {
           // n_predict 0 evaluates the prompt into the cache and generates nothing.
           await context.completion({ ...this.params(warmUp, context), n_predict: 0 });
-          this.warmed = true;
         } catch {
           // A failed warm up only costs speed: the first request evaluates the whole prompt.
+        } finally {
+          this.generating = false;
           this.warmed = true;
         }
       }

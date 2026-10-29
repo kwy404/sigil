@@ -183,7 +183,7 @@ The on device language model: the `ChatEngine` port and its llama.rn engine, the
 | `threadCountFor(cores)` | About half the cores, at most four; four when the count is unknown |
 | `toolList(tools)`, `describeTool(tool)` | The tools as one line each: `send_message(contact: string, text: string, app?: string): description` |
 | `toolCallSchema(tools)` | JSON schema that accepts exactly one `{ name, arguments }` call to one of the tools |
-| `DEFAULT_CONTEXT_SIZE`, `DEFAULT_IDLE_RELEASE_MS` | 2048 tokens; release after 60 s without requests |
+| `DEFAULT_CONTEXT_SIZE`, `DEFAULT_IDLE_RELEASE_MS` | 2048 tokens; release after five minutes without requests |
 | `ModelDownloader` | `new ModelDownloader({ file, url, storage, network, allowCellular, reserveBytes?, onChange? })`: `restore()`, `start()`, `pause()`, `cancel()`, `delete()`, `recheckNetwork()`, `dispose()` |
 | `DownloadState` | `absent`, `downloading` (bytes, total), `paused` (bytes, total, reason `user`, `network` or `interrupted`), `verifying`, `ready` (path), `failed` (error `offline`, `wifi_required`, `no_space`, `network`, `checksum` or `storage`) |
 | `ModelStorage`, `NetworkPort`, `NetworkInfo`, `Transfer` | Ports of the downloader: files, the network link and one HTTP transfer |

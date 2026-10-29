@@ -368,7 +368,7 @@ export const de: Messages = {
       none: 'Wird bei der ersten Sprachanfrage in den Speicher geladen.',
       idle: 'Nicht im Speicher. Wird bei der nächsten Sprachanfrage wieder geladen.',
       loading: 'Wird in den Speicher geladen.',
-      ready: 'Im Speicher. Wird nach einer Minute ohne Anfrage, im Hintergrund oder bei knappem Speicher freigegeben.',
+      ready: 'Im Speicher. Wird nach fünf Minuten ohne Anfrage, im Hintergrund oder bei knappem Speicher freigegeben.',
       failed: 'Das Modell konnte nicht geladen werden, daher nutzt Sigil vorerst den Regelparser.',
     },
     buttons: {

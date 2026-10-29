@@ -368,7 +368,7 @@ export const ptBR: Messages = {
       none: 'Vai para a memória no primeiro pedido de voz.',
       idle: 'Fora da memória. Volta no próximo pedido de voz.',
       loading: 'Carregando na memória.',
-      ready: 'Na memória. Sai depois de um minuto sem pedidos, em segundo plano ou quando o celular precisa de memória.',
+      ready: 'Na memória. Sai depois de cinco minutos sem pedidos, em segundo plano ou quando o celular precisa de memória.',
       failed: 'O modelo não carregou, então o Sigil usa o analisador de regras por enquanto.',
     },
     buttons: {

@@ -7,7 +7,7 @@ import { describeNotice, describePlan, describeStep, useDescribeContext, useI18n
 import { ActionPlanner, type PlanOutcome } from '../sigil-core';
 import { Button, Card, Chip, textStyles } from '../ui/primitives';
 import { tokens, type Tone } from '../ui/tokens';
-import { useOnDeviceModel } from './use-on-device-model';
+import { useOnDeviceTier } from './use-on-device-model';
 
 function statusTone(outcome: PlanOutcome): Tone {
   switch (outcome.status) {
@@ -32,15 +32,15 @@ function statusTone(outcome: PlanOutcome): Tone {
 export function PlannerPanel({ registry }: { registry: ProfileRegistry }) {
   const { messages: m, speechLocale } = useI18n();
   const ctx = useDescribeContext(registry);
-  const { model: onDevice, snapshot } = useOnDeviceModel();
+  const { model: onDevice, tier } = useOnDeviceTier();
   const planner = useMemo(
     () =>
       new ActionPlanner({
         profiles: registry,
-        model: onDevice.languageModel(snapshot.tier),
-        modelTimeoutMs: onDevice.plannerTimeoutMs(snapshot.tier),
+        model: onDevice.languageModel(tier),
+        modelTimeoutMs: onDevice.plannerTimeoutMs(tier),
       }),
-    [registry, onDevice, snapshot.tier],
+    [registry, onDevice, tier],
   );
   const speech = useMemo(() => createSpeechToText(m.planner.presets), [m]);
   const [request, setRequest] = useState<string | null>(null);

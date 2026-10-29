@@ -368,7 +368,7 @@ export const it: Messages = {
       none: 'Viene caricato in memoria alla prima richiesta vocale.',
       idle: 'Non in memoria. Viene ricaricato alla prossima richiesta vocale.',
       loading: 'Caricamento in memoria.',
-      ready: 'In memoria. Viene liberato dopo un minuto senza richieste, in background o quando il telefono ha bisogno di memoria.',
+      ready: 'In memoria. Viene liberato dopo cinque minuti senza richieste, in background o quando il telefono ha bisogno di memoria.',
       failed: 'Il modello non si è caricato, quindi per ora Sigil usa l’analizzatore di regole.',
     },
     buttons: {

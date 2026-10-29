@@ -5,6 +5,7 @@ import { toolDefinitions } from '../../sigil-core';
 import {
   buildMessages,
   DEFAULT_CONTEXT_SIZE,
+  DEFAULT_IDLE_RELEASE_MS,
   describeTool,
   LlamaChatEngine,
   threadCountFor,
@@ -200,7 +201,25 @@ describe('LlamaChatEngine', () => {
     expect(runtime.inits).toHaveLength(2);
   });
 
-  it('releases the weights after a minute without requests', async () => {
+  it('stops a warm up that is still running when the app releases the weights', async () => {
+    const runtime = new FakeLlama();
+    runtime.warmUp = (ctx) => ctx.hang();
+    const llama = engine(runtime);
+    llama.prepare(request(''));
+    await flush(20);
+    expect(llama.status).toBe('loading');
+    await llama.release();
+    expect(runtime.contexts[0].stops).toBe(1);
+    expect(runtime.contexts[0].released).toBe(true);
+    expect(llama.status).toBe('idle');
+    expect(llama.isReady()).toBe(false);
+  });
+
+  it('keeps the weights for five minutes by default', () => {
+    expect(DEFAULT_IDLE_RELEASE_MS).toBe(300_000);
+  });
+
+  it('releases the weights after the idle time without requests', async () => {
     jest.useFakeTimers();
     const runtime = new FakeLlama();
     const llama = engine(runtime, { idleReleaseMs: 60_000 });

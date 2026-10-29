@@ -375,7 +375,7 @@ export const fr: Messages = {
       none: 'Se charge en mémoire à la première demande vocale.',
       idle: 'Pas en mémoire. Se recharge à la prochaine demande vocale.',
       loading: 'Chargement en mémoire.',
-      ready: 'En mémoire. Libéré après une minute sans demande, en arrière-plan ou quand le téléphone a besoin de mémoire.',
+      ready: 'En mémoire. Libéré après cinq minutes sans demande, en arrière-plan ou quand le téléphone a besoin de mémoire.',
       failed: 'Le modèle n’a pas pu se charger, Sigil utilise donc l’analyseur de règles pour le moment.',
     },
     buttons: {

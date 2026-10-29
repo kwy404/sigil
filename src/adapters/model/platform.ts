@@ -31,6 +31,7 @@ function modelsFolder(): Directory {
 
 class ExpoTransfer implements Transfer {
   private readonly task: DownloadTask;
+  private token: string | null = null;
 
   constructor(url: string, path: string, token: string | null, onProgress: (bytes: number) => void) {
     const options: DownloadTaskOptions = { onProgress: (progress) => onProgress(progress.bytesWritten) };
@@ -41,11 +42,14 @@ class ExpoTransfer implements Transfer {
   async run(): Promise<'done' | 'paused'> {
     try {
       const file = this.task.state === 'paused' ? await this.task.resumeAsync() : await this.task.downloadAsync();
-      return file ? 'done' : 'paused';
-    } finally {
-      if (this.task.state !== 'paused') {
-        this.task.release();
+      if (file) {
+        return 'done';
       }
+      // A later transfer continues from this state; the native task is released below.
+      this.token = JSON.stringify(this.task.savable());
+      return 'paused';
+    } finally {
+      this.task.release();
     }
   }
 
@@ -56,11 +60,15 @@ class ExpoTransfer implements Transfer {
   }
 
   cancel(): void {
-    this.task.cancel();
+    try {
+      this.task.cancel();
+    } catch {
+      // The transfer already ended and released its native task.
+    }
   }
 
   resumeToken(): string | null {
-    return this.task.state === 'paused' ? JSON.stringify(this.task.savable()) : null;
+    return this.token;
   }
 }
 
