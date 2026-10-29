@@ -45,6 +45,21 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --max-workers=3 -PreactNativeArchitectures=x86_64
 
+      # MediaPipe ships its native tracker only for some processors; this shows
+      # which ones the AAR has and which libraries the emulator APK packaged.
+      - name: List the native libraries of the hand tracker
+        if: always()
+        run: |
+          mkdir -p smoke
+          {
+            find ~/.gradle/caches -name 'tasks-*.aar' 2>/dev/null | while read -r aar; do
+              echo "$aar"
+              unzip -l "$aar" | grep '\.so$' || echo "  no native libraries"
+            done
+            echo "APK:"
+            unzip -l android/app/build/outputs/apk/release/app-release.apk | grep '\.so$' | awk '{print $4}' | sort
+          } | tee smoke/native-libs.txt
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
