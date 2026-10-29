@@ -1,4 +1,22 @@
-import { CJK_NUM, fixed, lookup, parseCjkNumber, percent, speedRate, toSeconds, unquote, withApp } from './helpers';
+import type { AppPlace } from '../../app-profiles/schema';
+import {
+  CJK_NUM,
+  clockTime,
+  compactTime,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
+  fixed,
+  hourBefore,
+  lookup,
+  parseCjkNumber,
+  percent,
+  placeArgs,
+  speedRate,
+  toSeconds,
+  unquote,
+  withApp,
+} from './helpers';
 import type { Groups, LanguagePack, RuleArgs } from './types';
 
 const MESSAGE = '(?:一条|个)?(?:消息|信息|短信)';
@@ -49,14 +67,61 @@ function rate(g: Groups): RuleArgs | null {
 
 const UP = /^(?:调高|调大|调亮|加大|增大|提高|大一点|大点|高一点|亮一点|大声)$/u;
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^(?:reels?|快拍)$/iu, 'reels'],
+  [/^(?:shorts?|短视频)$/iu, 'shorts'],
+  [/^订阅(?:内容)?$/u, 'subscriptions'],
+  [/^(?:私信|私聊|消息|收件箱|dm)$/iu, 'messages'],
+  [/^(?:个人主页|个人资料|我的主页)$/u, 'profile'],
+  [/^(?:发现|探索)$/u, 'explore'],
+];
+/** Words that only name a place with an app: “打开消息” opens the messaging app. */
+const GENERIC_PLACE = /^(?:消息|收件箱)$/u;
+const SPAN_UNITS: DurationUnits = { hour: /^(?:个)?小时$/u, minute: /^分(?:钟)?$/u, second: /^秒(?:钟)?$/u };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  if (g.halfhour) return { seconds: 1800 };
+  const seconds = g.n3
+    ? durationSeconds([[parseCjkNumber(g.n3), g.u3]], SPAN_UNITS, true)
+    : durationSeconds(
+        [
+          [parseCjkNumber(g.n1), g.u1],
+          [parseCjkNumber(g.n2), g.u2],
+        ],
+        SPAN_UNITS,
+        Boolean(g.half),
+      );
+  return seconds === null ? null : { seconds };
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = !g.period ? null : /^(?:早上|上午|凌晨)$/u.test(g.period) ? 'am' : 'pm';
+  if (g.hm) {
+    const time = compactTime(g.hm.replace('：', ':'));
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  const minute = g.half ? 30 : g.quarter ? 15 : g.m === undefined ? 0 : parseCjkNumber(g.m);
+  return clockTime(parseCjkNumber(g.h), minute, period);
+}
+
 export const zh: LanguagePack = {
   id: 'zh',
   code: 'zh',
   vocab: {
+    SPAN: '(?:(?<n1>NUM)(?:个)?(?<u1>小时|分钟|分|秒钟|秒)(?:(?<n2>NUM)(?<u2>分钟|分|秒钟|秒))?(?<half>半)?|(?<halfhour>半个?小时)|(?<n3>NUM)个半(?<u3>小时))',
+    CLOCK: '(?:(?<period>早上|上午|凌晨|中午|下午|晚上|今晚)的?)?(?:(?<hm>\\d{1,2}[:：]\\d{2})|(?<h>NUM)(?:点|點|时)(?:(?<m>NUM)分?|(?<half>半)|(?<quarter>一刻))?)',
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.|点)[a-z0-9-]+)*(?:\\.|点)[a-z]{2,}(?:/[^ ]*)?',
     NUM: CJK_NUM,
     PCT: '(?:%)',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source:
+        '^(?:打开|显示|进入|去|看)(?:(?<app>APPS)(?:的)?)?(?<place>reels?|快拍|shorts?|短视频|订阅内容|订阅|私信|私聊|消息|收件箱|个人主页|个人资料|我的主页|发现|探索)$',
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-app-first',
       tool: 'send_message',
@@ -219,6 +284,85 @@ export const zh: LanguagePack = {
       tool: 'settings_panel',
       source: '^(?:打开|开启|关闭)?(?:勿扰模式|免打扰(?:模式)?|勿扰)$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:关闭|关掉|清除|清理|清空)(?:所有|全部)(?:的)?(?:应用|程序|后台应用|后台|最近的应用|最近应用|最近任务)$',
+        '^(?:一键清理|清理后台|清空后台|全部关闭|关闭全部|清空最近任务)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: ['^(?:关闭|关掉|退出)(?:这个|当前|此)?(?:应用|程序|软件|app)$', '^(?:关掉|关闭)(?:它|这个)$'],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: ['^(?:回到|返回|切换到|切回)?(?:上一个|前一个|刚才的)(?:应用|程序|app)$', '^切换(?:应用|程序)$'],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: '^(?:打开|开启|进入|启动)?分屏(?:模式)?$',
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:打开|显示|开始|重新开始|重新打开|重新播放|重新|再看一遍|重看|重做|再来一遍)?(?:新手)?(?:教程|引导|使用指南)(?:再来一遍|再看一遍)?$',
+        '^(?:教我|告诉我)(?:怎么|如何)(?:用|使用) ?sigil$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:设(?:置|定)?|定|开始|启动|来)(?:一个)?SPAN(?:的)?(?:计时器|倒计时|定时器|计时)$',
+        '^(?:计时器|倒计时|定时器|计时)SPAN$',
+        '^SPAN(?:后|以后)(?:提醒我|叫我)$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: ['^(?:帮我)?(?:设(?:置|定)?|定)(?:一个)?CLOCK(?:的)?闹钟$', '^闹钟(?:设(?:置|定)?)?(?:在|到|为)?CLOCK$', '^CLOCK(?:叫我起床|叫醒我|叫我)$'],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: ['^(?<verb>打开|开启|开|关闭|关掉|关)手电筒$', '^手电筒(?<state>打开|开|关闭|关|关掉)?$'],
+      build: (g) => ({ on: !/^关/u.test(g.verb ?? g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: '^(?:打开|访问|进入|去)(?:网站|网页)?(?<url>DOMAIN)$',
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source: [
+        '^(?:打开|进入)(?:和|与|跟)(?<contact>.+?)的(?:聊天|对话|会话)(?:窗口)?$',
+        '^(?:在|用)(?<app>APPS)(?:里|中)?(?:打开|进入)(?:和|与|跟)(?<contact>.+?)的(?:聊天|对话|会话)$',
+      ],
+      build: (g) => withApp(g, { contact: unquote(g.contact ?? '') }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source: ['^(?:关闭|关掉|退出|结束)(?<app>.+?)$', '^(?:把)?(?<app>.+?)(?:关掉|关闭|关了|退出)$'],
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     { id: 'back', tool: 'navigate', source: '^(?:返回|后退|回到上一页|返回上一页|上一页)$', build: fixed({ action: 'back' }) },
     {

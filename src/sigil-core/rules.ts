@@ -62,13 +62,17 @@ type CompiledRule = { patterns: RegExp[] };
 
 const compiledCache = new Map<string, Map<RuleLanguage, CompiledRule[]>>();
 
+/** Compiled rules for the last few app lists; the list changes when an app is installed or removed. */
+const CACHE_SIZE = 4;
+
 function expand(source: string, pack: LanguagePack, apps: string): string {
-  let out = source.split('APPS').join(apps);
+  // Tokens first, so an app label in capitals (a "CLOCK" app) is never read as a token.
+  let out = source;
   const tokens = Object.keys(pack.vocab).sort((a, b) => b.length - a.length);
   for (const token of tokens) {
     out = out.split(token).join(pack.vocab[token]);
   }
-  return loose(out);
+  return loose(out.split('APPS').join(apps));
 }
 
 function compile(appNames: readonly string[]): Map<RuleLanguage, CompiledRule[]> {
@@ -88,12 +92,20 @@ function compile(appNames: readonly string[]): Map<RuleLanguage, CompiledRule[]>
       );
     }
     compiledCache.set(apps, compiled);
+    while (compiledCache.size > CACHE_SIZE) {
+      const oldest = compiledCache.keys().next().value;
+      if (oldest === undefined) break;
+      compiledCache.delete(oldest);
+    }
   }
   return compiled;
 }
 
 function usable(args: RuleArgs | null): args is RuleArgs {
-  return args !== null && Object.values(args).every((v) => (typeof v === 'number' ? Number.isFinite(v) : v.length > 0));
+  return (
+    args !== null &&
+    Object.values(args).every((v) => (typeof v === 'number' ? Number.isFinite(v) : typeof v === 'boolean' || v.length > 0))
+  );
 }
 
 /**

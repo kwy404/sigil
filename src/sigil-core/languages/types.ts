@@ -7,7 +7,7 @@ export type RuleLanguage = (typeof RULE_LANGUAGES)[number];
 
 export type Groups = Record<string, string | undefined>;
 
-export type RuleArgs = Record<string, string | number>;
+export type RuleArgs = Record<string, string | number | boolean>;
 
 export interface Rule {
   id: string;

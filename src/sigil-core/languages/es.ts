@@ -1,11 +1,19 @@
+import type { AppPlace } from '../../app-profiles/schema';
 import {
+  clockTime,
+  compactTime,
   composeNumbers,
   contactCleaner,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
   fixed,
+  hourBefore,
   lookup,
   messageArgs,
   NumberWords,
   percent,
+  placeArgs,
   speedRate,
   toSeconds,
   unquote,
@@ -81,16 +89,75 @@ function rate(g: Groups): RuleArgs | null {
 const UP = '(?:sube|subir|súbele|aumenta|aumentar|auméntale|eleva|elevar)';
 const DOWN = '(?:baja|bajar|bájale|disminuye|disminuir|reduce|reducir)';
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^reels?$/iu, 'reels'],
+  [/^shorts?$/iu, 'shorts'],
+  [/^suscripciones$/iu, 'subscriptions'],
+  [/^(?:mensajes directos|mds?|dms?|direct|mensajes|bandeja de entrada|chats)$/iu, 'messages'],
+  [/^perfil$/iu, 'profile'],
+  [/^explorar$/iu, 'explore'],
+];
+/** Words that only name a place with an app: "abre los mensajes" opens the messaging app. */
+const GENERIC_PLACE = /^(?:mensajes|bandeja de entrada|chats)$/iu;
+const SPAN_UNITS: DurationUnits = { hour: /^horas?$/iu, minute: /^min(?:utos?)?$/iu, second: /^seg(?:undos?)?$/iu };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  if (g.halfhour) return { seconds: 1800 };
+  const seconds = durationSeconds(
+    [
+      [numbers.parse(g.n1), g.u1],
+      [numbers.parse(g.n2), g.u2],
+    ],
+    SPAN_UNITS,
+    Boolean(g.half),
+  );
+  return seconds === null ? null : { seconds };
+}
+
+function minuteOf(word: string | undefined): number | null {
+  if (word === undefined) return 0;
+  if (/^media$/iu.test(word)) return 30;
+  if (/^cuarto$/iu.test(word)) return 15;
+  return numbers.parse(word);
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = g.period ? (/(?:tarde|noche)$/iu.test(g.period) ? 'pm' : 'am') : null;
+  if (g.noon) return clockTime(/noche$/iu.test(g.noon) ? 0 : 12);
+  if (g.hm) {
+    const time = compactTime(g.hm);
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  if (g.less) {
+    const less = minuteOf(g.less);
+    return less === null ? null : clockTime(hourBefore(numbers.parse(g.h)), 60 - less, period);
+  }
+  return clockTime(numbers.parse(g.h), minuteOf(g.m), period);
+}
+
 export const es: LanguagePack = {
   id: 'es',
   code: 'es',
   vocab: {
+    SPAN: '(?:(?<n1>NUM) (?<u1>horas?|minutos?|min|segundos?|seg)(?:(?: y|,) (?<n2>NUM) (?<u2>minutos?|min|segundos?|seg))?(?<half> y media| y medio)?|(?<halfhour>media hora))',
+    CLOCK:
+      '(?:(?<hm>\\d{1,2}:\\d{2})|(?<h>NUM)(?: horas?)?(?: y (?<m>NUM|media|cuarto)(?: minutos?)?| menos (?<less>cuarto|NUM))?|(?<noon>mediodía|medianoche))(?: (?<period>de la mañana|de la madrugada|de la tarde|de la noche))?',
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.| punto )[a-z0-9-]+)*(?:\\.| punto )[a-z]{2,}(?:/[^ ]*)?',
     NUM: numbers.pattern(),
     PCT: '(?:\\s*%| por ciento)',
     UNIT: '(?<unit>segundos?|minutos?)',
     STREAM: '(?:del? (?:la )?)?(?<stream>timbre|tono de llamada|tono|llamadas|alarma|despertador)',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source: [
+        '^(?:abre|abrir|muestra|muéstrame|mostrar|ve a|ir a|entra (?:a|en)|ver)(?: (?:el|los|la|las|mi|mis))? (?<place>reels?|shorts?|suscripciones|mensajes directos|mds?|dms?|direct|mensajes|bandeja de entrada|perfil|explorar)(?: (?:de|del|en) (?<app>APPS))?$',
+        '^(?:los )?(?<place>reels|shorts)(?: (?:de|del|en) (?<app>APPS))?$',
+      ],
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-on-app-saying',
       tool: 'send_message',
@@ -242,6 +309,101 @@ export const es: LanguagePack = {
       tool: 'settings_panel',
       source: '^(?:(?:activa|activar|desactiva|desactivar|pon|poner|abre|quita) (?:el )?)?(?:modo )?no molestar$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:cierra|cierre|cerrar|limpia|limpiar)(?: todas las| todos los| las| los| todas| todos)(?: mis)? (?:apps|aplicaciones)(?: abiertas| recientes| en segundo plano)?$',
+        '^(?:cierra|cierre|cerrar) todo$',
+        '^(?:limpia|limpiar|borra|borrar)(?: las)? (?:apps |aplicaciones )?recientes$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: [
+        '^(?:cierra|cierre|cerrar) (?:esto|esta app|esta aplicación|la app|la aplicación)(?: actual)?$',
+        '^(?:sal|salir) (?:de aquí|de esta app|de la app|de esta aplicación|de la aplicación)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: [
+        '^(?:(?:vuelve|volver|regresa|regresar|ve|ir|cambia|cambiar) (?:a la|al|a) )?(?:app|aplicación) anterior$',
+        '^(?:(?:vuelve|volver|regresa|regresar|ve|ir) a )?la última (?:app|aplicación)$',
+        '^cambia(?:r)? de (?:app|aplicación)$',
+      ],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: ['^(?:(?:activa|activar|abre|abrir|usa|usar|pon|poner) (?:la )?)?pantalla dividida$', '^divid(?:e|ir) la pantalla$'],
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:(?:abre|abrir|muestra|muéstrame|mostrar|ver|repite|repetir|rehaz|rehacer|haz|hacer|empieza|empezar|inicia|iniciar|reinicia|reiniciar)(?: el)? )?tutorial(?: de nuevo| otra vez)?$',
+        '^(?:enséñame|muéstrame) (?:a usar|cómo usar) sigil$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:(?:pon|ponme|poner|crea|crear|inicia|iniciar|activa|activar|programa|programar)(?: un| el)? )?(?:temporizador|timer|cronómetro|cuenta atrás|cuenta regresiva) (?:de |por |para |a )?SPAN$',
+        '^avísame en SPAN$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: [
+        '^(?:(?:pon|ponme|poner|crea|crear|activa|activar|programa|programar)(?: una| la)? )?(?:alarma|despertador) (?:para |a |de )*(?:las |la )?CLOCK$',
+        '^(?:despiértame|levántame) (?:a |para )?(?:las |la )?CLOCK$',
+      ],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: [
+        '^(?<verb>enciende|encender|prende|prender|activa|activar|apaga|apagar|desactiva|desactivar)(?: la| el)? (?:linterna|luz del teléfono|luz del celular|flash)$',
+        '^linterna(?: (?<state>encendida|apagada|on|off))?$',
+      ],
+      build: (g) => ({ on: !/^(?:apag|desactiv)/iu.test(g.verb ?? '') && !/^(?:apagada|off)$/iu.test(g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: [
+        '^(?:abre|abrir|ve a|ir a|entra (?:a|en)|visita|visitar)(?: la| el)? (?:página|web|sitio|sitio web|página web) (?<url>.+)$',
+        '^(?:abre|abrir|ve a|ir a|entra (?:a|en)|visita|visitar) (?<url>DOMAIN)$',
+      ],
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source: [
+        `^(?:abre|abrir|ve a|entra (?:a|en))(?: el| la)? (?:chat|conversación) (?:con|de) (?<contact>.+?)(?: ${ON} (?<app>APPS))?$`,
+        '^(?:abre|abrir) (?:el )?(?<app>whatsapp|telegram|messenger) (?:de|con) (?<contact>.+)$',
+      ],
+      build: (g) => withApp(g, { contact: cleanContact(unquote(g.contact ?? '')) }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source: '^(?:cierra|cierre|cerrar|sal de|salir de|sal del|salir del|mata|matar|fuerza el cierre de|forzar el cierre de)(?: el| la)? (?<app>.+?)$',
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     {
       id: 'back',
