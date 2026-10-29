@@ -11,12 +11,12 @@ import {
   type LayoutRectangle,
 } from 'react-native';
 
-import { createSpeechToText } from '../adapters/voice';
 import type { ProfileRegistry } from '../app-profiles';
 import type { SampleId } from '../gesture-engine';
 import { subscribeGestures, type LiveGesture } from '../hand-control/feed';
 import { describeAction, describeNotice, describePlan, describeStep, describeGesture, useDescribeContext, useI18n } from '../i18n';
 import { ActionPlanner, type PlanOutcome } from '../sigil-core';
+import { useSigil } from '../runtime/provider';
 import { foregroundApp, getNativeControl, installedApps, planPlatform } from '../system-control';
 import { Icon } from '../ui/icon';
 import type { IconName } from '../ui/icons';
@@ -186,7 +186,7 @@ export function VoiceStepView({ registry, onPracticed }: { registry: ProfileRegi
   const ctx = useDescribeContext(registry);
   const copy = m.tutorial.steps.voice;
   const planner = useMemo(() => new ActionPlanner({ profiles: registry, installedApps, platform: planPlatform() }), [registry]);
-  const speech = useMemo(() => createSpeechToText([copy.example]), [copy.example]);
+  const { speech } = useSigil();
   const [typed, setTyped] = useState('');
   const [heard, setHeard] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<PlanOutcome | null>(null);

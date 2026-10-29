@@ -13,6 +13,14 @@ export interface SavedSettings {
   /** An app language picked in Sigil. Missing while Sigil follows the phone. */
   language?: string;
   tutorial?: SavedTutorial;
+  voice?: {
+    /** Voice requests while other apps are in front: the camera service also keeps the microphone. */
+    microphone?: boolean;
+  };
+  speech?: {
+    /** The user agreed to a speech recognizer that may not run on the phone (asked to prefer offline). */
+    allowOffDevice?: boolean;
+  };
 }
 
 const FILE_NAME = 'sigil-settings.json';

@@ -5,17 +5,16 @@ import { createSpeechToText } from '../adapters/voice';
 import type { ProfileRegistry } from '../app-profiles';
 import {
   describeConfirmation,
-  describeFailure,
   describeNotice,
   describePlan,
   describeStep,
   useDescribeContext,
   useI18n,
-  type DescribeContext,
 } from '../i18n';
-import type { ExecutionResult, Plan, PlanOutcome, SigilInterface, StepStatus } from '../sigil-core';
+import type { PlanOutcome, SigilInterface, StepStatus } from '../sigil-core';
 import { Button, Card, Chip, textStyles } from '../ui/primitives';
 import { tokens, toneColor, type Tone } from '../ui/tokens';
+import { resultText } from './result-text';
 import { usePlanRunner } from './use-plan-runner';
 
 function statusTone(outcome: PlanOutcome): Tone {
@@ -33,29 +32,6 @@ function statusTone(outcome: PlanOutcome): Tone {
 }
 
 const STEP_TONES: Record<StepStatus, Tone> = { running: 'accent', done: 'success', failed: 'danger', cancelled: 'neutral' };
-
-/** One line on how a run ended, in the app language. */
-function resultText(result: ExecutionResult, plan: Plan, ctx: DescribeContext): string {
-  const { m } = ctx;
-  if (result.status === 'completed') {
-    return m.planner.result.completed;
-  }
-  const step = plan.steps[result.completedSteps];
-  const reason = describeFailure(result, step, ctx);
-  if (reason) {
-    return reason;
-  }
-  if (result.permission) {
-    return result.permission === 'write_settings' ? m.system.access.brightness : m.system.access.media;
-  }
-  if (result.status === 'cancelled') {
-    return m.planner.result.cancelled;
-  }
-  if (result.status === 'refused') {
-    return m.planner.result.refused;
-  }
-  return m.planner.result.failed(step ? describeStep(step, ctx, plan, result.completedSteps) : '');
-}
 
 /**
  * Turns a request into a plan with the rule based fallback, shows the steps in
