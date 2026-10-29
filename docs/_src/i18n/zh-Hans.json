@@ -24,7 +24,7 @@
   "hero.tag": "手势 · 语音 · 设备端",
   "hero.title": "<span class=\"l1\">隔空画个符号，</span> <span class=\"l2\">手机照办。</span>",
   "hero.lead": "Sigil 让你隔空画出符号、开口说话，就能操控手机。它看到和听到的一切，都留在手机里。",
-  "hero.apkNote": "预览版 APK。实时手部追踪正在开发中。",
+  "hero.apkNote": "Android 预览版：实时手部追踪、语音和设备端模型。",
   "hero.chip1": "每只手 21 个点",
   "hero.chip2": "模型在手机上运行",
   "hero.chip3": "无需账号，无需云端",
@@ -319,7 +319,7 @@
 
   "follow.overline": "关注开发进展",
   "follow.title": "在公开中构建。",
-  "follow.lead": "Sigil 正在开发中。手势引擎、按应用的配置、规划器和确认规则都已完成编写和测试。接下来是实时手部追踪。",
+  "follow.lead": "Android 预览版已经能追踪你的手、点按、聆听，并在手机上完成理解。接下来我们会在更多手机上调校追踪，并准备上架应用商店。",
   "follow.cta": "在 GitHub 上关注",
   "follow.cta2": "阅读愿景",
   "follow.apk": "下载 APK",
