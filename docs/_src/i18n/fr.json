@@ -24,7 +24,7 @@
   "hero.tag": "Gestes · Voix · Sur l’appareil",
   "hero.title": "<span class=\"l1\">Tracez un signe.</span> <span class=\"l2\">Le téléphone obéit.</span>",
   "hero.lead": "Sigil pilote votre téléphone avec des signes tracés dans l’air et avec votre voix. Tout ce qu’il voit et entend reste sur le téléphone.",
-  "hero.apkNote": "APK de préversion. Le suivi des mains en direct arrive bientôt.",
+  "hero.apkNote": "Préversion Android avec suivi des mains en direct, voix et modèle sur l’appareil.",
   "hero.chip1": "21 points par main",
   "hero.chip2": "Modèles sur le téléphone",
   "hero.chip3": "Ni compte, ni cloud",
@@ -319,7 +319,7 @@
 
   "follow.overline": "Suivre le projet",
   "follow.title": "Construit au grand jour.",
-  "follow.lead": "Sigil est en développement. Le moteur de gestes, les profils par application, le planificateur et la politique de confirmation sont écrits et testés. Le suivi de la main en direct arrive ensuite.",
+  "follow.lead": "La préversion Android suit déjà votre main, touche, écoute et comprend sur le téléphone. Prochaine étape : affiner le suivi sur plus de téléphones et préparer les stores.",
   "follow.cta": "Suivre sur GitHub",
   "follow.cta2": "Lire la vision",
   "follow.apk": "Télécharger l’APK",

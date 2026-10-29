@@ -24,7 +24,7 @@
   "hero.tag": "Gestures · Voice · On device",
   "hero.title": "<span class=\"l1\">Draw a sign.</span> <span class=\"l2\">The phone obeys.</span>",
   "hero.lead": "Sigil pilots your phone with signs drawn in the air and with your voice. Everything it sees and hears stays on the phone.",
-  "hero.apkNote": "Preview APK. Live hand tracking is on its way.",
+  "hero.apkNote": "Android preview with live hands, voice and an on device model.",
   "hero.chip1": "21 points per hand",
   "hero.chip2": "Models on the phone",
   "hero.chip3": "No account, no cloud",
@@ -319,7 +319,7 @@
 
   "follow.overline": "Follow the build",
   "follow.title": "Built in the open.",
-  "follow.lead": "Sigil is in development. The gesture engine, app profiles, planner and confirmation policy are written and tested. Live hand tracking is next.",
+  "follow.lead": "The Android preview already follows your hand, taps, listens and understands on the phone. Next we tune tracking on more phones and get ready for the stores.",
   "follow.cta": "Follow on GitHub",
   "follow.cta2": "Read the vision",
   "follow.apk": "Download the APK",

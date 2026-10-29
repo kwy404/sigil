@@ -24,7 +24,7 @@
   "hero.tag": "Gestos · Voz · En el dispositivo",
   "hero.title": "<span class=\"l1\">Dibuja un signo.</span> <span class=\"l2\">El teléfono obedece.</span>",
   "hero.lead": "Sigil maneja tu teléfono con signos dibujados en el aire y con tu voz. Todo lo que ve y oye se queda en el teléfono.",
-  "hero.apkNote": "APK preliminar. El seguimiento de manos en vivo está en camino.",
+  "hero.apkNote": "Versión preliminar para Android con manos en vivo, voz y modelo en el dispositivo.",
   "hero.chip1": "21 puntos por mano",
   "hero.chip2": "Modelos en el teléfono",
   "hero.chip3": "Sin cuenta, sin nube",
@@ -319,7 +319,7 @@
 
   "follow.overline": "Sigue el desarrollo",
   "follow.title": "Hecho a la vista.",
-  "follow.lead": "Sigil está en desarrollo. El motor de gestos, los perfiles por app, el planificador y la política de confirmación ya están escritos y probados. Lo siguiente es el seguimiento de la mano en vivo.",
+  "follow.lead": "La versión preliminar para Android ya sigue tu mano, toca, escucha y entiende en el teléfono. Ahora afinamos el seguimiento en más teléfonos y preparamos las tiendas.",
   "follow.cta": "Síguelo en GitHub",
   "follow.cta2": "Lee la visión",
   "follow.apk": "Descargar el APK",

@@ -24,7 +24,7 @@
   "hero.tag": "Gestos · Voz · No aparelho",
   "hero.title": "<span class=\"l1\">Desenhe um sinal.</span> <span class=\"l2\">O celular obedece.</span>",
   "hero.lead": "O Sigil pilota o celular com sinais desenhados no ar e com a sua voz. Tudo o que ele vê e ouve fica no aparelho.",
-  "hero.apkNote": "APK de prévia. O rastreamento das mãos ao vivo está a caminho.",
+  "hero.apkNote": "Prévia para Android com mãos ao vivo, voz e modelo no aparelho.",
   "hero.chip1": "21 pontos por mão",
   "hero.chip2": "Modelos no celular",
   "hero.chip3": "Sem conta, sem nuvem",
@@ -319,7 +319,7 @@
 
   "follow.overline": "Acompanhe o projeto",
   "follow.title": "Construído em aberto.",
-  "follow.lead": "O Sigil está em desenvolvimento. O motor de gestos, os perfis por app, o planejador e a política de confirmação já estão escritos e testados. O rastreamento da mão ao vivo vem a seguir.",
+  "follow.lead": "A prévia para Android já segue sua mão, toca, ouve e entende tudo no celular. Agora ajustamos o rastreamento em mais aparelhos e preparamos as lojas.",
   "follow.cta": "Acompanhe no GitHub",
   "follow.cta2": "Leia a visão",
   "follow.apk": "Baixar o APK",

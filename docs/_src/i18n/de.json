@@ -24,7 +24,7 @@
   "hero.tag": "Gesten · Stimme · Auf dem Gerät",
   "hero.title": "<span class=\"l1\">Ein Zeichen in der Luft.</span> <span class=\"l2\">Das Smartphone gehorcht.</span>",
   "hero.lead": "Sigil steuert dein Smartphone mit Zeichen, die du in die Luft zeichnest, und mit deiner Stimme. Alles, was es sieht und hört, bleibt auf dem Gerät.",
-  "hero.apkNote": "Vorschau als APK. Live-Handerkennung folgt bald.",
+  "hero.apkNote": "Android-Vorschau mit Live-Handerkennung, Sprache und Modell auf dem Gerät.",
   "hero.chip1": "21 Punkte pro Hand",
   "hero.chip2": "Modelle auf dem Gerät",
   "hero.chip3": "Kein Konto, keine Cloud",
@@ -319,7 +319,7 @@
 
   "follow.overline": "Entwicklung verfolgen",
   "follow.title": "Offen entwickelt.",
-  "follow.lead": "Sigil ist in Entwicklung. Gestenerkennung, App-Profile, Planer und Bestätigungsregel sind geschrieben und getestet. Als Nächstes kommt die Live-Handerkennung.",
+  "follow.lead": "Die Android-Vorschau folgt schon deiner Hand, tippt, hört zu und versteht alles auf dem Telefon. Als Nächstes stimmen wir die Erkennung auf mehr Geräten ab und bereiten die Stores vor.",
   "follow.cta": "Auf GitHub folgen",
   "follow.cta2": "Die Vision lesen",
   "follow.apk": "APK herunterladen",
