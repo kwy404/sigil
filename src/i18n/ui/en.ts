@@ -209,6 +209,7 @@ export const uiEn = {
       tiktok: 'Short videos. Flicks move to the next one.',
       chrome: 'Pages and tabs. Swipes go back and forward.',
       messages: 'Text messages. Sending always waits for your yes.',
+      launcher: 'The home screen. Gestures open apps and pages.',
       settings: 'The phone settings. Gestures scroll and go back.',
     } as Record<string, string>,
   },

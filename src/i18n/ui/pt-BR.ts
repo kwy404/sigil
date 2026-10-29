@@ -210,6 +210,7 @@ export const uiPtBR: UiMessages = {
       tiktok: 'Vídeos curtos. O peteleco passa para o próximo.',
       chrome: 'Páginas e abas. Deslizar volta e avança.',
       messages: 'Mensagens de texto. Enviar sempre espera o seu sim.',
+      launcher: 'A tela inicial. Os gestos abrem apps e páginas.',
       settings: 'Os ajustes do celular. Os gestos rolam e voltam.',
     },
   },

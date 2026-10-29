@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     minHeight: 56,
     padding: 0,
+    outlineWidth: 0,
     textAlignVertical: 'top',
   },
   fieldActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },

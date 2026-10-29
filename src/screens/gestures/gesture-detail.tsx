@@ -107,7 +107,7 @@ export function GestureDetail() {
             ))}
           </ListGroup>
         ) : (
-          <EmptyState icon="app-profile" title={t.detail.appsTitle} body={t.detail.appsEmpty} />
+          <EmptyState icon="app-profile" title={m.ui.apps.noChanges} body={t.detail.appsEmpty} />
         )}
       </Section>
     </Screen>

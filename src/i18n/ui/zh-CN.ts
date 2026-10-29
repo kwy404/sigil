@@ -206,6 +206,7 @@ export const uiZhCN: UiMessages = {
       tiktok: '短视频。轻弹切到下一个。',
       chrome: '网页和标签页。滑动后退和前进。',
       messages: '短信。发送前总会等你确认。',
+      launcher: '主屏幕。手势可以打开应用和页面。',
       settings: '手机设置。手势用于滚动和返回。',
     },
   },

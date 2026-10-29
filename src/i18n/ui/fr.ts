@@ -206,6 +206,7 @@ export const uiFr: UiMessages = {
       tiktok: 'Vidéos courtes. La pichenette passe à la suivante.',
       chrome: 'Pages et onglets. Les balayages reviennent et avancent.',
       messages: 'SMS. L’envoi attend toujours votre oui.',
+      launcher: 'L’écran d’accueil. Les gestes ouvrent les apps et les pages.',
       settings: 'Les réglages du téléphone. Les gestes font défiler et reviennent.',
     },
   },

@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: color.hairlineFocus,
   },
-  input: { flex: 1, color: color.text, fontSize: 16, fontFamily: 'Inter_400Regular', paddingVertical: 10 },
+  input: { flex: 1, color: color.text, fontSize: 16, fontFamily: 'Inter_400Regular', paddingVertical: 10, outlineWidth: 0 },
   resultBlock: { gap: 8 },
   confirmCard: {
     gap: 14,

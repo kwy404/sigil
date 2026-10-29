@@ -206,6 +206,7 @@ export const uiIt: UiMessages = {
       tiktok: 'Video brevi. Il colpetto passa al successivo.',
       chrome: 'Pagine e schede. Lo scorrimento va indietro e avanti.',
       messages: 'SMS. L’invio aspetta sempre il tuo sì.',
+      launcher: 'La schermata home. I gesti aprono app e pagine.',
       settings: 'Le impostazioni del telefono. I gesti scorrono e tornano indietro.',
     },
   },

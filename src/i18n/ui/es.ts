@@ -214,6 +214,7 @@ export const uiEs: UiMessages = {
       tiktok: 'Videos cortos. El golpe rápido pasa al siguiente.',
       chrome: 'Páginas y pestañas. Deslizar va atrás y adelante.',
       messages: 'Mensajes de texto. Enviar siempre espera tu sí.',
+      launcher: 'La pantalla de inicio. Los gestos abren apps y páginas.',
       settings: 'Los ajustes del teléfono. Los gestos desplazan y vuelven atrás.',
     },
   },

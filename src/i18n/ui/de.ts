@@ -214,6 +214,7 @@ export const uiDe: UiMessages = {
       tiktok: 'Kurze Videos. Schnipsen geht zum nächsten.',
       chrome: 'Seiten und Tabs. Wischen geht zurück und vor.',
       messages: 'SMS. Senden wartet immer auf dein Ja.',
+      launcher: 'Der Startbildschirm. Gesten öffnen Apps und Seiten.',
       settings: 'Die Einstellungen des Handys. Gesten scrollen und gehen zurück.',
     },
   },

@@ -206,6 +206,7 @@ export const uiJa: UiMessages = {
       tiktok: '短い動画。フリックで次の動画へ。',
       chrome: 'ページとタブ。スワイプで戻る・進む。',
       messages: 'SMS。送信は必ずあなたの確認を待ちます。',
+      launcher: 'ホーム画面。ジェスチャーでアプリやページを開きます。',
       settings: '端末の設定。ジェスチャーでスクロールと戻る操作。',
     },
   },
