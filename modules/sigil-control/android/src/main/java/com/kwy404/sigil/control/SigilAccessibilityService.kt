@@ -22,6 +22,9 @@ class SigilAccessibilityService : AccessibilityService() {
   /** Cursor drawn in an accessibility overlay, which needs no extra permission. */
   val cursor: CursorOverlay by lazy { CursorOverlay(this) }
 
+  /** Panel for voice requests made while another app is in front. */
+  val prompt: PromptOverlay by lazy { PromptOverlay(this) }
+
   override fun onServiceConnected() {
     super.onServiceConnected()
     SigilRuntime.attach(this)
@@ -48,12 +51,14 @@ class SigilAccessibilityService : AccessibilityService() {
 
   override fun onUnbind(intent: Intent?): Boolean {
     cursor.hide()
+    prompt.hide()
     SigilRuntime.detach(this)
     return super.onUnbind(intent)
   }
 
   override fun onDestroy() {
     cursor.hide()
+    prompt.hide()
     SigilRuntime.detach(this)
     super.onDestroy()
   }
