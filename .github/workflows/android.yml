@@ -48,7 +48,7 @@ jobs:
           sudo docker image prune --all --force > /dev/null 2>&1 || true
           df -h /
 
-      # The private repository runner is small, so give the C++ compilers room.
+      # Give the parallel C++ compilers room on the runner.
       - name: Add swap space
         run: |
           sudo fallocate -l 6G /swapfile-build
@@ -69,7 +69,7 @@ jobs:
         working-directory: android
         run: |
           (while true; do free -m | awk 'NR == 2 { print "memory used " $3 " of " $2 " MB" }'; sleep 60; done) &
-          ./gradlew assembleRelease --no-daemon --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process -PreactNativeArchitectures=arm64-v8a
+          ./gradlew assembleRelease --no-daemon --max-workers=3 -PreactNativeArchitectures=arm64-v8a
 
       - run: cp android/app/build/outputs/apk/release/app-release.apk sigil-android.apk
 
