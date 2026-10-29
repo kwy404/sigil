@@ -48,6 +48,16 @@ jobs:
           sudo docker image prune --all --force > /dev/null 2>&1 || true
           df -h /
 
+      # The private repository runner is small, so give the C++ compilers room.
+      - name: Add swap space
+        run: |
+          sudo fallocate -l 6G /swapfile-build
+          sudo chmod 600 /swapfile-build
+          sudo mkswap /swapfile-build
+          sudo swapon /swapfile-build
+          free -h
+          nproc
+
       - run: npm ci
 
       - name: Generate the native project
@@ -57,7 +67,9 @@ jobs:
       # debug key, which makes an installable preview without any secret.
       - name: Build the release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=arm64-v8a
+        run: |
+          (while true; do free -m | awk 'NR == 2 { print "memory used " $3 " of " $2 " MB" }'; sleep 60; done) &
+          ./gradlew assembleRelease --no-daemon --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process -PreactNativeArchitectures=arm64-v8a
 
       - run: cp android/app/build/outputs/apk/release/app-release.apk sigil-android.apk
 
