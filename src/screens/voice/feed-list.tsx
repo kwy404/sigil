@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { albumForKey } from '../../catalog/gestures';
 import { isGestureKey } from '../../gesture-engine/gestures';
@@ -70,7 +69,7 @@ export function FeedList({ entries }: { entries: readonly FeedEntry[] }) {
         }
         const last = index === entries.length - 1;
         return (
-          <Animated.View key={entry.id} entering={FadeInDown.duration(260)} style={styles.row}>
+          <View key={entry.id} style={styles.row}>
             <View style={styles.rail}>
               <View style={[styles.node, entry.kind === 'command' ? { borderColor: alpha(statusColor(tone), 0.5) } : null]}>
                 <Glyph name={icon} size={17} color={entry.kind === 'gesture' ? color.accent : color.text} />
@@ -95,7 +94,7 @@ export function FeedList({ entries }: { entries: readonly FeedEntry[] }) {
                 </View>
               ) : null}
             </View>
-          </Animated.View>
+          </View>
         );
       })}
     </View>

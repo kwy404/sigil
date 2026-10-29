@@ -294,7 +294,7 @@ export const uiEn = {
     haptics: 'Haptics',
     hapticsCaption: 'A light tick on presses and choices',
     permissions: 'Permissions',
-    permissionsAll: 'Everything is allowed',
+    permissionsAll: 'All allowed',
     permissionsMissing: (n: number) => (n === 1 ? '1 to fix' : `${n} to fix`),
     model: 'On device model',
     modelCaption: 'Understands requests in your own words',

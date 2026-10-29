@@ -1,6 +1,5 @@
 import { router, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { albumForKey } from '../../catalog/gestures';
@@ -114,14 +113,14 @@ export function LiveSheet() {
                 </Txt>
               </View>
               {session.lastCommand && session.lastCommand.text ? (
-                <Animated.View entering={FadeIn.duration(200)} style={styles.lastCommand}>
+                <View style={styles.lastCommand}>
                   <Txt variant="monoTag" tone="tertiary">
                     {t.lastCommand}
                   </Txt>
                   <Txt variant="callout" tone="secondary" numberOfLines={2}>
                     {`${m.quote(session.lastCommand.text)} · ${m.ui.voice.outcomes[session.lastCommand.outcome]}`}
                   </Txt>
-                </Animated.View>
+                </View>
               ) : null}
             </View>
 

@@ -176,7 +176,7 @@ export function CommandSheet() {
                 ) : null}
               </View>
             ) : (
-              <Animated.View entering={FadeIn.duration(200)} style={styles.suggestions}>
+              <View style={styles.suggestions}>
                 <Txt variant="monoTag" tone="tertiary">
                   {t.suggestions}
                 </Txt>
@@ -195,7 +195,7 @@ export function CommandSheet() {
                     </Txt>
                   </PressableScale>
                 ))}
-              </Animated.View>
+              </View>
             )}
           </ScrollView>
         </KeyboardAvoidingView>

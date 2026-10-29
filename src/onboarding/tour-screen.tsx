@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useReducer, useRef, useState, type ComponentRef } from 'react';
 import { AccessibilityInfo, Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useI18n } from '../i18n';
@@ -105,6 +105,18 @@ export function TourScreen() {
 
   const bar = useAnimatedStyle(() => ({ width: withSpring(`${Math.max(4, fraction * 100)}%`, springs.glide) }));
 
+  // Each page fades and rises in. A plain animated style rather than a layout animation, which
+  // left the first page invisible on Android.
+  const reduceMotion = useReducedMotion();
+  const appear = useSharedValue(1);
+  useEffect(() => {
+    appear.set(reduceMotion ? 1 : withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 300 })));
+  }, [step, reduceMotion, appear]);
+  const pageStyle = useAnimatedStyle(() => ({
+    opacity: appear.get(),
+    transform: [{ translateY: (1 - appear.get()) * 10 }],
+  }));
+
   const labelOf = (candidate: TourStep): string => {
     if (isPermissionStep(candidate)) return m.ui.checklist[candidate].title;
     if (isPracticeStep(candidate)) {
@@ -205,7 +217,7 @@ export function TourScreen() {
         </PressableScale>
       </View>
       <ScrollView ref={scroll} style={styles.flex} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Animated.View key={step} entering={FadeIn.duration(280)} exiting={FadeOut.duration(120)}>
+        <Animated.View style={pageStyle}>
           {page()}
         </Animated.View>
       </ScrollView>

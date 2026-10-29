@@ -73,13 +73,14 @@ function GlyphPart({
   stroke: number;
 }) {
   const end = useDerivedValue(() => {
-    const local = (time.get() - index * STAGGER_MS) / DRAW_MS;
-    return Math.min(1, Math.max(0, 1 - (1 - local) * (1 - local) * (local < 0 ? 0 : 1) - (local < 0 ? 1 : 0)));
+    const local = Math.min(1, Math.max(0, (time.get() - index * STAGGER_MS) / DRAW_MS));
+    return 1 - (1 - local) * (1 - local);
   });
-  const shown = useDerivedValue(() => (end.get() > 0.98 ? 1 : 0));
+  const solid = part.secondary ? 0.28 : 1;
+  const fillOpacity = useDerivedValue(() => (end.get() > 0.98 ? solid : 0));
   if (!part.path) return null;
   if (part.secondary || part.fill) {
-    return <Path path={part.path} color={ink} opacity={part.secondary ? shown.get() * 0.28 : shown.get()} />;
+    return <Path path={part.path} color={ink} opacity={fillOpacity} />;
   }
   return (
     <>

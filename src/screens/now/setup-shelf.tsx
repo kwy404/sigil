@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useI18n } from '../../i18n';
 import type { ChecklistItem } from '../../session/types';
@@ -37,7 +36,7 @@ export function SetupShelf({ missing, fix }: { missing: readonly ChecklistItem[]
   }, [pending]);
 
   return (
-    <Animated.ScrollView
+    <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       decelerationRate="fast"
@@ -47,12 +46,7 @@ export function SetupShelf({ missing, fix }: { missing: readonly ChecklistItem[]
         const text = m.ui.checklist[item];
         const optional = OPTIONAL_ITEMS.includes(item);
         return (
-          <Animated.View
-            key={item}
-            entering={FadeIn.duration(220)}
-            exiting={FadeOut.duration(180)}
-            layout={LinearTransition.springify().damping(22).stiffness(180)}
-            style={[styles.card, continuous]}>
+          <View key={item} style={[styles.card, continuous]}>
             <View style={styles.head}>
               <View style={[styles.icon, { backgroundColor: alpha(optional ? color.neutral : color.warning, 0.12) }]}>
                 <Glyph name={CHECKLIST_GLYPH[item]} size={20} color={optional ? color.text2 : color.warning} />
@@ -81,10 +75,10 @@ export function SetupShelf({ missing, fix }: { missing: readonly ChecklistItem[]
               />
               {item === 'restrictedSettings' ? <Tag label="Android 13+" /> : null}
             </View>
-          </Animated.View>
+          </View>
         );
       })}
-    </Animated.ScrollView>
+    </ScrollView>
   );
 }
 

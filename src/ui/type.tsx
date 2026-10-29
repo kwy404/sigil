@@ -83,7 +83,7 @@ const SPECS: Record<TypeVariant, Spec> = {
     cjk: { fontWeight: '600', fontSize: 16, lineHeight: 21 },
   },
   buttonSmall: {
-    latin: { fontFamily: family.textSemi, fontSize: 14, lineHeight: 18, letterSpacing: -0.05 },
+    latin: { fontFamily: family.textSemi, fontSize: 14, lineHeight: 18 },
     cjk: { fontWeight: '600', fontSize: 14, lineHeight: 19 },
   },
   tab: {

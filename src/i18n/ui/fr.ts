@@ -291,7 +291,7 @@ export const uiFr: UiMessages = {
     haptics: 'Retour haptique',
     hapticsCaption: 'Une légère vibration aux touchers et aux choix',
     permissions: 'Autorisations',
-    permissionsAll: 'Tout est autorisé',
+    permissionsAll: 'Tout autorisé',
     permissionsMissing: (n) => (n === 1 ? '1 à régler' : `${n} à régler`),
     model: 'Modèle sur l’appareil',
     modelCaption: 'Comprend les demandes formulées librement',

@@ -26,7 +26,7 @@ export function Segmented<T extends string>({
             onPress={() => onChange(option.value)}
             scaleTo={0.95}
             style={[styles.pill, selected ? styles.selected : null]}>
-            <Txt variant="buttonSmall" tone={selected ? 'primary' : 'tertiary'} numberOfLines={1}>
+            <Txt variant="buttonSmall" tone={selected ? 'primary' : 'tertiary'}>
               {option.label}
             </Txt>
           </PressableScale>

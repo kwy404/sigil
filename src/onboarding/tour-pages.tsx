@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { createSpeechToText } from '../adapters/voice';
 import { useI18n } from '../i18n';
@@ -56,7 +55,7 @@ export function AboutPage() {
       </Txt>
       <View style={styles.features}>
         {t.features.map((feature, index) => (
-          <Animated.View key={feature.title} entering={FadeIn.delay(80 * index).duration(260)} style={styles.feature}>
+          <View key={feature.title} style={styles.feature}>
             <View style={styles.featureIcon}>
               <Glyph name={FEATURE_GLYPHS[index] ?? 'sigil'} size={24} color={color.accent} />
             </View>
@@ -66,7 +65,7 @@ export function AboutPage() {
                 {feature.body}
               </Txt>
             </View>
-          </Animated.View>
+          </View>
         ))}
       </View>
     </View>
@@ -149,7 +148,7 @@ export function PermissionPage({
             style={styles.helpToggle}
           />
           {helpOpen ? (
-            <Animated.View entering={FadeIn.duration(200)} style={styles.helpBody}>
+            <View style={styles.helpBody}>
               {m.ui.settings.permissionsPage.restrictedSteps.map((line, index) => (
                 <View key={line} style={styles.bullet}>
                   <Txt variant="mono" tone="accent">
@@ -161,17 +160,17 @@ export function PermissionPage({
                 </View>
               ))}
               <Button label={m.ui.settings.permissionsPage.openAppInfo} variant="secondary" size="sm" onPress={() => session.fix('restrictedSettings')} />
-            </Animated.View>
+            </View>
           ) : null}
         </View>
       ) : null}
       {success ? (
-        <Animated.View entering={ZoomIn.duration(220)} style={styles.successRow}>
+        <View style={styles.successRow}>
           <Glyph name="check" size={18} color={color.success} />
           <Txt variant="subhead" tone="success">
             {t.granted}
           </Txt>
-        </Animated.View>
+        </View>
       ) : null}
     </View>
   );
@@ -250,9 +249,9 @@ export function PracticePage({
         <GridBackdrop cell={20} opacity={0.08} fadeTo={color.surface} />
         <HandPreview clip={album} width={stage} height={stage * 0.78} live={!done} still={done} />
         {done ? (
-          <Animated.View entering={ZoomIn.duration(240)} style={styles.stageBadge}>
+          <View style={styles.stageBadge}>
             <Glyph name="check" size={28} color={color.accentInk} />
-          </Animated.View>
+          </View>
         ) : null}
       </View>
       <Txt variant="largeTitle" accessibilityRole="header">
@@ -409,12 +408,12 @@ export function ConfirmPracticePage({ state, onAnswer }: { state: TourState; onA
             <Button label={t.no} icon="close" variant="secondary" onPress={() => onAnswer('no')} style={styles.flexButton} />
           </View>
         ) : (
-          <Animated.View entering={FadeIn.duration(220)} style={styles.successRow}>
+          <View style={styles.successRow}>
             <Glyph name={state.answer === 'yes' ? 'check' : 'close'} size={18} color={state.answer === 'yes' ? color.success : color.text2} />
             <Txt variant="callout" tone={state.answer === 'yes' ? 'success' : 'secondary'} style={styles.flex}>
               {state.answer === 'yes' ? t.answeredYes : t.answeredNo}
             </Txt>
-          </Animated.View>
+          </View>
         )}
       </View>
     </View>
@@ -428,9 +427,9 @@ export function DonePage({ later }: { later: string[] }) {
     <View style={styles.block}>
       <View style={styles.doneMark}>
         <Glow x={90} y={90} radius={110} opacity={0.22} />
-        <Animated.View entering={ZoomIn.springify().damping(14)} style={styles.doneRing}>
+        <View style={styles.doneRing}>
           <Glyph name="check" size={44} color={color.accentInk} />
-        </Animated.View>
+        </View>
       </View>
       <Txt variant="hero" accessibilityRole="header">
         {t.title}
@@ -450,14 +449,21 @@ export function DonePage({ later }: { later: string[] }) {
             </Txt>
           </View>
         ) : (
-          later.map((line) => (
-            <View key={line} style={styles.bullet}>
-              <StatusDot tone="warning" />
-              <Txt variant="callout" tone="secondary" style={styles.flex}>
-                {line}
+          <>
+            {later.slice(0, 4).map((line) => (
+              <View key={line} style={styles.bullet}>
+                <StatusDot tone="warning" />
+                <Txt variant="callout" tone="secondary" style={styles.flex}>
+                  {line}
+                </Txt>
+              </View>
+            ))}
+            {later.length > 4 ? (
+              <Txt variant="monoTag" tone="tertiary">
+                {`+${later.length - 4}`}
               </Txt>
-            </View>
-          ))
+            ) : null}
+          </>
         )}
       </View>
     </View>
