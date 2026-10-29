@@ -1,0 +1,10 @@
+[
+  { "code": "en", "hreflang": "en", "dir": "", "og": "en_US", "name": "English", "short": "EN" },
+  { "code": "pt-BR", "hreflang": "pt-BR", "dir": "pt-br", "og": "pt_BR", "name": "Português (Brasil)", "short": "PT" },
+  { "code": "es", "hreflang": "es", "dir": "es", "og": "es_ES", "name": "Español", "short": "ES" },
+  { "code": "fr", "hreflang": "fr", "dir": "fr", "og": "fr_FR", "name": "Français", "short": "FR" },
+  { "code": "de", "hreflang": "de", "dir": "de", "og": "de_DE", "name": "Deutsch", "short": "DE" },
+  { "code": "it", "hreflang": "it", "dir": "it", "og": "it_IT", "name": "Italiano", "short": "IT" },
+  { "code": "ja", "hreflang": "ja", "dir": "ja", "og": "ja_JP", "name": "日本語", "short": "日本語" },
+  { "code": "zh-Hans", "hreflang": "zh-Hans", "dir": "zh-hans", "og": "zh_CN", "name": "简体中文", "short": "中文" }
+]

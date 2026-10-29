@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="[[@lang]]" dir="ltr" class="no-js" style="--seed: #5EF2DF">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>[[a:meta.title]]</title>
+<meta name="description" content="[[a:meta.description]]">
+<link rel="canonical" href="[[@url]]">
+[[@hreflang]]
+<meta name="theme-color" content="#070B15">
+<meta name="color-scheme" content="dark">
+<meta name="author" content="Alexandre Kohler">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SIGIL">
+<meta property="og:url" content="[[@url]]">
+<meta property="og:title" content="[[a:og.title]]">
+<meta property="og:description" content="[[a:og.description]]">
+<meta property="og:image" content="[[@ogImage]]">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="[[a:og.imageAlt]]">
+<meta property="og:locale" content="[[@ogLocale]]">
+[[@ogAlternates]]
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="[[a:og.title]]">
+<meta name="twitter:description" content="[[a:og.description]]">
+<meta name="twitter:image" content="[[@ogImage]]">
+<meta name="twitter:image:alt" content="[[a:og.imageAlt]]">
+<link rel="icon" href="[[@root]]assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="[[@root]]assets/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="[[@root]]assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monsooncss@[[@v.monsoon]]/dist/monsoon.min.css"[[@sri.monsoon]] crossorigin="anonymous">
+<link rel="stylesheet" href="[[@fonts]]">
+<link rel="stylesheet" href="[[@root]]assets/site.css?v=[[@build]]">
+<script>[[@headScript]]</script>
+<script src="https://cdn.jsdelivr.net/npm/glyphfox@[[@v.glyphfox]]/dist/web/glyphfox.min.js"[[@sri.glyphfox]] crossorigin="anonymous" defer></script>
+<script src="[[@root]]assets/sigil-icons.js?v=[[@build]]" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@[[@v.voodoo]]/dist/voodoo.full.min.js"[[@sri.voodoo]] crossorigin="anonymous" data-no-observer defer></script>
+<script src="[[@root]]assets/site.js?v=[[@build]]" defer></script>
+<script type="application/json" id="sigil-strings">[[@strings]]</script>
+<script type="application/ld+json">[[@jsonld]]</script>
+</head>
+<body class="bg-background text-foreground antialiased">
+<a class="skip-link" href="#main">[[a11y.skip]]</a>
+
+<header class="site-header is-top" id="site-header">
+  <div class="header-bar wrap flex items-center gap-3">
+    <a class="brand" href="#top" aria-label="[[a:nav.home]]">
+      <img src="[[@root]]assets/logo/sigil-lockup-dark.svg" width="124" height="44" alt="SIGIL">
+    </a>
+    <nav class="site-nav hidden xl:flex" aria-label="[[a:nav.label]]" v-scrollspy v-scrollspy-class="is-current" v-scroll-offset="120">
+      <a href="#top">[[nav.overview]]</a>
+      <a href="#how">[[nav.how]]</a>
+      <a href="#gestures">[[nav.gestures]]</a>
+      <a href="#sphere">[[nav.sphere]]</a>
+      <a href="#profiles">[[nav.profiles]]</a>
+      <a href="#voice">[[nav.voice]]</a>
+      <a href="#privacy">[[nav.privacy]]</a>
+      <a href="#platforms">[[nav.platforms]]</a>
+    </nav>
+    <div class="header-end ml-auto flex items-center gap-2">
+      [[@langMenu]]
+      <a class="btn btn-primary btn-sm btn-pill header-cta hidden sm:inline-flex" href="https://github.com/kwy404/sigil">
+        <glyph-fox class="i16" data-icon="brand-github" size="16"></glyph-fox><span>[[cta.follow]]</span>
+      </a>
+      <details class="navmenu xl:hidden" v-click-outside="$el.open = false" v-escape="$el.open = false">
+        <summary class="btn btn-ghost btn-sm btn-square navmenu-button" aria-label="[[a:nav.menu]]">
+          <glyph-fox class="i20 navmenu-open" data-icon="menu" size="20"></glyph-fox>
+          <glyph-fox class="i20 navmenu-close" data-icon="x" size="20"></glyph-fox>
+        </summary>
+        <nav class="navmenu-panel" aria-label="[[a:nav.label]]" @click="$event.target.closest('a') && ($el.parentElement.open = false)">
+          <a href="#top">[[nav.overview]]</a>
+          <a href="#how">[[nav.how]]</a>
+          <a href="#gestures">[[nav.gestures]]</a>
+          <a href="#sphere">[[nav.sphere]]</a>
+          <a href="#profiles">[[nav.profiles]]</a>
+          <a href="#voice">[[nav.voice]]</a>
+          <a href="#privacy">[[nav.privacy]]</a>
+          <a href="#platforms">[[nav.platforms]]</a>
+          <a class="btn btn-primary btn-pill navmenu-cta" href="https://github.com/kwy404/sigil">
+            <glyph-fox class="i18" data-icon="brand-github" size="18"></glyph-fox><span>[[cta.follow]]</span>
+          </a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- Hero: the sigil is drawn in light when the page opens -->
+<section class="sg-hero" id="top" aria-labelledby="hero-title">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-copy wrap">
+    <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span>[[hero.tag]]</p>
+    <h1 id="hero-title" class="hero-title">[[hero.title]]</h1>
+    <p class="hero-lead">[[hero.lead]]</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary btn-lg btn-pill" href="https://github.com/kwy404/sigil">
+        <glyph-fox class="i20" data-icon="brand-github" size="20"></glyph-fox><span>[[cta.follow]]</span>
+      </a>
+      <a class="btn btn-ghost btn-lg btn-pill btn-quiet" href="#how">
+        <span>[[cta.how]]</span><glyph-fox class="i18" data-icon="arrow-down" size="18"></glyph-fox>
+      </a>
+    </div>
+  </div>
+  <div class="hero-stage">
+    [[@hero]]
+    <ul class="hero-chips" role="list">
+      <li class="hud-chip"><glyph-fox class="i16" data-icon="sigil:camera-tracking" size="16"></glyph-fox><span>[[hero.chip1]]</span></li>
+      <li class="hud-chip"><glyph-fox class="i16" data-icon="sigil:on-device-model" size="16"></glyph-fox><span>[[hero.chip2]]</span></li>
+      <li class="hud-chip"><glyph-fox class="i16" data-icon="sigil:privacy-shield" size="16"></glyph-fox><span>[[hero.chip3]]</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- The sign: the mark draws itself as you scroll, one reading at a time -->
+<section class="scene scene-sign" id="sign" data-scene="sign" aria-labelledby="sign-title">
+  <div class="scene-track">
+    <div class="scene-pin">
+      <div class="sign-stage" aria-hidden="true" v-ignore>
+        <div class="sign-halo"></div>
+        [[@mark]]
+      </div>
+      <div class="scene-copy">
+        <p class="kicker"><span class="mono-num">00</span>[[sign.overline]]</p>
+        <h2 id="sign-title" class="sr-only">[[sign.title]]</h2>
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; [[sign.s1.k]]</p><h3 class="beat-h">[[sign.s1.h]]</h3><p class="beat-p">[[sign.s1.p]]</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; [[sign.s2.k]]</p><h3 class="beat-h">[[sign.s2.h]]</h3><p class="beat-p">[[sign.s2.p]]</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; [[sign.s3.k]]</p><h3 class="beat-h">[[sign.s3.h]]</h3><p class="beat-p">[[sign.s3.p]]</p></li>
+          <li class="beat"><p class="beat-k">04 &#183; [[sign.s4.k]]</p><h3 class="beat-h">[[sign.s4.h]]</h3><p class="beat-p">[[sign.s4.p]]</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works: the cursor trail sweeps across a phone -->
+<section class="scene" id="how" data-scene="trail" aria-labelledby="how-title">
+  <header class="chapter-head wrap">
+    <p class="kicker"><span class="mono-num">01</span>[[how.overline]]</p>
+    <h2 id="how-title" class="chapter-title">[[how.title]]</h2>
+    <p class="chapter-lead">[[how.lead]]</p>
+  </header>
+  <div class="scene-track">
+    <div class="scene-pin">
+      <figure class="scene-stage frame" data-src="[[@root]]assets/scenes/trail.svg">
+        <img src="[[@art]]cursor-trail.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="[[a:how.fig.alt]]">
+        <span class="stage-chip" data-at="800 150" aria-hidden="true"><span class="live-dot"></span>[[how.stage.tracking]]</span>
+      </figure>
+      <div class="scene-copy">
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; [[how.s1.k]]</p><h3 class="beat-h">[[how.s1.title]]</h3><p class="beat-p">[[how.s1.text]]</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; [[how.s2.k]]</p><h3 class="beat-h">[[how.s2.title]]</h3><p class="beat-p">[[how.s2.text]]</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; [[how.s3.k]]</p><h3 class="beat-h">[[how.s3.title]]</h3><p class="beat-p">[[how.s3.text]]</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="pipeline" role="group" aria-label="[[a:how.pipe.label]]">
+      <p class="pipeline-k">[[how.pipe.label]]</p>
+      <ol class="pipeline-row" role="list">
+        <li><glyph-fox class="i18" data-icon="sigil:camera-tracking" size="18"></glyph-fox><span>[[how.pipe.1]]</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:gesture-open-palm" size="18"></glyph-fox><span>[[how.pipe.2]]</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:light-trail" size="18"></glyph-fox><span>[[how.pipe.3]]</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:gesture-pinch" size="18"></glyph-fox><span>[[how.pipe.4]]</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:app-profile" size="18"></glyph-fox><span>[[how.pipe.5]]</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:snap-target" size="18"></glyph-fox><span>[[how.pipe.6]]</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- The gesture set -->
+<section class="chapter" id="gestures" aria-labelledby="gestures-title">
+  <div class="wrap ruled">
+    <header class="chapter-head">
+      <p class="kicker"><span class="mono-num">02</span>[[gestures.overline]]</p>
+      <h2 id="gestures-title" class="chapter-title">[[gestures.title]]</h2>
+      <p class="chapter-lead">[[gestures.lead]]</p>
+    </header>
+    <div class="explorer" v-tabs="g-pinch">
+      <div class="explorer-grid" role="tablist" aria-label="[[a:gestures.listLabel]]">
+        <button class="g-tile" type="button" v-tab="g-open-palm"><glyph-fox class="i32" data-icon="sigil:gesture-open-palm" size="32" variant="duotone"></glyph-fox><span>[[g.openPalm.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-point"><glyph-fox class="i32" data-icon="sigil:gesture-point" size="32" variant="duotone"></glyph-fox><span>[[g.point.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-pinch"><glyph-fox class="i32" data-icon="sigil:gesture-pinch" size="32" variant="duotone"></glyph-fox><span>[[g.pinch.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-double-pinch"><glyph-fox class="i32" data-icon="sigil:gesture-double-pinch" size="32" variant="duotone"></glyph-fox><span>[[g.doublePinch.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-pinch-hold"><glyph-fox class="i32" data-icon="sigil:gesture-pinch-hold" size="32" variant="duotone"></glyph-fox><span>[[g.pinchHold.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-fist"><glyph-fox class="i32" data-icon="sigil:gesture-fist" size="32" variant="duotone"></glyph-fox><span>[[g.fist.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-up"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-up" size="32" variant="duotone"></glyph-fox><span>[[g.swipeUp.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-down"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-down" size="32" variant="duotone"></glyph-fox><span>[[g.swipeDown.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-left"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-left" size="32" variant="duotone"></glyph-fox><span>[[g.swipeLeft.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-right"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-right" size="32" variant="duotone"></glyph-fox><span>[[g.swipeRight.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-three"><glyph-fox class="i32" data-icon="sigil:gesture-three-fingers" size="32" variant="duotone"></glyph-fox><span>[[g.threeFingers.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-circle-cw"><glyph-fox class="i32" data-icon="sigil:gesture-circle-cw" size="32" variant="duotone"></glyph-fox><span>[[g.circleCw.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-circle-ccw"><glyph-fox class="i32" data-icon="sigil:gesture-circle-ccw" size="32" variant="duotone"></glyph-fox><span>[[g.circleCcw.name]]</span></button>
+        <button class="g-tile" type="button" v-tab="g-flick"><glyph-fox class="i32" data-icon="sigil:gesture-flick" size="32" variant="duotone"></glyph-fox><span>[[g.flick.name]]</span></button>
+      </div>
+      <div class="explorer-panels">
+[[@gesturePanels]]
+      </div>
+    </div>
+    <p class="fine-note"><glyph-fox class="i16" data-icon="sigil:hand-lost" size="16"></glyph-fox><span>[[gestures.note]]</span></p>
+  </div>
+</section>
+
+<!-- The Control Sphere assembles -->
+<section class="scene" id="sphere" data-scene="sphere" aria-labelledby="sphere-title">
+  <header class="chapter-head wrap">
+    <p class="kicker"><span class="mono-num">03</span>[[sphere.overline]]</p>
+    <h2 id="sphere-title" class="chapter-title">[[sphere.title]]</h2>
+    <p class="chapter-lead">[[sphere.lead]]</p>
+  </header>
+  <div class="scene-track">
+    <div class="scene-pin">
+      <figure class="scene-stage frame" data-src="[[@root]]assets/scenes/sphere.svg">
+        <img src="[[@art]]control-sphere.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="[[a:sphere.fig.alt]]">
+      </figure>
+      <div class="scene-copy">
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; [[sphere.s1.k]]</p><h3 class="beat-h">[[sphere.s1.h]]</h3><p class="beat-p">[[sphere.s1.p]]</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; [[sphere.s2.k]]</p><h3 class="beat-h">[[sphere.s2.h]]</h3><p class="beat-p">[[sphere.s2.p]]</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; [[sphere.s3.k]]</p><h3 class="beat-h">[[sphere.s3.h]]</h3><p class="beat-p">[[sphere.s3.p]]</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="wrap ruled">
+    <dl class="trio">
+      <div class="trio-cell">
+        <dt><glyph-fox class="i24" data-icon="sigil:gesture-open-palm" size="24" variant="duotone"></glyph-fox>[[sphere.summon.title]]</dt>
+        <dd>[[sphere.summon.text]]</dd>
+      </div>
+      <div class="trio-cell">
+        <dt><glyph-fox class="i24" data-icon="sigil:gesture-pinch" size="24" variant="duotone"></glyph-fox>[[sphere.choose.title]]</dt>
+        <dd>[[sphere.choose.text]]</dd>
+      </div>
+      <div class="trio-cell">
+        <dt><glyph-fox class="i24" data-icon="sigil:gesture-fist" size="24" variant="duotone"></glyph-fox>[[sphere.dismiss.title]]</dt>
+        <dd>[[sphere.dismiss.text]]</dd>
+      </div>
+    </dl>
+    <div class="states" v-data="{ s: 'idle' }">
+      <div class="states-stage" aria-hidden="true">
+        <svg class="state-mark" :class="'is-' + s" viewBox="0 0 24 24" fill="none" stroke-linecap="round">
+          <circle class="sm-halo" cx="12" cy="12" r="9"/>
+          <g class="sm-arcs">
+            <path class="sm-arc sm-t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51"/>
+            <path class="sm-arc sm-b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49"/>
+          </g>
+          <circle class="sm-point" cx="12" cy="12" r="1.25"/>
+        </svg>
+      </div>
+      <div class="states-copy">
+        <p class="kicker">[[sphere.states.title]]</p>
+        <div class="segmented states-switch" role="radiogroup" aria-label="[[a:sphere.states.label]]">
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="idle" v-model="s" checked><span>[[sphere.state.idle]]</span></label>
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="listening" v-model="s"><span>[[sphere.state.listening]]</span></label>
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="thinking" v-model="s"><span>[[sphere.state.thinking]]</span></label>
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="done" v-model="s"><span>[[sphere.state.done]]</span></label>
+        </div>
+        <div class="states-text" aria-live="polite">
+          <p v-show="s === 'idle'">[[sphere.state.idle.text]]</p>
+          <p v-show="s === 'listening'" style="display:none">[[sphere.state.listening.text]]</p>
+          <p v-show="s === 'thinking'" style="display:none">[[sphere.state.thinking.text]]</p>
+          <p v-show="s === 'done'" style="display:none">[[sphere.state.done.text]]</p>
+        </div>
+        <p class="hud-line">[[sphere.states.reduced]]</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Per app gesture profiles -->
+<section class="chapter" id="profiles" aria-labelledby="profiles-title">
+  <div class="wrap ruled">
+    <header class="chapter-head">
+      <p class="kicker"><span class="mono-num">04</span>[[profiles.overline]]</p>
+      <h2 id="profiles-title" class="chapter-title">[[profiles.title]]</h2>
+      <p class="chapter-lead">[[profiles.lead]]</p>
+    </header>
+    <figure class="figure">
+      <div class="frame">
+        <img src="[[@art]]gesture-profiles.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="[[a:profiles.fig.alt]]">
+      </div>
+      <figcaption><span class="fig-k">FIG. 04</span>[[profiles.fig.caption]]</figcaption>
+    </figure>
+    <div class="profiles">
+      <div class="profiles-tabs" v-tabs>
+        <div class="tabs tabs-pills" role="tablist" aria-label="[[a:profiles.tabsLabel]]">
+          <button class="tab" type="button" v-tab="p-whatsapp"><glyph-fox class="i18" data-icon="brand-whatsapp" size="18"></glyph-fox><span>WhatsApp</span></button>
+          <button class="tab" type="button" v-tab="p-instagram"><glyph-fox class="i18" data-icon="brand-instagram" size="18"></glyph-fox><span>Instagram</span></button>
+          <button class="tab" type="button" v-tab="p-youtube"><glyph-fox class="i18" data-icon="brand-youtube" size="18"></glyph-fox><span>YouTube</span></button>
+          <button class="tab" type="button" v-tab="p-general"><glyph-fox class="i18" data-icon="sigil:app-profile" size="18"></glyph-fox><span>[[profiles.general]]</span></button>
+        </div>
+[[@profilePanels]]
+      </div>
+      <figure class="code-frame">
+        <figcaption class="code-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file" translate="no">src/app-profiles/profiles/youtube.json</span></figcaption>
+        <pre translate="no"><code><span class="tk-p">{</span>
+  <span class="tk-k">"id"</span><span class="tk-p">:</span> <span class="tk-s">"youtube"</span><span class="tk-p">,</span>
+  <span class="tk-k">"packages"</span><span class="tk-p">:</span> <span class="tk-p">[</span><span class="tk-s">"com.google.android.youtube"</span><span class="tk-p">],</span>
+  <span class="tk-k">"bindings"</span><span class="tk-p">:</span> <span class="tk-p">{</span>
+    <span class="tk-k">"flick_up"</span><span class="tk-p">:</span> <span class="tk-p">{</span> <span class="tk-k">"type"</span><span class="tk-p">:</span> <span class="tk-s">"swipe"</span><span class="tk-p">,</span> <span class="tk-k">"direction"</span><span class="tk-p">:</span> <span class="tk-s">"up"</span> <span class="tk-p">},</span>
+    <span class="tk-k">"swipe_two_left"</span><span class="tk-p">:</span> <span class="tk-p">{</span>
+      <span class="tk-k">"type"</span><span class="tk-p">:</span> <span class="tk-s">"media"</span><span class="tk-p">,</span> <span class="tk-k">"action"</span><span class="tk-p">:</span> <span class="tk-s">"next"</span>
+    <span class="tk-p">},</span>
+    <span class="tk-k">"pinch_hold"</span><span class="tk-p">:</span> <span class="tk-p">{</span>
+      <span class="tk-k">"type"</span><span class="tk-p">:</span> <span class="tk-s">"media"</span><span class="tk-p">,</span> <span class="tk-k">"action"</span><span class="tk-p">:</span> <span class="tk-s">"play_pause"</span>
+    <span class="tk-p">}</span>
+  <span class="tk-p">}</span>
+<span class="tk-p">}</span></code></pre>
+        <p class="code-note">[[profiles.code.caption]]</p>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- Voice to action: the wave becomes the chain -->
+<section class="scene" id="voice" data-scene="chain" aria-labelledby="voice-title">
+  <header class="chapter-head wrap">
+    <p class="kicker"><span class="mono-num">05</span>[[voice.overline]]</p>
+    <h2 id="voice-title" class="chapter-title">[[voice.title]]</h2>
+    <p class="chapter-lead">[[voice.lead]]</p>
+  </header>
+  <div class="scene-track">
+    <div class="scene-pin">
+      <figure class="scene-stage frame" data-src="[[@root]]assets/scenes/chain.svg">
+        <img src="[[@art]]voice-action-chain.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="[[a:voice.fig.alt]]">
+        <span class="stage-chip stage-chip-end stage-ask" data-at="1362 408" aria-hidden="true"><glyph-fox class="i16" data-icon="sigil:confirm-action" size="16"></glyph-fox>[[voice.stage.ask]]</span>
+      </figure>
+      <div class="scene-copy">
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; [[voice.s1.k]]</p><h3 class="beat-h">[[voice.s1.h]]</h3><p class="beat-p">[[voice.s1.p]]</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; [[voice.s2.k]]</p><h3 class="beat-h">[[voice.s2.h]]</h3><p class="beat-p">[[voice.s2.p]]</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; [[voice.s3.k]]</p><h3 class="beat-h">[[voice.s3.h]]</h3><p class="beat-p">[[voice.s3.p]]</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="wrap ruled">
+    <div class="voice-grid">
+      <div class="demo" aria-labelledby="demo-title">
+        <div class="demo-head">
+          <h3 id="demo-title" class="demo-title">[[voice.demo.title]]</h3>
+          <span class="hud-chip hud-chip-sm"><glyph-fox class="i14" data-icon="sigil:on-device-model" size="14"></glyph-fox>[[voice.demo.chip]]</span>
+        </div>
+        <p class="demo-request"><glyph-fox class="i20" data-icon="sigil:voice" size="20"></glyph-fox><span>[[voice.demo.request]]</span></p>
+        <ol class="chain" role="list" v-cloak>
+          {$store.chain.steps.map((step, i) => (
+            <li class="chain-node" :class="$store.chain.cls(i)">
+              <span class="node-orb"><glyph-fox size="18" :name="step.icon"></glyph-fox></span>
+              <span class="node-num">{step.num}</span>
+              <span class="node-label">{step.label}</span>
+            </li>
+          ))}
+        </ol>
+        <noscript>
+          <ol class="chain" role="list">
+            <li class="chain-node"><span class="node-num">01</span><span class="node-label">[[voice.demo.s1]]</span></li>
+            <li class="chain-node"><span class="node-num">02</span><span class="node-label">[[voice.demo.s2]]</span></li>
+            <li class="chain-node"><span class="node-num">03</span><span class="node-label">[[voice.demo.s3]]</span></li>
+            <li class="chain-node"><span class="node-num">04</span><span class="node-label">[[voice.demo.s4]]</span></li>
+            <li class="chain-node"><span class="node-num">05</span><span class="node-label">[[voice.demo.s5]]</span></li>
+          </ol>
+        </noscript>
+        <div class="demo-actions" v-cloak>
+          <button class="btn btn-primary btn-pill" type="button" v-show="$store.chain.phase === 'idle' || $store.chain.phase === 'sent' || $store.chain.phase === 'canceled'" @click="$store.chain.run()">
+            <glyph-fox class="i18" data-icon="sigil:action-chain" size="18"></glyph-fox><span v-text="$store.chain.phase === 'idle' ? $store.chain.t.run : $store.chain.t.again">[[voice.demo.run]]</span>
+          </button>
+          <button class="btn btn-primary btn-pill" type="button" v-show="$store.chain.phase === 'waiting'" @click="$store.chain.confirm()">
+            <glyph-fox class="i18" data-icon="sigil:gesture-pinch" size="18"></glyph-fox><span>[[voice.demo.confirm]]</span>
+          </button>
+          <button class="btn btn-ghost btn-pill btn-quiet" type="button" v-show="$store.chain.phase === 'waiting' || $store.chain.phase === 'running'" @click="$store.chain.cancel()">
+            <glyph-fox class="i18" data-icon="sigil:gesture-fist" size="18"></glyph-fox><span>[[voice.demo.cancel]]</span>
+          </button>
+          <span class="demo-timer" v-show="$store.chain.phase === 'waiting'" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15"/><circle class="demo-timer-run" cx="18" cy="18" r="15" pathLength="100" :style="{ strokeDashoffset: 100 - $store.chain.left * 12.5 }"/></svg><b v-text="$store.chain.left">8</b></span>
+        </div>
+        <p class="demo-status" role="status" v-text="$store.chain.status">[[js.ready]]</p>
+        <p class="demo-note">[[voice.demo.note]]</p>
+      </div>
+      <aside class="rule" aria-labelledby="rule-title">
+        <p class="kicker">[[voice.rule.title]]</p>
+        <h3 id="rule-title" class="rule-title">[[voice.rule.lead]]</h3>
+        <ul class="rule-list" role="list">
+          <li><glyph-fox class="i20" data-icon="sigil:confirm-action" size="20"></glyph-fox><span>[[voice.rule.1]]</span></li>
+          <li><glyph-fox class="i20" data-icon="clock" size="20"></glyph-fox><span>[[voice.rule.2]]</span></li>
+          <li><glyph-fox class="i20" data-icon="sigil:recent-people" size="20"></glyph-fox><span>[[voice.rule.3]]</span></li>
+          <li><glyph-fox class="i20" data-icon="sigil:wake-word" size="20"></glyph-fox><span>[[voice.rule.4]]</span></li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- On device privacy -->
+<section class="chapter chapter-privacy" id="privacy" aria-labelledby="privacy-title">
+  <div class="wrap ruled">
+    <header class="chapter-head chapter-head-center">
+      <p class="kicker"><span class="mono-num">06</span>[[privacy.overline]]</p>
+      <h2 id="privacy-title" class="chapter-title chapter-title-xl">[[privacy.title]]</h2>
+      <p class="chapter-lead">[[privacy.lead]]</p>
+    </header>
+    <figure class="figure">
+      <div class="frame">
+        <img src="[[@art]]on-device-brain.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="[[a:privacy.fig.alt]]">
+      </div>
+      <figcaption><span class="fig-k">FIG. 06</span>[[privacy.fig.caption]]</figcaption>
+    </figure>
+    <ul class="facts" role="list">
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:camera-tracking" size="24" variant="duotone"></glyph-fox><h3>[[privacy.f1.title]]</h3><p>[[privacy.f1.text]]</p></li>
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:wake-word" size="24" variant="duotone"></glyph-fox><h3>[[privacy.f2.title]]</h3><p>[[privacy.f2.text]]</p></li>
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:offline" size="24" variant="duotone"></glyph-fox><h3>[[privacy.f3.title]]</h3><p>[[privacy.f3.text]]</p></li>
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:camera-off" size="24" variant="duotone"></glyph-fox><h3>[[privacy.f4.title]]</h3><p>[[privacy.f4.text]]</p></li>
+    </ul>
+    <div class="tiers" v-data="{ i: 3, rams: [3, 4, 6, 8, 12, 16] }">
+      <div class="tiers-copy">
+        <h3 class="tiers-title">[[privacy.tiers.title]]</h3>
+        <p class="tiers-text">[[privacy.tiers.text]]</p>
+        <div class="tiers-control">
+          <label class="tiers-label" for="ram">[[privacy.tiers.ram]]</label>
+          <output class="tiers-value" for="ram" v-text="rams[i] + ' [[a:unit.gb]]'">8 [[unit.gb]]</output>
+          <input id="ram" class="range range-primary" type="range" min="0" max="5" step="1" value="3" v-model.number="i" :aria-valuetext="rams[i] + ' [[a:unit.gb]]'" aria-valuetext="8 [[a:unit.gb]]">
+          <div class="tiers-ticks" aria-hidden="true"><span>3</span><span>4</span><span>6</span><span>8</span><span>12</span><span>16</span></div>
+          <p class="tiers-budget">[[privacy.tiers.budget]] <b v-text="$store.site.num(rams[i] * 0.35) + ' [[a:unit.gb]]'">[[privacy.tiers.budgetDefault]]</b></p>
+        </div>
+      </div>
+      <div class="tiers-table-wrap">
+        <table class="tiers-table">
+          <caption class="sr-only">[[privacy.tiers.caption]]</caption>
+          <thead>
+            <tr><th scope="col">[[privacy.tiers.col.tier]]</th><th scope="col">[[privacy.tiers.col.models]]</th><th scope="col">[[privacy.tiers.col.download]]</th><th scope="col">[[privacy.tiers.col.memory]]</th></tr>
+          </thead>
+          <tbody>
+            <tr :class="{ 'is-on': rams[i] < 6 }"><th scope="row"><span class="tier-name">[[privacy.tiers.rules]]</span><span class="tier-from">[[privacy.tiers.from.rules]]</span><span class="tier-pick" v-show="rams[i] < 6" style="display:none">[[privacy.tiers.pick]]</span></th><td data-label="[[a:privacy.tiers.col.models]]">[[privacy.tiers.rules.models]]</td><td class="num" data-label="[[a:privacy.tiers.col.download]]">[[privacy.tiers.dl.rules]]</td><td class="num" data-label="[[a:privacy.tiers.col.memory]]">[[privacy.tiers.mem.rules]]</td></tr>
+            <tr :class="{ 'is-on': rams[i] >= 6 && rams[i] < 8 }"><th scope="row"><span class="tier-name">[[privacy.tiers.lite]]</span><span class="tier-from">[[privacy.tiers.from.lite]]</span><span class="tier-pick" v-show="rams[i] >= 6 && rams[i] < 8" style="display:none">[[privacy.tiers.pick]]</span></th><td data-label="[[a:privacy.tiers.col.models]]">[[privacy.tiers.lite.models]]</td><td class="num" data-label="[[a:privacy.tiers.col.download]]">[[privacy.tiers.dl.lite]]</td><td class="num" data-label="[[a:privacy.tiers.col.memory]]">[[privacy.tiers.mem.lite]]</td></tr>
+            <tr :class="{ 'is-on': rams[i] >= 8 }"><th scope="row"><span class="tier-name">[[privacy.tiers.full]]</span><span class="tier-from">[[privacy.tiers.from.full]]</span><span class="tier-pick" v-show="rams[i] >= 8">[[privacy.tiers.pick]]</span></th><td data-label="[[a:privacy.tiers.col.models]]">[[privacy.tiers.full.models]]</td><td class="num" data-label="[[a:privacy.tiers.col.download]]">[[privacy.tiers.dl.full]]</td><td class="num" data-label="[[a:privacy.tiers.col.memory]]">[[privacy.tiers.mem.full]]</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Honest about the platform -->
+<section class="chapter" id="platforms" aria-labelledby="platforms-title">
+  <div class="wrap ruled">
+    <header class="chapter-head">
+      <p class="kicker"><span class="mono-num">07</span>[[platforms.overline]]</p>
+      <h2 id="platforms-title" class="chapter-title">[[platforms.title]]</h2>
+      <p class="chapter-lead">[[platforms.lead]]</p>
+    </header>
+    <div class="platforms">
+      <article class="platform">
+        <p class="platform-k"><glyph-fox class="i20" data-icon="smartphone" size="20"></glyph-fox>Android</p>
+        <h3 class="platform-title">[[platforms.android.title]]</h3>
+        <p class="platform-text">[[platforms.android.text]]</p>
+        <ul class="ticks" role="list">
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>[[platforms.android.b1]]</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>[[platforms.android.b2]]</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>[[platforms.android.b3]]</span></li>
+        </ul>
+      </article>
+      <article class="platform">
+        <p class="platform-k"><glyph-fox class="i20" data-icon="brand-apple" size="20"></glyph-fox>iOS</p>
+        <h3 class="platform-title">[[platforms.ios.title]]</h3>
+        <p class="platform-text">[[platforms.ios.text]]</p>
+        <ul class="ticks" role="list">
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>[[platforms.ios.b1]]</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>[[platforms.ios.b2]]</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>[[platforms.ios.b3]]</span></li>
+        </ul>
+      </article>
+    </div>
+    <div class="platform-table-wrap">
+      <table class="platform-table">
+        <caption class="sr-only">[[platforms.table.caption]]</caption>
+        <thead><tr><th scope="col">[[platforms.table.feature]]</th><th scope="col">Android</th><th scope="col">iOS</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">[[platforms.row1]]</th><td data-label="Android"><span class="yes">[[platforms.row1.a]]</span></td><td data-label="iOS"><span class="part">[[platforms.row1.i]]</span></td></tr>
+          <tr><th scope="row">[[platforms.row2]]</th><td data-label="Android"><span class="yes">[[platforms.row2.a]]</span></td><td data-label="iOS"><span class="no">[[platforms.row2.i]]</span></td></tr>
+          <tr><th scope="row">[[platforms.row3]]</th><td data-label="Android"><span class="yes">[[platforms.row3.a]]</span></td><td data-label="iOS"><span class="part">[[platforms.row3.i]]</span></td></tr>
+          <tr><th scope="row">[[platforms.row4]]</th><td data-label="Android"><span class="yes">[[platforms.row4.a]]</span></td><td data-label="iOS"><span class="no">[[platforms.row4.i]]</span></td></tr>
+          <tr><th scope="row">[[platforms.row5]]</th><td data-label="Android"><span class="yes">[[platforms.row5.a]]</span></td><td data-label="iOS"><span class="yes">[[platforms.row5.i]]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Follow the build -->
+<section class="chapter chapter-follow" id="follow" aria-labelledby="follow-title">
+  <div class="follow-glow" aria-hidden="true"></div>
+  <div class="wrap ruled">
+    <header class="chapter-head chapter-head-center">
+      <p class="kicker"><span class="mono-num">08</span>[[follow.overline]]</p>
+      <h2 id="follow-title" class="chapter-title chapter-title-xl">[[follow.title]]</h2>
+      <p class="chapter-lead">[[follow.lead]]</p>
+      <div class="follow-ctas">
+        <a class="btn btn-primary btn-lg btn-pill" href="https://github.com/kwy404/sigil">
+          <glyph-fox class="i20" data-icon="brand-github" size="20"></glyph-fox><span>[[follow.cta]]</span>
+        </a>
+        <a class="btn btn-ghost btn-lg btn-pill btn-quiet" href="https://github.com/kwy404/sigil/blob/main/docs/VISION.md">
+          <span>[[follow.cta2]]</span><glyph-fox class="i18" data-icon="arrow-up-right" size="18"></glyph-fox>
+        </a>
+      </div>
+      <p class="follow-hint">[[follow.hint]]</p>
+    </header>
+    <ol class="milestones" role="list">
+      <li class="milestone is-done"><span class="ms-k">M1 &#183; [[follow.status.done]]</span><h3>[[follow.m1.title]]</h3><p>[[follow.m1.text]]</p></li>
+      <li class="milestone is-next"><span class="ms-k">M2 &#183; [[follow.status.next]]</span><h3>[[follow.m2.title]]</h3><p>[[follow.m2.text]]</p></li>
+      <li class="milestone"><span class="ms-k">M3 &#183; [[follow.status.later]]</span><h3>[[follow.m3.title]]</h3><p>[[follow.m3.text]]</p></li>
+      <li class="milestone"><span class="ms-k">M4 &#183; [[follow.status.later]]</span><h3>[[follow.m4.title]]</h3><p>[[follow.m4.text]]</p></li>
+      <li class="milestone"><span class="ms-k">M5 &#183; [[follow.status.later]]</span><h3>[[follow.m5.title]]</h3><p>[[follow.m5.text]]</p></li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap ruled">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <img src="[[@root]]assets/logo/sigil-lockup-dark.svg" width="136" height="48" alt="SIGIL" loading="lazy">
+        <p class="foot-tagline">[[footer.tagline]]</p>
+        <p class="foot-built">[[footer.builtWith]]</p>
+      </div>
+      <nav class="foot-col" aria-label="[[a:footer.product]]">
+        <p class="foot-k">[[footer.product]]</p>
+        <a href="#how">[[nav.how]]</a>
+        <a href="#gestures">[[nav.gestures]]</a>
+        <a href="#sphere">[[nav.sphere]]</a>
+        <a href="#voice">[[nav.voice]]</a>
+        <a href="#privacy">[[nav.privacy]]</a>
+      </nav>
+      <nav class="foot-col" aria-label="[[a:footer.project]]">
+        <p class="foot-k">[[footer.project]]</p>
+        <a href="https://github.com/kwy404/sigil">[[footer.repo]]</a>
+        <a href="https://github.com/kwy404/sigil/blob/main/docs/VISION.md">[[footer.vision]]</a>
+        <a href="https://github.com/kwy404/sigil/blob/main/docs/ARCHITECTURE.md">[[footer.architecture]]</a>
+      </nav>
+      <div class="foot-col">
+        <p class="foot-k">[[footer.author]]</p>
+        <p class="foot-name">Alexandre Kohler</p>
+        <a class="foot-social" href="https://github.com/kwy404" rel="me"><glyph-fox class="i18" data-icon="brand-github" size="18"></glyph-fox><span>GitHub</span></a>
+        <a class="foot-social" href="https://www.linkedin.com/in/alexandre-silva-173687256/" rel="me"><glyph-fox class="i18" data-icon="brand-linkedin" size="18"></glyph-fox><span>LinkedIn</span></a>
+      </div>
+    </div>
+    <div class="foot-langs">
+      <p class="foot-k">[[footer.languages]]</p>
+      [[@langList]]
+    </div>
+    <div class="foot-bottom">
+      <p>&#169; 2026 Alexandre Kohler. [[footer.license]]</p>
+      <p>[[footer.trademarks]]</p>
+      <a class="foot-top-link" href="#top"><span>[[footer.top]]</span><glyph-fox class="i16" data-icon="arrow-up" size="16"></glyph-fox></a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

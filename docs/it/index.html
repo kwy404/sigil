@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="it" dir="ltr" class="no-js" style="--seed: #5EF2DF">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIGIL · Controlla il telefono con gesti e voce, sul dispositivo</title>
+<meta name="description" content="Sigil guida il tuo telefono con segni disegnati nell’aria e con la tua voce. Tracciamento della mano, voce e modello linguistico funzionano sul telefono, e niente ne esce.">
+<link rel="canonical" href="https://kwy404.github.io/sigil/it/">
+<link rel="alternate" hreflang="en" href="https://kwy404.github.io/sigil/">
+<link rel="alternate" hreflang="pt-BR" href="https://kwy404.github.io/sigil/pt-br/">
+<link rel="alternate" hreflang="es" href="https://kwy404.github.io/sigil/es/">
+<link rel="alternate" hreflang="fr" href="https://kwy404.github.io/sigil/fr/">
+<link rel="alternate" hreflang="de" href="https://kwy404.github.io/sigil/de/">
+<link rel="alternate" hreflang="it" href="https://kwy404.github.io/sigil/it/">
+<link rel="alternate" hreflang="ja" href="https://kwy404.github.io/sigil/ja/">
+<link rel="alternate" hreflang="zh-Hans" href="https://kwy404.github.io/sigil/zh-hans/">
+<link rel="alternate" hreflang="x-default" href="https://kwy404.github.io/sigil/">
+<meta name="theme-color" content="#070B15">
+<meta name="color-scheme" content="dark">
+<meta name="author" content="Alexandre Kohler">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SIGIL">
+<meta property="og:url" content="https://kwy404.github.io/sigil/it/">
+<meta property="og:title" content="SIGIL · Disegna un segno. Il telefono obbedisce.">
+<meta property="og:description" content="Un compagno per Android e iOS che trasforma gesti e voce in azioni, tutto sul dispositivo, e chiede prima di inviare qualsiasi cosa.">
+<meta property="og:image" content="https://kwy404.github.io/sigil/assets/og/it_it.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Una mano disegna con la luce il segno di SIGIL sopra un telefono, la cui fotocamera frontale la segue.">
+<meta property="og:locale" content="it_IT">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta property="og:locale:alternate" content="es_ES">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:locale:alternate" content="de_DE">
+<meta property="og:locale:alternate" content="ja_JP">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SIGIL · Disegna un segno. Il telefono obbedisce.">
+<meta name="twitter:description" content="Un compagno per Android e iOS che trasforma gesti e voce in azioni, tutto sul dispositivo, e chiede prima di inviare qualsiasi cosa.">
+<meta name="twitter:image" content="https://kwy404.github.io/sigil/assets/og/it_it.png">
+<meta name="twitter:image:alt" content="Una mano disegna con la luce il segno di SIGIL sopra un telefono, la cui fotocamera frontale la segue.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monsooncss@0.2.0/dist/monsoon.min.css" integrity="sha384-B438i0UadMDKq3r72vvwMESbCq43lGUxMFnUCwMIl2Lf/9nghl+Q96jnmTUhwf79" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Sora:wght@300;400;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css?v=6321de2c96">
+<script>(function(){var d=document,h=d.documentElement;h.classList.remove('no-js');h.classList.add('js');var still=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;h.classList.add(still?'still':'motion');})();</script>
+<script src="https://cdn.jsdelivr.net/npm/glyphfox@1.3.0/dist/web/glyphfox.min.js" integrity="sha384-0PEVIK2sxTipsNBZuo0fsZ0WaCdpuVVF8AoDzMuT9pJlwKXzNGQTqIxybkgkZ4EB" crossorigin="anonymous" defer></script>
+<script src="../assets/sigil-icons.js?v=6321de2c96" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/voodoojs@1.1.0/dist/voodoo.full.min.js" integrity="sha384-r4vWOg+2FrOsL3+wm1DZW3yrMKTtydvB+Z1V2Ty6zgeTk6dbq3xAbqP5M7UZbu/U" crossorigin="anonymous" data-no-observer defer></script>
+<script src="../assets/site.js?v=6321de2c96" defer></script>
+<script type="application/json" id="sigil-strings">{"voice.demo.s1":"Aprire WhatsApp","voice.demo.s2":"Trovare Ana","voice.demo.s3":"Scrivere «Sto arrivando»","voice.demo.s4":"Inviare ad Ana? Pizzica per confermare.","voice.demo.s5":"Inviare","voice.demo.run":"Esegui il piano","voice.demo.again":"Esegui di nuovo","js.ready":"Pronto. Niente parte finché non lo chiedi.","js.thinking":"Ci sto lavorando.","js.step":"Passo {n} di 5: {label}","js.waiting":"In attesa della tua conferma. Annullo tra {s} s.","js.sent":"Inviato. Un messaggio, a una persona.","js.canceled":"Annullato. Non è stato inviato niente.","js.timeout":"Nessuna risposta in 8 secondi. Annullato, non è stato inviato niente.","scene.trail.nowPlaying":"In riproduzione","scene.trail.fromSet":"Dalla tua selezione serale","scene.trail.upNext":"Successivo","scene.trail.cursorTag":"CURSORE","scene.trail.snapped":"Agganciato a Play","scene.sphere.status":"SUL DISPOSITIVO · 18 MS · MICROFONO ATTIVO","scene.sphere.app":"Messaggi","scene.sphere.appState":"· Ana sta scrivendo","scene.sphere.reply":"Rispondi","scene.sphere.readAloud":"Leggi ad alta voce","scene.sphere.done":"Fatto","scene.sphere.routine":"Routine","scene.sphere.silence":"Silenzia","scene.sphere.settings":"Impostazioni","scene.sphere.recent":"RECENTI","scene.chain.request":"Di’ ad Ana che arrivo con dieci minuti di ritardo","scene.chain.open":"Aprire Messaggi","scene.chain.find":"Trovare Ana","scene.chain.write":"Scrivere la nota","scene.chain.send":"Inviare","scene.chain.doneIn":"FATTO IN 1,2 S"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://kwy404.github.io/sigil/#website","name":"SIGIL","url":"https://kwy404.github.io/sigil/","inLanguage":["en","pt-BR","es","fr","de","it","ja","zh-Hans"]},{"@type":"WebPage","@id":"https://kwy404.github.io/sigil/it/#page","url":"https://kwy404.github.io/sigil/it/","name":"SIGIL · Controlla il telefono con gesti e voce, sul dispositivo","description":"Sigil guida il tuo telefono con segni disegnati nell’aria e con la tua voce. Tracciamento della mano, voce e modello linguistico funzionano sul telefono, e niente ne esce.","inLanguage":"it","isPartOf":{"@id":"https://kwy404.github.io/sigil/#website"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://kwy404.github.io/sigil/assets/og/it_it.png","width":1200,"height":630},"author":{"@type":"Person","name":"Alexandre Kohler","url":"https://github.com/kwy404","sameAs":["https://www.linkedin.com/in/alexandre-silva-173687256/"]}}]}</script>
+</head>
+<body class="bg-background text-foreground antialiased">
+<a class="skip-link" href="#main">Vai al contenuto</a>
+
+<header class="site-header is-top" id="site-header">
+  <div class="header-bar wrap flex items-center gap-3">
+    <a class="brand" href="#top" aria-label="SIGIL, torna in cima">
+      <img src="../assets/logo/sigil-lockup-dark.svg" width="124" height="44" alt="SIGIL">
+    </a>
+    <nav class="site-nav hidden xl:flex" aria-label="Sezioni" v-scrollspy v-scrollspy-class="is-current" v-scroll-offset="120">
+      <a href="#top">Panoramica</a>
+      <a href="#how">Come funziona</a>
+      <a href="#gestures">Gesti</a>
+      <a href="#sphere">Sfera</a>
+      <a href="#profiles">Profili</a>
+      <a href="#voice">Voce</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#platforms">Piattaforme</a>
+    </nav>
+    <div class="header-end ml-auto flex items-center gap-2">
+      <details class="lang-menu" v-click-outside="$el.open = false" v-escape="$el.open = false">
+        <summary class="btn btn-ghost btn-sm lang-button" aria-label="Lingua: Italiano">
+          <glyph-fox class="i18" data-icon="globe" size="18"></glyph-fox><span class="lang-short">IT</span><glyph-fox class="i14 lang-caret" data-icon="chevron-down" size="14"></glyph-fox>
+        </summary>
+        <ul class="lang-list" role="list"><li><a href="../" hreflang="en" lang="en" data-lang="en"><span>English</span></a></li><li><a href="../pt-br/" hreflang="pt-BR" lang="pt-BR" data-lang="pt-BR"><span>Português (Brasil)</span></a></li><li><a href="../es/" hreflang="es" lang="es" data-lang="es"><span>Español</span></a></li><li><a href="../fr/" hreflang="fr" lang="fr" data-lang="fr"><span>Français</span></a></li><li><a href="../de/" hreflang="de" lang="de" data-lang="de"><span>Deutsch</span></a></li><li><a href="../it/" hreflang="it" lang="it" data-lang="it" aria-current="page"><span>Italiano</span><glyph-fox class="i16" data-icon="check" size="16"></glyph-fox></a></li><li><a href="../ja/" hreflang="ja" lang="ja" data-lang="ja"><span>日本語</span></a></li><li><a href="../zh-hans/" hreflang="zh-Hans" lang="zh-Hans" data-lang="zh-Hans"><span>简体中文</span></a></li></ul>
+      </details>
+      <a class="btn btn-primary btn-sm btn-pill header-cta hidden sm:inline-flex" href="https://github.com/kwy404/sigil">
+        <glyph-fox class="i16" data-icon="brand-github" size="16"></glyph-fox><span>Segui lo sviluppo</span>
+      </a>
+      <details class="navmenu xl:hidden" v-click-outside="$el.open = false" v-escape="$el.open = false">
+        <summary class="btn btn-ghost btn-sm btn-square navmenu-button" aria-label="Menu">
+          <glyph-fox class="i20 navmenu-open" data-icon="menu" size="20"></glyph-fox>
+          <glyph-fox class="i20 navmenu-close" data-icon="x" size="20"></glyph-fox>
+        </summary>
+        <nav class="navmenu-panel" aria-label="Sezioni" @click="$event.target.closest('a') && ($el.parentElement.open = false)">
+          <a href="#top">Panoramica</a>
+          <a href="#how">Come funziona</a>
+          <a href="#gestures">Gesti</a>
+          <a href="#sphere">Sfera</a>
+          <a href="#profiles">Profili</a>
+          <a href="#voice">Voce</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#platforms">Piattaforme</a>
+          <a class="btn btn-primary btn-pill navmenu-cta" href="https://github.com/kwy404/sigil">
+            <glyph-fox class="i18" data-icon="brand-github" size="18"></glyph-fox><span>Segui lo sviluppo</span>
+          </a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- Hero: the sigil is drawn in light when the page opens -->
+<section class="sg-hero" id="top" aria-labelledby="hero-title">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-copy wrap">
+    <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span>Gesti · Voce · Sul dispositivo</p>
+    <h1 id="hero-title" class="hero-title"><span class="l1">Disegna un segno.</span> <span class="l2">Il telefono obbedisce.</span></h1>
+    <p class="hero-lead">Sigil guida il tuo telefono con segni disegnati nell’aria e con la tua voce. Tutto ciò che vede e sente resta sul telefono.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary btn-lg btn-pill" href="https://github.com/kwy404/sigil">
+        <glyph-fox class="i20" data-icon="brand-github" size="20"></glyph-fox><span>Segui lo sviluppo</span>
+      </a>
+      <a class="btn btn-ghost btn-lg btn-pill btn-quiet" href="#how">
+        <span>Scopri come funziona</span><glyph-fox class="i18" data-icon="arrow-down" size="18"></glyph-fox>
+      </a>
+    </div>
+  </div>
+  <div class="hero-stage">
+    <div class="hero-art" role="img" aria-label="Una mano, profilata di luce acquamarina, disegna il segno di SIGIL. La punta del dito è il punto di luce. Sotto, la fotocamera frontale di un telefono la segue." v-ignore><svg class="hero-layer hero-scene" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><defs><filter id="hero-b1" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="1"/></filter><filter id="hero-b2" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="2"/></filter><filter id="hero-b4" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="4"/></filter><filter id="hero-b6" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="6"/></filter><filter id="hero-b10" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="10"/></filter><filter id="hero-b16" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="16"/></filter><filter id="hero-b24" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="24"/></filter><filter id="hero-b40" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="40"/></filter><filter id="hero-b70" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="70"/></filter><radialGradient id="hero-bg" cx="800" cy="420" r="1050" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0D1B30"/><stop offset="0.33" stop-color="#081222"/><stop offset="0.7" stop-color="#050913"/><stop offset="1" stop-color="#020409"/></radialGradient><radialGradient id="hero-vig" cx="800" cy="500" r="980" gradientUnits="userSpaceOnUse"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.55"/></radialGradient><radialGradient id="hero-bokeh"><stop offset="0" stop-color="#98FBEA" stop-opacity="0.55"/><stop offset="0.6" stop-color="#2FD9C8" stop-opacity="0.18"/><stop offset="1" stop-color="#2FD9C8" stop-opacity="0"/></radialGradient><radialGradient id="hero-dot"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.2" stop-color="#CCFFF6" stop-opacity="0.95"/><stop offset="0.5" stop-color="#5EF2DF" stop-opacity="0.35"/><stop offset="1" stop-color="#2FD9C8" stop-opacity="0"/></radialGradient><linearGradient id="hero-sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.11"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.03"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.015"/></linearGradient><linearGradient id="hero-edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.30"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.07"/><stop offset="1" stop-color="#5EF2DF" stop-opacity="0.12"/></linearGradient><linearGradient id="hero-edgeLit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#98FBEA" stop-opacity="0.65"/><stop offset="1" stop-color="#5EF2DF" stop-opacity="0.18"/></linearGradient><radialGradient id="hero-orb" cx="0.36" cy="0.3" r="0.8"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/><stop offset="0.35" stop-color="#5EF2DF" stop-opacity="0.06"/><stop offset="0.8" stop-color="#0A1426" stop-opacity="0.78"/><stop offset="1" stop-color="#0A1426" stop-opacity="0.9"/></radialGradient><linearGradient id="hero-orbRim" x1="0.15" y1="0.1" x2="0.85" y2="0.95"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.06"/><stop offset="1" stop-color="#5EF2DF" stop-opacity="0.45"/></linearGradient><linearGradient id="hero-skin" x1="722" y1="410" x2="1113.6" y2="253.2" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#173540"/><stop offset="0.4" stop-color="#0C1824"/><stop offset="1" stop-color="#070C16"/></linearGradient><linearGradient id="hero-arm" x1="1113.6" y1="253.2" x2="1383.9" y2="116.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#070C16"/><stop offset="1" stop-color="#03060C" stop-opacity="0"/></linearGradient><linearGradient id="hero-cone" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#5EF2DF" stop-opacity="0.16"/><stop offset="1" stop-color="#5EF2DF" stop-opacity="0"/></linearGradient><linearGradient id="hero-phone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1828"/><stop offset="1" stop-color="#05080F"/></linearGradient><linearGradient id="hero-screen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FD9C8" stop-opacity="0.20"/><stop offset="0.5" stop-color="#0A1424" stop-opacity="0.9"/><stop offset="1" stop-color="#05080F"/></linearGradient><linearGradient id="hero-phoneEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#98FBEA" stop-opacity="0.75"/><stop offset="0.25" stop-color="#FFFFFF" stop-opacity="0.12"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/></linearGradient><radialGradient id="hero-spill" cx="722" cy="410" r="420" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2FD9C8" stop-opacity="0.17"/><stop offset="0.5" stop-color="#0E968C" stop-opacity="0.045"/><stop offset="1" stop-color="#0B746F" stop-opacity="0"/></radialGradient></defs><rect width="1600" height="1000" fill="url(#hero-bg)"/><ellipse cx="700" cy="520" rx="620" ry="260" fill="#0A1E2E" fill-opacity="0.45" filter="url(#hero-b70)"/><ellipse cx="1150" cy="260" rx="420" ry="220" fill="#0E2238" fill-opacity="0.5" filter="url(#hero-b70)"/><ellipse cx="300" cy="760" rx="360" ry="160" fill="#0A5353" fill-opacity="0.25" filter="url(#hero-b70)"/><path d="M708 728L728 728L1300 40L180 40Z" fill="url(#hero-cone)" filter="url(#hero-b24)"/><path d="M718 728L322 70M718 728L1172 70" stroke="#5EF2DF" stroke-opacity="0.07" stroke-width="1.2"/><circle cx="722" cy="410" r="420" fill="url(#hero-spill)"/><circle cx="18.73" cy="61.96" r="2.6" fill="#98FBEA" fill-opacity="0.53"/><circle cx="834.31" cy="405.52" r="0.98" fill="#98FBEA" fill-opacity="0.28"/><circle cx="885.32" cy="729.82" r="0.65" fill="#98FBEA" fill-opacity="0.24"/><circle cx="315.42" cy="367.96" r="0.69" fill="#98FBEA" fill-opacity="0.44"/><circle cx="474.13" cy="977.95" r="0.63" fill="#98FBEA" fill-opacity="0.63"/><circle cx="305.27" cy="143.66" r="0.55" fill="#98FBEA" fill-opacity="0.31"/><circle cx="876.64" cy="761.87" r="0.51" fill="#98FBEA" fill-opacity="0.65"/><circle cx="885.94" cy="621.62" r="1.52" fill="#98FBEA" fill-opacity="0.68"/><circle cx="999.01" cy="921.2" r="2.01" fill="#98FBEA" fill-opacity="0.17"/><circle cx="279.91" cy="356.98" r="0.9" fill="#98FBEA" fill-opacity="0.16"/><circle cx="140.97" cy="768.02" r="0.8" fill="#98FBEA" fill-opacity="0.38"/><circle cx="749.86" cy="946.22" r="1.59" fill="#98FBEA" fill-opacity="0.53"/><circle cx="529.04" cy="356.33" r="0.54" fill="#98FBEA" fill-opacity="0.22"/><circle cx="304.6" cy="632.21" r="0.75" fill="#98FBEA" fill-opacity="0.17"/><circle cx="1094.81" cy="921.37" r="1.16" fill="#98FBEA" fill-opacity="0.6"/><circle cx="1048.39" cy="919.88" r="0.53" fill="#98FBEA" fill-opacity="0.44"/><circle cx="1038.67" cy="891.06" r="2.53" fill="#98FBEA" fill-opacity="0.61"/><circle cx="950.78" cy="963.87" r="2.56" fill="#98FBEA" fill-opacity="0.45"/><circle cx="1309.63" cy="5.7" r="1.09" fill="#98FBEA" fill-opacity="0.33"/><circle cx="1208.67" cy="976.93" r="1.18" fill="#98FBEA" fill-opacity="0.6"/><circle cx="687.99" cy="642.35" r="1.7" fill="#98FBEA" fill-opacity="0.45"/><circle cx="499.81" cy="236.84" r="0.5" fill="#98FBEA" fill-opacity="0.16"/><circle cx="1509.44" cy="833.37" r="1.37" fill="#98FBEA" fill-opacity="0.16"/><circle cx="990.23" cy="594.9" r="1.63" fill="#98FBEA" fill-opacity="0.7"/><circle cx="444.8" cy="986.28" r="1.43" fill="#98FBEA" fill-opacity="0.59"/><circle cx="999.04" cy="830.14" r="0.54" fill="#98FBEA" fill-opacity="0.7"/><circle cx="811.09" cy="566.89" r="0.56" fill="#98FBEA" fill-opacity="0.37"/><circle cx="337.07" cy="813.54" r="2.13" fill="#98FBEA" fill-opacity="0.55"/><circle cx="1053.53" cy="990.24" r="1.32" fill="#98FBEA" fill-opacity="0.56"/><circle cx="367.64" cy="584.01" r="1.89" fill="#98FBEA" fill-opacity="0.62"/><circle cx="303.87" cy="554.9" r="1" fill="#98FBEA" fill-opacity="0.44"/><circle cx="288.33" cy="250.63" r="0.92" fill="#98FBEA" fill-opacity="0.41"/><circle cx="273.35" cy="3.21" r="0.57" fill="#98FBEA" fill-opacity="0.16"/><circle cx="171.57" cy="876.31" r="2.63" fill="#98FBEA" fill-opacity="0.18"/><circle cx="279.13" cy="405.04" r="1.05" fill="#98FBEA" fill-opacity="0.55"/><circle cx="589.2" cy="360.02" r="1.88" fill="#98FBEA" fill-opacity="0.54"/><circle cx="843.61" cy="776.48" r="0.51" fill="#98FBEA" fill-opacity="0.29"/><circle cx="1322.95" cy="827.37" r="1.82" fill="#98FBEA" fill-opacity="0.39"/><circle cx="571.06" cy="920.33" r="0.64" fill="#98FBEA" fill-opacity="0.35"/><circle cx="763.14" cy="830.31" r="0.86" fill="#98FBEA" fill-opacity="0.69"/><circle cx="882.05" cy="436.31" r="0.75" fill="#98FBEA" fill-opacity="0.45"/><circle cx="469.21" cy="884.19" r="1.22" fill="#98FBEA" fill-opacity="0.69"/><circle cx="698.89" cy="697.67" r="2.41" fill="#98FBEA" fill-opacity="0.45"/><circle cx="975.54" cy="856.03" r="0.82" fill="#98FBEA" fill-opacity="0.31"/><circle cx="144.83" cy="683.46" r="1.68" fill="#98FBEA" fill-opacity="0.68"/><circle cx="507.87" cy="259.64" r="0.51" fill="#98FBEA" fill-opacity="0.55"/><circle cx="1481.9" cy="784.19" r="2.01" fill="#98FBEA" fill-opacity="0.68"/><circle cx="362.42" cy="978.76" r="0.68" fill="#98FBEA" fill-opacity="0.45"/><circle cx="625.75" cy="713.56" r="1.77" fill="#98FBEA" fill-opacity="0.49"/><circle cx="1160.84" cy="621.5" r="1.28" fill="#98FBEA" fill-opacity="0.3"/><circle cx="223.72" cy="722.54" r="0.97" fill="#98FBEA" fill-opacity="0.46"/><circle cx="882.08" cy="888.03" r="2.5" fill="#98FBEA" fill-opacity="0.23"/><circle cx="162.81" cy="286.91" r="1.1" fill="#98FBEA" fill-opacity="0.37"/><circle cx="1456.09" cy="857.27" r="1.12" fill="#98FBEA" fill-opacity="0.65"/><circle cx="445.97" cy="493.12" r="2.39" fill="#98FBEA" fill-opacity="0.52"/><circle cx="1455.31" cy="969.62" r="2.06" fill="#98FBEA" fill-opacity="0.15"/><circle cx="267.97" cy="752.62" r="0.52" fill="#98FBEA" fill-opacity="0.2"/><circle cx="1270.26" cy="719.58" r="0.51" fill="#98FBEA" fill-opacity="0.4"/><circle cx="136.72" cy="381.2" r="1.87" fill="#98FBEA" fill-opacity="0.53"/><circle cx="435.13" cy="497.54" r="0.52" fill="#98FBEA" fill-opacity="0.42"/><circle cx="699.44" cy="544.27" r="0.56" fill="#98FBEA" fill-opacity="0.57"/><circle cx="485.13" cy="691.85" r="2.02" fill="#98FBEA" fill-opacity="0.17"/><circle cx="291.28" cy="717.18" r="2.25" fill="#98FBEA" fill-opacity="0.31"/><circle cx="1343.76" cy="644.36" r="0.73" fill="#98FBEA" fill-opacity="0.2"/><circle cx="170.78" cy="988.4" r="1.56" fill="#98FBEA" fill-opacity="0.29"/><circle cx="825.54" cy="426.49" r="1.84" fill="#98FBEA" fill-opacity="0.24"/><circle cx="382.2" cy="204.63" r="2.21" fill="#98FBEA" fill-opacity="0.17"/><circle cx="53.5" cy="940.27" r="2.37" fill="#98FBEA" fill-opacity="0.42"/><circle cx="921.04" cy="705.08" r="0.56" fill="#98FBEA" fill-opacity="0.43"/><circle cx="119.18" cy="595.27" r="1.65" fill="#98FBEA" fill-opacity="0.61"/><circle cx="111.6" cy="570.17" r="0.8" fill="#98FBEA" fill-opacity="0.18"/><circle cx="248.36" cy="283.51" r="0.77" fill="#98FBEA" fill-opacity="0.59"/><circle cx="1317.78" cy="866.03" r="1.82" fill="#98FBEA" fill-opacity="0.54"/><circle cx="1383.62" cy="637.6" r="1.58" fill="#98FBEA" fill-opacity="0.53"/><circle cx="493.86" cy="403.33" r="1.46" fill="#98FBEA" fill-opacity="0.33"/><circle cx="386.77" cy="496.51" r="1.29" fill="#98FBEA" fill-opacity="0.52"/><circle cx="682.44" cy="711.18" r="0.63" fill="#98FBEA" fill-opacity="0.56"/><circle cx="831.21" cy="440.15" r="0.84" fill="#98FBEA" fill-opacity="0.6"/><circle cx="199.44" cy="553.9" r="1.14" fill="#98FBEA" fill-opacity="0.51"/><circle cx="670.11" cy="945.24" r="1.62" fill="#98FBEA" fill-opacity="0.43"/><circle cx="359.22" cy="492.21" r="0.61" fill="#98FBEA" fill-opacity="0.62"/><circle cx="68.42" cy="701.45" r="1.78" fill="#98FBEA" fill-opacity="0.27"/><circle cx="10.5" cy="481.95" r="1.47" fill="#98FBEA" fill-opacity="0.32"/><circle cx="857.56" cy="940.3" r="0.69" fill="#98FBEA" fill-opacity="0.45"/><circle cx="166.33" cy="634.52" r="0.53" fill="#98FBEA" fill-opacity="0.45"/><circle cx="725.49" cy="672.01" r="1.98" fill="#98FBEA" fill-opacity="0.56"/><circle cx="920.01" cy="777.09" r="1.11" fill="#98FBEA" fill-opacity="0.56"/><circle cx="981.9" cy="615.01" r="1.29" fill="#98FBEA" fill-opacity="0.52"/><circle cx="1221.87" cy="722.15" r="2.19" fill="#98FBEA" fill-opacity="0.62"/><circle cx="1079.45" cy="626.75" r="0.55" fill="#98FBEA" fill-opacity="0.29"/><circle cx="1449.51" cy="37.73" r="1.73" fill="#98FBEA" fill-opacity="0.44"/><circle cx="292.86" cy="327.21" r="1.58" fill="#98FBEA" fill-opacity="0.51"/><circle cx="525.11" cy="107.83" r="0.71" fill="#98FBEA" fill-opacity="0.67"/><circle cx="151.36" cy="151.18" r="0.64" fill="#98FBEA" fill-opacity="0.55"/><circle cx="0.84" cy="714.3" r="0.5" fill="#98FBEA" fill-opacity="0.69"/><circle cx="812.52" cy="971.48" r="1.32" fill="#98FBEA" fill-opacity="0.36"/><circle cx="587.57" cy="661.58" r="1.79" fill="#98FBEA" fill-opacity="0.45"/><circle cx="101.74" cy="398.68" r="0.61" fill="#98FBEA" fill-opacity="0.57"/><circle cx="260.76" cy="324.13" r="0.52" fill="#98FBEA" fill-opacity="0.33"/><circle cx="1495.05" cy="888.1" r="1.25" fill="#98FBEA" fill-opacity="0.55"/><circle cx="1380.06" cy="15.54" r="0.59" fill="#98FBEA" fill-opacity="0.26"/><circle cx="660.77" cy="461.11" r="0.55" fill="#98FBEA" fill-opacity="0.4"/><circle cx="591.39" cy="9.01" r="0.5" fill="#98FBEA" fill-opacity="0.5"/><circle cx="681.12" cy="301.2" r="0.5" fill="#98FBEA" fill-opacity="0.39"/><circle cx="1235.3" cy="865.24" r="1.15" fill="#98FBEA" fill-opacity="0.55"/><circle cx="1577.29" cy="961.66" r="0.74" fill="#98FBEA" fill-opacity="0.63"/><circle cx="1306.76" cy="798.3" r="2.43" fill="#98FBEA" fill-opacity="0.53"/><circle cx="484.8" cy="795.4" r="0.76" fill="#98FBEA" fill-opacity="0.57"/><circle cx="98.6" cy="575.61" r="1.24" fill="#98FBEA" fill-opacity="0.28"/><circle cx="733.9" cy="663.01" r="2.3" fill="#98FBEA" fill-opacity="0.31"/><circle cx="22.45" cy="575.1" r="1.01" fill="#98FBEA" fill-opacity="0.17"/><circle cx="80.28" cy="402.25" r="0.57" fill="#98FBEA" fill-opacity="0.52"/><circle cx="1173.38" cy="798.17" r="1.81" fill="#98FBEA" fill-opacity="0.58"/><circle cx="805.51" cy="929.19" r="2.32" fill="#98FBEA" fill-opacity="0.44"/><circle cx="1512.94" cy="923.95" r="0.75" fill="#98FBEA" fill-opacity="0.65"/><circle cx="639.33" cy="280.89" r="1.04" fill="#98FBEA" fill-opacity="0.68"/><circle cx="1217.67" cy="749.44" r="1.38" fill="#98FBEA" fill-opacity="0.55"/><circle cx="992.62" cy="820.93" r="0.52" fill="#98FBEA" fill-opacity="0.58"/><circle cx="648.82" cy="739.07" r="1.83" fill="#98FBEA" fill-opacity="0.43"/><circle cx="680.25" cy="943.81" r="2.66" fill="#98FBEA" fill-opacity="0.23"/><circle cx="912.2" cy="470.15" r="1.15" fill="#98FBEA" fill-opacity="0.37"/><circle cx="1084.73" cy="607.08" r="2.05" fill="#98FBEA" fill-opacity="0.2"/><circle cx="309.2" cy="860.77" r="0.51" fill="#98FBEA" fill-opacity="0.6"/><circle cx="508.22" cy="641.84" r="0.76" fill="#98FBEA" fill-opacity="0.6"/><circle cx="353.46" cy="146.57" r="0.98" fill="#98FBEA" fill-opacity="0.48"/><circle cx="163.6" cy="971.49" r="0.51" fill="#98FBEA" fill-opacity="0.49"/><circle cx="1285.55" cy="929.28" r="1.49" fill="#98FBEA" fill-opacity="0.17"/><circle cx="295.64" cy="588.23" r="0.61" fill="#98FBEA" fill-opacity="0.32"/><circle cx="695.83" cy="169.21" r="0.52" fill="#98FBEA" fill-opacity="0.41"/><circle cx="1101.44" cy="947.23" r="1.44" fill="#98FBEA" fill-opacity="0.51"/><circle cx="751.22" cy="352.91" r="0.52" fill="#98FBEA" fill-opacity="0.33"/><circle cx="915.07" cy="619.76" r="2.26" fill="#98FBEA" fill-opacity="0.19"/><circle cx="409.31" cy="71.48" r="1.03" fill="#98FBEA" fill-opacity="0.54"/><circle cx="1231.39" cy="953.75" r="0.95" fill="#98FBEA" fill-opacity="0.63"/><circle cx="84.78" cy="242.39" r="1.94" fill="#98FBEA" fill-opacity="0.23"/><circle cx="587.9" cy="791.59" r="1.51" fill="#98FBEA" fill-opacity="0.38"/><circle cx="814.32" cy="779.93" r="1.57" fill="#98FBEA" fill-opacity="0.52"/><circle cx="461.66" cy="185.59" r="2.48" fill="#98FBEA" fill-opacity="0.61"/><circle cx="591.97" cy="495.09" r="1.35" fill="#98FBEA" fill-opacity="0.61"/><circle cx="155.88" cy="55.27" r="0.65" fill="#98FBEA" fill-opacity="0.64"/><circle cx="1323.59" cy="967.34" r="1.87" fill="#98FBEA" fill-opacity="0.4"/><circle cx="524.62" cy="373.11" r="0.52" fill="#98FBEA" fill-opacity="0.41"/><circle cx="311.22" cy="113.8" r="0.75" fill="#98FBEA" fill-opacity="0.44"/><circle cx="415.88" cy="633.67" r="2.47" fill="#98FBEA" fill-opacity="0.7"/><circle cx="120.89" cy="925.9" r="2.04" fill="#98FBEA" fill-opacity="0.54"/><circle cx="1257.52" cy="917.23" r="2.02" fill="#98FBEA" fill-opacity="0.34"/><circle cx="215.63" cy="407.13" r="0.51" fill="#98FBEA" fill-opacity="0.16"/><circle cx="345" cy="430.4" r="0.63" fill="#98FBEA" fill-opacity="0.66"/><circle cx="404.26" cy="592.22" r="1.05" fill="#98FBEA" fill-opacity="0.67"/><circle cx="1300.1" cy="44.19" r="2.16" fill="#98FBEA" fill-opacity="0.67"/><circle cx="1275.97" cy="10.81" r="18.19" fill="url(#hero-bokeh)" opacity="0.34"/><circle cx="816.59" cy="57.65" r="11.49" fill="url(#hero-bokeh)" opacity="0.58"/><circle cx="217.08" cy="145.38" r="20.27" fill="url(#hero-bokeh)" opacity="0.6"/><circle cx="708.77" cy="880.32" r="28.38" fill="url(#hero-bokeh)" opacity="0.39"/><circle cx="6.91" cy="35.83" r="18.18" fill="url(#hero-bokeh)" opacity="0.63"/><circle cx="1385.45" cy="475.51" r="19.28" fill="url(#hero-bokeh)" opacity="0.53"/><circle cx="1227.37" cy="397.05" r="9.58" fill="url(#hero-bokeh)" opacity="0.52"/><circle cx="260.36" cy="141.72" r="18.78" fill="url(#hero-bokeh)" opacity="0.47"/><circle cx="9.7" cy="250.35" r="29.72" fill="url(#hero-bokeh)" opacity="0.48"/><circle cx="722" cy="410" r="96" fill="none" stroke="#5EF2DF" stroke-opacity="0.22" stroke-width="1.4"/><circle cx="722" cy="410" r="158" fill="none" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="1.2"/><circle cx="722" cy="410" r="154" fill="#2FD9C8" fill-opacity="0.07" filter="url(#hero-b40)"/><circle cx="722" cy="410" r="70" fill="url(#hero-dot)"/><circle cx="722" cy="410" r="21" fill="#FFFFFF"/><rect x="572" y="708" width="300" height="420" rx="48" fill="url(#hero-phone)"/><rect x="572.5" y="708.5" width="299" height="419" rx="47.5" fill="none" stroke="url(#hero-phoneEdge)" stroke-width="1.6"/><rect x="584" y="720" width="276" height="400" rx="38" fill="url(#hero-screen)"/><circle cx="722" cy="740" r="7" fill="#03060C" stroke="#5EF2DF" stroke-opacity="0.65" stroke-width="1.5"/><circle cx="722" cy="740" r="2.4" fill="#98FBEA"/><circle cx="722" cy="740" r="16" fill="#5EF2DF" fill-opacity="0.18" filter="url(#hero-b6)"/><rect x="652" y="776" width="140" height="40" rx="20" fill="#0B1424" fill-opacity="0.55"/><rect x="652" y="776" width="140" height="40" rx="20" fill="url(#hero-sheen)"/><rect x="652.5" y="776.5" width="139" height="39" rx="19.5" fill="none" stroke="url(#hero-edgeLit)" stroke-width="1.6"/><path d="M672 777.5H772" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="1.2" filter="url(#hero-b1)"/><circle cx="675" cy="796" r="5" fill="#5EF2DF" class="hl-track"/><circle cx="675" cy="796" r="11" fill="#5EF2DF" fill-opacity="0.25" filter="url(#hero-b4)"/><text x="690" y="801" class="hero-mono" font-size="13" font-weight="500" fill="#E8EEF6" fill-opacity="1" text-anchor="start" letter-spacing="1.4">RILEVATA</text><g filter="url(#hero-b6)" opacity="0.8"><path d="M1105.6 260.2L1037.8 257.8L996.3 301.1L877.9 316.8L908.1 354.8L940.1 386.2L975.9 409.9Z" fill="#2FD9C8" stroke="#2FD9C8" stroke-width="52" stroke-linejoin="round"/><path d="M877.9 316.8L798 365.7" stroke="#2FD9C8" stroke-width="44" stroke-linecap="round"/><path d="M798 365.7L748.7 395.6" stroke="#2FD9C8" stroke-width="40" stroke-linecap="round"/><path d="M748.7 395.6L714 417" stroke="#2FD9C8" stroke-width="36" stroke-linecap="round"/><path d="M908.1 354.8L857.1 400.9" stroke="#2FD9C8" stroke-width="44" stroke-linecap="round"/><path d="M857.1 400.9L880.5 431.7" stroke="#2FD9C8" stroke-width="41" stroke-linecap="round"/><path d="M880.5 431.7L913.2 421.2" stroke="#2FD9C8" stroke-width="38" stroke-linecap="round"/><path d="M940.1 386.2L892.1 427.8" stroke="#2FD9C8" stroke-width="42" stroke-linecap="round"/><path d="M892.1 427.8L914.2 456.6" stroke="#2FD9C8" stroke-width="39" stroke-linecap="round"/><path d="M914.2 456.6L943.6 445.1" stroke="#2FD9C8" stroke-width="36" stroke-linecap="round"/><path d="M975.9 409.9L940.4 444.3" stroke="#2FD9C8" stroke-width="37" stroke-linecap="round"/><path d="M940.4 444.3L956.8 468" stroke="#2FD9C8" stroke-width="34" stroke-linecap="round"/><path d="M956.8 468L980.9 456.9" stroke="#2FD9C8" stroke-width="31" stroke-linecap="round"/><path d="M1037.8 257.8L996.3 301.1" stroke="#2FD9C8" stroke-width="46" stroke-linecap="round"/><path d="M996.3 301.1L961.4 346.2" stroke="#2FD9C8" stroke-width="41" stroke-linecap="round"/><path d="M961.4 346.2L932.3 382.4" stroke="#2FD9C8" stroke-width="37" stroke-linecap="round"/></g><g filter="url(#hero-b24)" opacity="0.3"><path d="M1091.6 273.2L1023.8 270.8L982.3 314.1L863.9 329.8L894.1 367.8L926.1 399.2L961.9 422.9Z" fill="#17B8AA" stroke="#17B8AA" stroke-width="52" stroke-linejoin="round"/><path d="M863.9 329.8L784 378.7" stroke="#17B8AA" stroke-width="44" stroke-linecap="round"/><path d="M784 378.7L734.7 408.6" stroke="#17B8AA" stroke-width="40" stroke-linecap="round"/><path d="M734.7 408.6L700 430" stroke="#17B8AA" stroke-width="36" stroke-linecap="round"/><path d="M894.1 367.8L843.1 413.9" stroke="#17B8AA" stroke-width="44" stroke-linecap="round"/><path d="M843.1 413.9L866.5 444.7" stroke="#17B8AA" stroke-width="41" stroke-linecap="round"/><path d="M866.5 444.7L899.2 434.2" stroke="#17B8AA" stroke-width="38" stroke-linecap="round"/><path d="M926.1 399.2L878.1 440.8" stroke="#17B8AA" stroke-width="42" stroke-linecap="round"/><path d="M878.1 440.8L900.2 469.6" stroke="#17B8AA" stroke-width="39" stroke-linecap="round"/><path d="M900.2 469.6L929.6 458.1" stroke="#17B8AA" stroke-width="36" stroke-linecap="round"/><path d="M961.9 422.9L926.4 457.3" stroke="#17B8AA" stroke-width="37" stroke-linecap="round"/><path d="M926.4 457.3L942.8 481" stroke="#17B8AA" stroke-width="34" stroke-linecap="round"/><path d="M942.8 481L966.9 469.9" stroke="#17B8AA" stroke-width="31" stroke-linecap="round"/><path d="M1023.8 270.8L982.3 314.1" stroke="#17B8AA" stroke-width="46" stroke-linecap="round"/><path d="M982.3 314.1L947.4 359.2" stroke="#17B8AA" stroke-width="41" stroke-linecap="round"/><path d="M947.4 359.2L918.3 395.4" stroke="#17B8AA" stroke-width="37" stroke-linecap="round"/></g><g filter="url(#hero-b2)"><path d="M1383.9 116.5L1113.6 253.2" stroke="url(#hero-arm)" stroke-width="128" stroke-linecap="round"/><path d="M1113.6 253.2L1045.8 250.8L1004.3 294.1L885.9 309.8L916.1 347.8L948.1 379.2L983.9 402.9Z" fill="url(#hero-skin)" stroke="url(#hero-skin)" stroke-width="52" stroke-linejoin="round"/><path d="M885.9 309.8L806 358.7" stroke="url(#hero-skin)" stroke-width="44" stroke-linecap="round"/><path d="M806 358.7L756.7 388.6" stroke="url(#hero-skin)" stroke-width="40" stroke-linecap="round"/><path d="M756.7 388.6L722 410" stroke="url(#hero-skin)" stroke-width="36" stroke-linecap="round"/><path d="M916.1 347.8L865.1 393.9" stroke="url(#hero-skin)" stroke-width="44" stroke-linecap="round"/><path d="M865.1 393.9L888.5 424.7" stroke="url(#hero-skin)" stroke-width="41" stroke-linecap="round"/><path d="M888.5 424.7L921.2 414.2" stroke="url(#hero-skin)" stroke-width="38" stroke-linecap="round"/><path d="M948.1 379.2L900.1 420.8" stroke="url(#hero-skin)" stroke-width="42" stroke-linecap="round"/><path d="M900.1 420.8L922.2 449.6" stroke="url(#hero-skin)" stroke-width="39" stroke-linecap="round"/><path d="M922.2 449.6L951.6 438.1" stroke="url(#hero-skin)" stroke-width="36" stroke-linecap="round"/><path d="M983.9 402.9L948.4 437.3" stroke="url(#hero-skin)" stroke-width="37" stroke-linecap="round"/><path d="M948.4 437.3L964.8 461" stroke="url(#hero-skin)" stroke-width="34" stroke-linecap="round"/><path d="M964.8 461L988.9 449.9" stroke="url(#hero-skin)" stroke-width="31" stroke-linecap="round"/><path d="M1045.8 250.8L1004.3 294.1" stroke="url(#hero-skin)" stroke-width="46" stroke-linecap="round"/><path d="M1004.3 294.1L969.4 339.2" stroke="url(#hero-skin)" stroke-width="41" stroke-linecap="round"/><path d="M969.4 339.2L940.3 375.4" stroke="url(#hero-skin)" stroke-width="37" stroke-linecap="round"/></g><rect width="1600" height="1000" fill="url(#hero-vig)"/></svg>
+<svg class="hero-layer hero-marks" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><g stroke="#CCFFF6" stroke-opacity="0.32" stroke-width="1.3" fill="none" class="hl-lines"><path d="M1113.6 253.2L1045.8 250.8"/><path d="M1045.8 250.8L1004.3 294.1"/><path d="M1004.3 294.1L969.4 339.2"/><path d="M969.4 339.2L940.3 375.4"/><path d="M1113.6 253.2L885.9 309.8"/><path d="M885.9 309.8L806 358.7"/><path d="M806 358.7L756.7 388.6"/><path d="M756.7 388.6L722 410"/><path d="M885.9 309.8L916.1 347.8"/><path d="M916.1 347.8L865.1 393.9"/><path d="M865.1 393.9L888.5 424.7"/><path d="M888.5 424.7L921.2 414.2"/><path d="M916.1 347.8L948.1 379.2"/><path d="M948.1 379.2L900.1 420.8"/><path d="M900.1 420.8L922.2 449.6"/><path d="M922.2 449.6L951.6 438.1"/><path d="M948.1 379.2L983.9 402.9"/><path d="M1113.6 253.2L983.9 402.9"/><path d="M983.9 402.9L948.4 437.3"/><path d="M948.4 437.3L964.8 461"/><path d="M964.8 461L988.9 449.9"/></g><circle cx="1113.6" cy="253.2" r="5" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:0"/><circle cx="1045.8" cy="250.8" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:1"/><circle cx="1004.3" cy="294.1" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:2"/><circle cx="969.4" cy="339.2" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:3"/><circle cx="940.3" cy="375.4" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:4"/><circle cx="885.9" cy="309.8" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:5"/><circle cx="806" cy="358.7" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:6"/><circle cx="756.7" cy="388.6" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:7"/><circle cx="916.1" cy="347.8" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:8"/><circle cx="865.1" cy="393.9" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:9"/><circle cx="888.5" cy="424.7" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:10"/><circle cx="921.2" cy="414.2" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:11"/><circle cx="948.1" cy="379.2" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:12"/><circle cx="900.1" cy="420.8" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:13"/><circle cx="922.2" cy="449.6" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:14"/><circle cx="951.6" cy="438.1" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:15"/><circle cx="983.9" cy="402.9" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:16"/><circle cx="948.4" cy="437.3" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:17"/><circle cx="964.8" cy="461" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:18"/><circle cx="988.9" cy="449.9" r="3.6" fill="#06101A" stroke="#98FBEA" stroke-opacity="0.75" stroke-width="1.3" class="hl-dot" style="--i:19"/><path d="M1113.6 253.2L1163.6 163.2H1273.6" stroke="#98FBEA" stroke-opacity="0.35" stroke-width="1" fill="none" class="hl-lead" pathLength="100"/><text x="1169.6" y="155.2" class="hero-mono hl-label" font-size="12" font-weight="500" fill="#CCFFF6" fill-opacity="0.75" text-anchor="start" letter-spacing="1.6">MANO DESTRA  0,98</text></svg>
+<svg class="hero-layer hero-light" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><g transform="translate(554 242) scale(14)"><g filter="url(#hero-b2)" opacity="0.95"><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="6.25 200" stroke-dashoffset="-93.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:6.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="12.5 200" stroke-dashoffset="-87.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:12.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="18.75 200" stroke-dashoffset="-81.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:18.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="31.25 200" stroke-dashoffset="-68.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:31.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="37.5 200" stroke-dashoffset="-62.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:37.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="43.75 200" stroke-dashoffset="-56.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:43.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:50"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="56.25 200" stroke-dashoffset="-43.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:56.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="62.5 200" stroke-dashoffset="-37.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:62.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="68.75 200" stroke-dashoffset="-31.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:68.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="81.25 200" stroke-dashoffset="-18.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:81.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="87.5 200" stroke-dashoffset="-12.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:87.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="93.75 200" stroke-dashoffset="-6.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:93.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg t" style="--x:100"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="6.25 200" stroke-dashoffset="-93.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:6.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="12.5 200" stroke-dashoffset="-87.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:12.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="18.75 200" stroke-dashoffset="-81.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:18.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="31.25 200" stroke-dashoffset="-68.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:31.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="37.5 200" stroke-dashoffset="-62.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:37.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="43.75 200" stroke-dashoffset="-56.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:43.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:50"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="56.25 200" stroke-dashoffset="-43.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:56.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="62.5 200" stroke-dashoffset="-37.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:62.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="68.75 200" stroke-dashoffset="-31.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:68.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="81.25 200" stroke-dashoffset="-18.75" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:81.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="87.5 200" stroke-dashoffset="-12.5" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:87.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="93.75 200" stroke-dashoffset="-6.25" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:93.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#17B8AA" stroke-opacity="0.09" stroke-width="3.6" stroke-linecap="butt" fill="none" class="seg b" style="--x:100"/></g></g><g transform="translate(554 242) scale(14)"><g filter="url(#hero-b1)"><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="6.25 200" stroke-dashoffset="-93.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:6.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="12.5 200" stroke-dashoffset="-87.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:12.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="18.75 200" stroke-dashoffset="-81.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:18.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="31.25 200" stroke-dashoffset="-68.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:31.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="37.5 200" stroke-dashoffset="-62.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:37.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="43.75 200" stroke-dashoffset="-56.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:43.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:50"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="56.25 200" stroke-dashoffset="-43.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:56.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="62.5 200" stroke-dashoffset="-37.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:62.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="68.75 200" stroke-dashoffset="-31.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:68.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="81.25 200" stroke-dashoffset="-18.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:81.25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="87.5 200" stroke-dashoffset="-12.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:87.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="93.75 200" stroke-dashoffset="-6.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:93.75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg t" style="--x:100"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="6.25 200" stroke-dashoffset="-93.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:6.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="12.5 200" stroke-dashoffset="-87.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:12.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="18.75 200" stroke-dashoffset="-81.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:18.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="31.25 200" stroke-dashoffset="-68.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:31.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="37.5 200" stroke-dashoffset="-62.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:37.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="43.75 200" stroke-dashoffset="-56.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:43.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:50"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="56.25 200" stroke-dashoffset="-43.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:56.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="62.5 200" stroke-dashoffset="-37.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:62.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="68.75 200" stroke-dashoffset="-31.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:68.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="81.25 200" stroke-dashoffset="-18.75" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:81.25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="87.5 200" stroke-dashoffset="-12.5" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:87.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="93.75 200" stroke-dashoffset="-6.25" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:93.75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#5EF2DF" stroke-opacity="0.09" stroke-width="2.1" stroke-linecap="butt" fill="none" class="seg b" style="--x:100"/></g></g><g transform="translate(554 242) scale(14)"><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="4.17 200" stroke-dashoffset="-95.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:4.17"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="8.33 200" stroke-dashoffset="-91.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:8.33"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="12.5 200" stroke-dashoffset="-87.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:12.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="16.67 200" stroke-dashoffset="-83.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:16.67"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="20.83 200" stroke-dashoffset="-79.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:20.83"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:25"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="29.17 200" stroke-dashoffset="-70.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:29.17"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="33.33 200" stroke-dashoffset="-66.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:33.33"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="37.5 200" stroke-dashoffset="-62.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:37.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="41.67 200" stroke-dashoffset="-58.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:41.67"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="45.83 200" stroke-dashoffset="-54.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:45.83"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:50"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="54.17 200" stroke-dashoffset="-45.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:54.17"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="58.33 200" stroke-dashoffset="-41.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:58.33"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="62.5 200" stroke-dashoffset="-37.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:62.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="66.67 200" stroke-dashoffset="-33.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:66.67"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="70.83 200" stroke-dashoffset="-29.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:70.83"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:75"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="79.17 200" stroke-dashoffset="-20.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:79.17"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="83.33 200" stroke-dashoffset="-16.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:83.33"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="87.5 200" stroke-dashoffset="-12.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:87.5"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="91.67 200" stroke-dashoffset="-8.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:91.67"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="95.83 200" stroke-dashoffset="-4.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:95.83"/><path d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg t" style="--x:100"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="4.17 200" stroke-dashoffset="-95.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:4.17"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="8.33 200" stroke-dashoffset="-91.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:8.33"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="12.5 200" stroke-dashoffset="-87.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:12.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="16.67 200" stroke-dashoffset="-83.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:16.67"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="20.83 200" stroke-dashoffset="-79.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:20.83"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:25"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="29.17 200" stroke-dashoffset="-70.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:29.17"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="33.33 200" stroke-dashoffset="-66.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:33.33"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="37.5 200" stroke-dashoffset="-62.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:37.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="41.67 200" stroke-dashoffset="-58.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:41.67"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="45.83 200" stroke-dashoffset="-54.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:45.83"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:50"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="54.17 200" stroke-dashoffset="-45.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:54.17"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="58.33 200" stroke-dashoffset="-41.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:58.33"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="62.5 200" stroke-dashoffset="-37.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:62.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="66.67 200" stroke-dashoffset="-33.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:66.67"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="70.83 200" stroke-dashoffset="-29.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:70.83"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:75"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="79.17 200" stroke-dashoffset="-20.83" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:79.17"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="83.33 200" stroke-dashoffset="-16.67" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:83.33"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="87.5 200" stroke-dashoffset="-12.5" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:87.5"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="91.67 200" stroke-dashoffset="-8.33" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:91.67"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="95.83 200" stroke-dashoffset="-4.17" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:95.83"/><path d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#EFFFFC" stroke-opacity="0.06" stroke-width="1.2" stroke-linecap="butt" fill="none" class="seg b" style="--x:100"/><circle cx="7.85" cy="9.51" r="0.6" fill="#EFFFFC" class="hl-end t"/><circle cx="16.15" cy="14.49" r="0.6" fill="#EFFFFC" class="hl-end b"/></g><circle class="hl-burst" cx="722" cy="410" r="30" fill="none" stroke="#98FBEA" stroke-width="3" opacity="0"/><g class="hl-point"><circle cx="722" cy="410" r="70" fill="url(#hero-dot)"/><circle cx="722" cy="410" r="21" fill="#FFFFFF"/></g></svg>
+<div class="hero-glow"></div>
+<div class="hero-motes"><i style="--m:0"></i><i style="--m:1"></i><i style="--m:2"></i><i style="--m:3"></i><i style="--m:4"></i><i style="--m:5"></i><i style="--m:6"></i><i style="--m:7"></i></div>
+</div>
+
+    <ul class="hero-chips" role="list">
+      <li class="hud-chip"><glyph-fox class="i16" data-icon="sigil:camera-tracking" size="16"></glyph-fox><span>21 punti per mano</span></li>
+      <li class="hud-chip"><glyph-fox class="i16" data-icon="sigil:on-device-model" size="16"></glyph-fox><span>Modelli sul telefono</span></li>
+      <li class="hud-chip"><glyph-fox class="i16" data-icon="sigil:privacy-shield" size="16"></glyph-fox><span>Niente account, niente cloud</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- The sign: the mark draws itself as you scroll, one reading at a time -->
+<section class="scene scene-sign" id="sign" data-scene="sign" aria-labelledby="sign-title">
+  <div class="scene-track">
+    <div class="scene-pin">
+      <div class="sign-stage" aria-hidden="true" v-ignore>
+        <div class="sign-halo"></div>
+        <svg class="mark-svg" viewBox="0 0 240 240" aria-hidden="true" focusable="false"><g class="mk-turn"><defs><filter id="mk-bloom" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="1.5"/></filter><filter id="mk-glow" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0.5"/></filter><radialGradient id="mk-amb" cx="12" cy="12" r="11" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2FD9C8" stop-opacity="0.22"/><stop offset="0.45" stop-color="#0E968C" stop-opacity="0.08"/><stop offset="1" stop-color="#0B746F" stop-opacity="0"/></radialGradient><radialGradient id="mk-dot" cx="12" cy="12" r="4.8" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.22" stop-color="#CCFFF6" stop-opacity="0.95"/><stop offset="0.5" stop-color="#5EF2DF" stop-opacity="0.35"/><stop offset="1" stop-color="#2FD9C8" stop-opacity="0"/></radialGradient></defs><g transform="translate(0 0) scale(10)"><circle cx="12" cy="12" r="11" fill="url(#mk-amb)"/><g filter="url(#mk-bloom)" opacity="0.95"><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="5.56 200" stroke-dashoffset="-94.44" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="11.11 200" stroke-dashoffset="-88.89" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="16.67 200" stroke-dashoffset="-83.33" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="22.22 200" stroke-dashoffset="-77.78" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="27.78 200" stroke-dashoffset="-72.22" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="33.33 200" stroke-dashoffset="-66.67" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="38.89 200" stroke-dashoffset="-61.11" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="44.44 200" stroke-dashoffset="-55.56" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="55.56 200" stroke-dashoffset="-44.44" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="61.11 200" stroke-dashoffset="-38.89" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="66.67 200" stroke-dashoffset="-33.33" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="72.22 200" stroke-dashoffset="-27.78" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="77.78 200" stroke-dashoffset="-22.22" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="83.33 200" stroke-dashoffset="-16.67" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="88.89 200" stroke-dashoffset="-11.11" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="94.44 200" stroke-dashoffset="-5.56" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="5.56 200" stroke-dashoffset="-94.44" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="11.11 200" stroke-dashoffset="-88.89" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="16.67 200" stroke-dashoffset="-83.33" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="22.22 200" stroke-dashoffset="-77.78" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="27.78 200" stroke-dashoffset="-72.22" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="33.33 200" stroke-dashoffset="-66.67" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="38.89 200" stroke-dashoffset="-61.11" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="44.44 200" stroke-dashoffset="-55.56" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="55.56 200" stroke-dashoffset="-44.44" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="61.11 200" stroke-dashoffset="-38.89" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="66.67 200" stroke-dashoffset="-33.33" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="72.22 200" stroke-dashoffset="-27.78" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="77.78 200" stroke-dashoffset="-22.22" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="83.33 200" stroke-dashoffset="-16.67" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="88.89 200" stroke-dashoffset="-11.11" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="94.44 200" stroke-dashoffset="-5.56" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#17B8AA" stroke-opacity="0.08" stroke-width="3.6" stroke-linecap="butt" fill="none"/><circle class="mk-end t" cx="7.85" cy="9.51" r="1.8" fill="#17B8AA" fill-opacity="0.6"/><circle class="mk-end b" cx="16.15" cy="14.49" r="1.8" fill="#17B8AA" fill-opacity="0.6"/></g><g filter="url(#mk-glow)"><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="5.56 200" stroke-dashoffset="-94.44" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="11.11 200" stroke-dashoffset="-88.89" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="16.67 200" stroke-dashoffset="-83.33" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="22.22 200" stroke-dashoffset="-77.78" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="27.78 200" stroke-dashoffset="-72.22" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="33.33 200" stroke-dashoffset="-66.67" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="38.89 200" stroke-dashoffset="-61.11" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="44.44 200" stroke-dashoffset="-55.56" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="55.56 200" stroke-dashoffset="-44.44" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="61.11 200" stroke-dashoffset="-38.89" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="66.67 200" stroke-dashoffset="-33.33" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="72.22 200" stroke-dashoffset="-27.78" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="77.78 200" stroke-dashoffset="-22.22" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="83.33 200" stroke-dashoffset="-16.67" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="88.89 200" stroke-dashoffset="-11.11" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="94.44 200" stroke-dashoffset="-5.56" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="5.56 200" stroke-dashoffset="-94.44" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="11.11 200" stroke-dashoffset="-88.89" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="16.67 200" stroke-dashoffset="-83.33" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="22.22 200" stroke-dashoffset="-77.78" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="27.78 200" stroke-dashoffset="-72.22" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="33.33 200" stroke-dashoffset="-66.67" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="38.89 200" stroke-dashoffset="-61.11" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="44.44 200" stroke-dashoffset="-55.56" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="55.56 200" stroke-dashoffset="-44.44" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="61.11 200" stroke-dashoffset="-38.89" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="66.67 200" stroke-dashoffset="-33.33" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="72.22 200" stroke-dashoffset="-27.78" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="77.78 200" stroke-dashoffset="-22.22" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="83.33 200" stroke-dashoffset="-16.67" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="88.89 200" stroke-dashoffset="-11.11" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="94.44 200" stroke-dashoffset="-5.56" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#5EF2DF" stroke-opacity="0.08" stroke-width="2.1" stroke-linecap="butt" fill="none"/><circle class="mk-end t" cx="7.85" cy="9.51" r="1.05" fill="#5EF2DF" fill-opacity="0.9"/><circle class="mk-end b" cx="16.15" cy="14.49" r="1.05" fill="#5EF2DF" fill-opacity="0.9"/></g><g><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="3.57 200" stroke-dashoffset="-96.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="7.14 200" stroke-dashoffset="-92.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="10.71 200" stroke-dashoffset="-89.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="14.29 200" stroke-dashoffset="-85.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="17.86 200" stroke-dashoffset="-82.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="21.43 200" stroke-dashoffset="-78.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="28.57 200" stroke-dashoffset="-71.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="32.14 200" stroke-dashoffset="-67.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="35.71 200" stroke-dashoffset="-64.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="39.29 200" stroke-dashoffset="-60.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="42.86 200" stroke-dashoffset="-57.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="46.43 200" stroke-dashoffset="-53.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="53.57 200" stroke-dashoffset="-46.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="57.14 200" stroke-dashoffset="-42.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="60.71 200" stroke-dashoffset="-39.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="64.29 200" stroke-dashoffset="-35.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="67.86 200" stroke-dashoffset="-32.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="71.43 200" stroke-dashoffset="-28.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="78.57 200" stroke-dashoffset="-21.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="82.14 200" stroke-dashoffset="-17.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="85.71 200" stroke-dashoffset="-14.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="89.29 200" stroke-dashoffset="-10.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="92.86 200" stroke-dashoffset="-7.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="96.43 200" stroke-dashoffset="-3.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="3.57 200" stroke-dashoffset="-96.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="7.14 200" stroke-dashoffset="-92.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="10.71 200" stroke-dashoffset="-89.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="14.29 200" stroke-dashoffset="-85.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="17.86 200" stroke-dashoffset="-82.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="21.43 200" stroke-dashoffset="-78.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="25 200" stroke-dashoffset="-75" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="28.57 200" stroke-dashoffset="-71.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="32.14 200" stroke-dashoffset="-67.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="35.71 200" stroke-dashoffset="-64.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="39.29 200" stroke-dashoffset="-60.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="42.86 200" stroke-dashoffset="-57.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="46.43 200" stroke-dashoffset="-53.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="50 200" stroke-dashoffset="-50" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="53.57 200" stroke-dashoffset="-46.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="57.14 200" stroke-dashoffset="-42.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="60.71 200" stroke-dashoffset="-39.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="64.29 200" stroke-dashoffset="-35.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="67.86 200" stroke-dashoffset="-32.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="71.43 200" stroke-dashoffset="-28.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="75 200" stroke-dashoffset="-25" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="78.57 200" stroke-dashoffset="-21.43" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="82.14 200" stroke-dashoffset="-17.86" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="85.71 200" stroke-dashoffset="-14.29" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="89.29 200" stroke-dashoffset="-10.71" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="92.86 200" stroke-dashoffset="-7.14" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="96.43 200" stroke-dashoffset="-3.57" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><path class="seg b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49" pathLength="100" stroke-dasharray="100 200" stroke-dashoffset="0" stroke="#EFFFFC" stroke-opacity="0.05" stroke-width="1.25" stroke-linecap="butt" fill="none"/><circle class="mk-end t" cx="7.85" cy="9.51" r="0.63" fill="#EFFFFC" fill-opacity="1"/><circle class="mk-end b" cx="16.15" cy="14.49" r="0.63" fill="#EFFFFC" fill-opacity="1"/></g><circle class="mk-dot" cx="12" cy="12" r="4.8" fill="url(#mk-dot)"/><circle class="mk-core" cx="12" cy="12" r="1.45" fill="#FFFFFF"/><circle cx="17.9" cy="9.6" r="0.32" fill="#98FBEA" fill-opacity="0.55"/><circle cx="6.2" cy="14.6" r="0.26" fill="#98FBEA" fill-opacity="0.45"/><circle cx="18.6" cy="18.4" r="0.2" fill="#98FBEA" fill-opacity="0.35"/><circle cx="5.4" cy="5.8" r="0.22" fill="#98FBEA" fill-opacity="0.3"/><circle cx="9.6" cy="21.8" r="0.18" fill="#98FBEA" fill-opacity="0.3"/><circle cx="14.8" cy="2.2" r="0.16" fill="#98FBEA" fill-opacity="0.28"/></g></g></svg>
+
+      </div>
+      <div class="scene-copy">
+        <p class="kicker"><span class="mono-num">00</span>Il segno</p>
+        <h2 id="sign-title" class="sr-only">Quattro modi di leggere il marchio</h2>
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; Una lettera</p><h3 class="beat-h">La S di SIGIL.</h3><p class="beat-p">Due tratti attorno a un punto di luce. Il dorso della S non viene mai disegnato: il dorso è la luce.</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; Un gesto</p><h3 class="beat-h">Due tratti, un punto.</h3><p class="beat-p">La punta di un dito che si chiude su un punto, come pollice e indice si incontrano in un pizzico.</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; Un cursore</p><h3 class="beat-h">La luce è il cursore.</h3><p class="beat-p">Il punto segue il tuo indice sullo schermo ed è il nucleo della Sfera di controllo.</p></li>
+          <li class="beat"><p class="beat-k">04 &#183; Un sigillo</p><h3 class="beat-h">Giralo. Resta uguale.</h3><p class="beat-p">Mezzo giro non cambia il segno, come si addice a un sigillo. La sua radice latina, sigillum, significa piccolo sigillo.</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works: the cursor trail sweeps across a phone -->
+<section class="scene" id="how" data-scene="trail" aria-labelledby="how-title">
+  <header class="chapter-head wrap">
+    <p class="kicker"><span class="mono-num">01</span>Come funziona</p>
+    <h2 id="how-title" class="chapter-title">Da un segno nell’aria a un tocco sullo schermo.</h2>
+    <p class="chapter-lead">Tre fasi, e tutte funzionano sul telefono.</p>
+  </header>
+  <div class="scene-track">
+    <div class="scene-pin">
+      <figure class="scene-stage frame" data-src="../assets/scenes/trail.svg">
+        <img src="../assets/illustrations/it/cursor-trail.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="Un’app di musica su un telefono. Il cursore olografico entra come una scia di luce e si aggancia al pulsante di riproduzione, che si accende come una lente di vetro.">
+        <span class="stage-chip" data-at="800 150" aria-hidden="true"><span class="live-dot"></span>In tracciamento</span>
+      </figure>
+      <div class="scene-copy">
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; Vedere</p><h3 class="beat-h">La fotocamera vede la tua mano.</h3><p class="beat-p">La fotocamera frontale trova 21 punti sulla tua mano, da 30 a 60 volte al secondo. I fotogrammi vengono letti in memoria e scartati.</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; Capire</p><h3 class="beat-h">I gesti diventano intenzioni.</h3><p class="beat-p">Un piccolo classificatore legge pose e movimenti: un pizzico, uno scorrimento, un cerchio nell’aria. L’app in primo piano decide cosa significa ogni segno.</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; Agire</p><h3 class="beat-h">Le azioni partono.</h3><p class="beat-p">Il cursore si aggancia ai bersagli, così il pizzico arriva dove hai mirato. Tutto ciò che invia, pubblica o paga aspetta il tuo sì.</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="pipeline" role="group" aria-label="Dalla fotocamera all’azione">
+      <p class="pipeline-k">Dalla fotocamera all’azione</p>
+      <ol class="pipeline-row" role="list">
+        <li><glyph-fox class="i18" data-icon="sigil:camera-tracking" size="18"></glyph-fox><span>Fotocamera frontale</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:gesture-open-palm" size="18"></glyph-fox><span>21 punti della mano</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:light-trail" size="18"></glyph-fox><span>Filtro One Euro</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:gesture-pinch" size="18"></glyph-fox><span>Classificatore di gesti</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:app-profile" size="18"></glyph-fox><span>Profilo dell’app</span></li>
+        <li><glyph-fox class="i18" data-icon="sigil:snap-target" size="18"></glyph-fox><span>Azione</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- The gesture set -->
+<section class="chapter" id="gestures" aria-labelledby="gestures-title">
+  <div class="wrap ruled">
+    <header class="chapter-head">
+      <p class="kicker"><span class="mono-num">02</span>I gesti</p>
+      <h2 id="gestures-title" class="chapter-title">14 segni, una mano.</h2>
+      <p class="chapter-lead">Ogni segno si fa con il palmo verso la fotocamera, così come lei ti vede. E per ognuno c’è anche una via con il tocco e una con la voce.</p>
+    </header>
+    <div class="explorer" v-tabs="g-pinch">
+      <div class="explorer-grid" role="tablist" aria-label="Gesti">
+        <button class="g-tile" type="button" v-tab="g-open-palm"><glyph-fox class="i32" data-icon="sigil:gesture-open-palm" size="32" variant="duotone"></glyph-fox><span>Palmo aperto</span></button>
+        <button class="g-tile" type="button" v-tab="g-point"><glyph-fox class="i32" data-icon="sigil:gesture-point" size="32" variant="duotone"></glyph-fox><span>Indicare</span></button>
+        <button class="g-tile" type="button" v-tab="g-pinch"><glyph-fox class="i32" data-icon="sigil:gesture-pinch" size="32" variant="duotone"></glyph-fox><span>Pizzico</span></button>
+        <button class="g-tile" type="button" v-tab="g-double-pinch"><glyph-fox class="i32" data-icon="sigil:gesture-double-pinch" size="32" variant="duotone"></glyph-fox><span>Doppio pizzico</span></button>
+        <button class="g-tile" type="button" v-tab="g-pinch-hold"><glyph-fox class="i32" data-icon="sigil:gesture-pinch-hold" size="32" variant="duotone"></glyph-fox><span>Pizzico prolungato</span></button>
+        <button class="g-tile" type="button" v-tab="g-fist"><glyph-fox class="i32" data-icon="sigil:gesture-fist" size="32" variant="duotone"></glyph-fox><span>Pugno</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-up"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-up" size="32" variant="duotone"></glyph-fox><span>Due dita in alto</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-down"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-down" size="32" variant="duotone"></glyph-fox><span>Due dita in basso</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-left"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-left" size="32" variant="duotone"></glyph-fox><span>Due dita a sinistra</span></button>
+        <button class="g-tile" type="button" v-tab="g-swipe-right"><glyph-fox class="i32" data-icon="sigil:gesture-swipe-right" size="32" variant="duotone"></glyph-fox><span>Due dita a destra</span></button>
+        <button class="g-tile" type="button" v-tab="g-three"><glyph-fox class="i32" data-icon="sigil:gesture-three-fingers" size="32" variant="duotone"></glyph-fox><span>Tre dita</span></button>
+        <button class="g-tile" type="button" v-tab="g-circle-cw"><glyph-fox class="i32" data-icon="sigil:gesture-circle-cw" size="32" variant="duotone"></glyph-fox><span>Cerchio orario</span></button>
+        <button class="g-tile" type="button" v-tab="g-circle-ccw"><glyph-fox class="i32" data-icon="sigil:gesture-circle-ccw" size="32" variant="duotone"></glyph-fox><span>Cerchio antiorario</span></button>
+        <button class="g-tile" type="button" v-tab="g-flick"><glyph-fox class="i32" data-icon="sigil:gesture-flick" size="32" variant="duotone"></glyph-fox><span>Scorrimento rapido</span></button>
+      </div>
+      <div class="explorer-panels">
+        <section class="g-panel" v-tab-panel="g-open-palm" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-open-palm" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 01 / 14</p>
+            <h3 class="g-panel-title">Palmo aperto</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Cinque dita distese, palmo verso la fotocamera, fermo per 400 ms. Un anello tenue cresce dove si aprirà la sfera.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Apre la Sfera di controllo sopra l’app che stai usando.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Tieni 400 ms</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-point" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-point" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 02 / 14</p>
+            <h3 class="g-panel-title">Indicare</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Indice disteso e le altre dita piegate, per 200 ms.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Mostra il cursore, che segue la punta del dito sullo schermo.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Tieni 200 ms</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-pinch">
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-pinch" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 03 / 14</p>
+            <h3 class="g-panel-title">Pizzico</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Le punte di pollice e indice si toccano e si riaprono entro 300 ms.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Tocca dove si trova il cursore. Il tocco arriva dove miravi 90 ms prima, prima che le dita cominciassero a chiudersi.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Indietro 90 ms</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-double-pinch" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-double-pinch" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 04 / 14</p>
+            <h3 class="g-panel-title">Doppio pizzico</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Due pizzichi entro 350 ms, nello stesso punto.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Doppio tocco: apre, ingrandisce o mette mi piace, secondo l’app.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Finestra 350 ms</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-pinch-hold" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-pinch-hold" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 05 / 14</p>
+            <h3 class="g-panel-title">Pizzico prolungato</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Il pizzico resta chiuso per 500 ms.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Pressione prolungata. Muoviti senza lasciare per trascinare. Su YouTube, riproduci o metti in pausa.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Tieni 500 ms</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-fist" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-fist" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 06 / 14</p>
+            <h3 class="g-panel-title">Pugno</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Tutte le dita si chiudono, come quando si tiene un microfono.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Inizia ad ascoltare una richiesta. Con la sfera aperta, la chiude.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Ascolto</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-swipe-up" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-swipe-up" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 07 / 14</p>
+            <h3 class="g-panel-title">Due dita in alto</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Indice e medio insieme, un movimento rapido verso l’alto.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Scorre la pagina verso ciò che c’è sotto.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Scorrere</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-swipe-down" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-swipe-down" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 08 / 14</p>
+            <h3 class="g-panel-title">Due dita in basso</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Le stesse due dita, un movimento rapido verso il basso.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Torna su.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Scorrere</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-swipe-left" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-swipe-left" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 09 / 14</p>
+            <h3 class="g-panel-title">Due dita a sinistra</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Le stesse due dita, un movimento rapido verso sinistra.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Scorre di lato. Su YouTube, il video successivo.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Scorrere · Avanti</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-swipe-right" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-swipe-right" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 10 / 14</p>
+            <h3 class="g-panel-title">Due dita a destra</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Le stesse due dita, un movimento rapido verso destra.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Scorre di lato. Su YouTube, il video precedente.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Scorrere · Indietro</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-three" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-three-fingers" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 11 / 14</p>
+            <h3 class="g-panel-title">Tre dita</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Indice, medio e anulare insieme, poi uno scorrimento.</dd></div>
+              <div><dt>Cosa fa</dt><dd>A sinistra torna indietro, in alto va alla home, a destra mostra le app recenti e in basso apre le notifiche.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Sistema</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-circle-cw" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-circle-cw" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 12 / 14</p>
+            <h3 class="g-panel-title">Cerchio orario</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>La punta del dito disegna quasi un cerchio nell’aria, come per girare una manopola.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Alza il volume.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Manopola</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-circle-ccw" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-circle-ccw" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 13 / 14</p>
+            <h3 class="g-panel-title">Cerchio antiorario</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>La stessa manopola, girata nell’altro verso.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Abbassa il volume.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Manopola</p>
+          </div>
+        </section>
+        <section class="g-panel" v-tab-panel="g-flick" hidden>
+          <div class="g-panel-art"><glyph-fox class="i96" data-icon="sigil:gesture-flick" size="96" weight="1.25" variant="duotone" animate="draw" trigger="inView"></glyph-fox></div>
+          <div class="g-panel-body">
+            <p class="g-panel-k">Gesto 14 / 14</p>
+            <h3 class="g-panel-title">Scorrimento rapido</h3>
+            <dl class="g-panel-dl">
+              <div><dt>Riconosciuto quando</dt><dd>Un movimento breve e veloce della punta del dito, che si ferma di colpo.</dd></div>
+              <div><dt>Cosa fa</dt><dd>Scorre in quella direzione: il prossimo Reel, il prossimo Short, una notifica tolta di mezzo.</dd></div>
+            </dl>
+            <p class="hud-chip hud-chip-sm">Sotto i 250 ms</p>
+          </div>
+        </section>
+      </div>
+    </div>
+    <p class="fine-note"><glyph-fox class="i16" data-icon="sigil:hand-lost" size="16"></glyph-fox><span>Nessun segno scatta mentre la mano si avvicina allo schermo, quando due mani si sovrappongono o entro 300 ms dal precedente. Perdere la mano non conferma mai un’azione.</span></p>
+  </div>
+</section>
+
+<!-- The Control Sphere assembles -->
+<section class="scene" id="sphere" data-scene="sphere" aria-labelledby="sphere-title">
+  <header class="chapter-head wrap">
+    <p class="kicker"><span class="mono-num">03</span>La Sfera di controllo</p>
+    <h2 id="sphere-title" class="chapter-title">Apri la mano. La sfera risponde.</h2>
+    <p class="chapter-lead">Una sfera di vetro si apre dove si trova la tua mano, sopra l’app che stai usando, con le azioni utili in quel momento.</p>
+  </header>
+  <div class="scene-track">
+    <div class="scene-pin">
+      <figure class="scene-stage frame" data-src="../assets/scenes/sphere.svg">
+        <img src="../assets/illustrations/it/control-sphere.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="La Sfera di controllo: una sfera di vetro con il punto di luce al centro, un anello di stato e sei azioni rapide in orbita. Fatto è acceso sotto il cursore, l’app compare in alto e le persone recenti in basso.">
+      </figure>
+      <div class="scene-copy">
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; Chiamare</p><h3 class="beat-h">Mostra il palmo aperto.</h3><p class="beat-p">Dopo 400 ms di immobilità, la sfera si apre dove si trova la mano. Funziona anche dire «Sigil».</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; Proporre</p><h3 class="beat-h">Sei azioni, scelte dall’app.</h3><p class="beat-p">In Messaggi: Rispondi, Leggi ad alta voce e Fatto. Le persone recenti stanno sotto l’orbita, solo con le iniziali.</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; Scegliere</p><h3 class="beat-h">Indica. Pizzica. Fatto.</h3><p class="beat-p">Il cursore si aggancia all’azione. Con un po’ di pratica basta uno scorrimento verso di lei, senza guardare.</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="wrap ruled">
+    <dl class="trio">
+      <div class="trio-cell">
+        <dt><glyph-fox class="i24" data-icon="sigil:gesture-open-palm" size="24" variant="duotone"></glyph-fox>Chiamare</dt>
+        <dd>Tieni il palmo aperto e fermo per 400 ms, di’ «Sigil» o premi a lungo il bordo dello schermo.</dd>
+      </div>
+      <div class="trio-cell">
+        <dt><glyph-fox class="i24" data-icon="sigil:gesture-pinch" size="24" variant="duotone"></glyph-fox>Scegliere</dt>
+        <dd>Indica e pizzica, oppure pizzica il centro e scorri verso un’azione senza guardare. Puoi anche dirne il nome o toccarla.</dd>
+      </div>
+      <div class="trio-cell">
+        <dt><glyph-fox class="i24" data-icon="sigil:gesture-fist" size="24" variant="duotone"></glyph-fox>Chiudere</dt>
+        <dd>Chiudi il pugno, scorri in basso con due dita o di’ «Sigil, chiudi». Senza mano né voce per 8 secondi, si chiude da sola.</dd>
+      </div>
+    </dl>
+    <div class="states" v-data="{ s: 'idle' }">
+      <div class="states-stage" aria-hidden="true">
+        <svg class="state-mark" :class="'is-' + s" viewBox="0 0 24 24" fill="none" stroke-linecap="round">
+          <circle class="sm-halo" cx="12" cy="12" r="9"/>
+          <g class="sm-arcs">
+            <path class="sm-arc sm-t" d="M15.99 4.81A4.7 4.7 0 0 0 7.85 9.51"/>
+            <path class="sm-arc sm-b" d="M8.01 19.19A4.7 4.7 0 0 0 16.15 14.49"/>
+          </g>
+          <circle class="sm-point" cx="12" cy="12" r="1.25"/>
+        </svg>
+      </div>
+      <div class="states-copy">
+        <p class="kicker">Il marchio in movimento</p>
+        <div class="segmented states-switch" role="radiogroup" aria-label="Stato della sfera">
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="idle" v-model="s" checked><span>A riposo</span></label>
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="listening" v-model="s"><span>In ascolto</span></label>
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="thinking" v-model="s"><span>Elaborazione</span></label>
+          <label class="segmented-item"><input type="radio" name="sphere-state" value="done" v-model="s"><span>Fatto</span></label>
+        </div>
+        <div class="states-text" aria-live="polite">
+          <p v-show="s === 'idle'">Respira: un respiro lento ogni 5,2 secondi.</p>
+          <p v-show="s === 'listening'" style="display:none">Gli archi si aprono di 8 gradi e pulsano con la tua voce. Per 8 secondi, le richieste successive non hanno bisogno della parola di attivazione.</p>
+          <p v-show="s === 'thinking'" style="display:none">Gli archi girano attorno al punto, un giro ogni 1,6 secondi. Dopo 1,2 secondi la didascalia dice «Ci sto lavorando.»</p>
+          <p v-show="s === 'done'" style="display:none">Il punto si illumina una volta e si assesta in 320 ms.</p>
+        </div>
+        <p class="hud-line">Con il movimento ridotto il marchio resta fermo e l’etichetta indica lo stato.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Per app gesture profiles -->
+<section class="chapter" id="profiles" aria-labelledby="profiles-title">
+  <div class="wrap ruled">
+    <header class="chapter-head">
+      <p class="kicker"><span class="mono-num">04</span>Profili per app</p>
+      <h2 id="profiles-title" class="chapter-title">Ogni app parla la sua lingua.</h2>
+      <p class="chapter-lead">Sigil sa quale app è in primo piano e ne carica il profilo. Su Instagram uno scorrimento rapido passa al Reel successivo, su YouTube due dita saltano al video successivo. Le app senza profilo usano quello generale.</p>
+    </header>
+    <figure class="figure">
+      <div class="frame">
+        <img src="../assets/illustrations/it/gesture-profiles.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="Tre schede di vetro, Lettore, Musica e Fotocamera, che collegano gesti e azioni in ciascuna app. Il profilo Musica è attivo e illuminato in primo piano.">
+      </div>
+      <figcaption><span class="fig-k">FIG. 04</span>Il profilo cambia con l’app in primo piano.</figcaption>
+    </figure>
+    <div class="profiles">
+      <div class="profiles-tabs" v-tabs>
+        <div class="tabs tabs-pills" role="tablist" aria-label="Profili dei gesti">
+          <button class="tab" type="button" v-tab="p-whatsapp"><glyph-fox class="i18" data-icon="brand-whatsapp" size="18"></glyph-fox><span>WhatsApp</span></button>
+          <button class="tab" type="button" v-tab="p-instagram"><glyph-fox class="i18" data-icon="brand-instagram" size="18"></glyph-fox><span>Instagram</span></button>
+          <button class="tab" type="button" v-tab="p-youtube"><glyph-fox class="i18" data-icon="brand-youtube" size="18"></glyph-fox><span>YouTube</span></button>
+          <button class="tab" type="button" v-tab="p-general"><glyph-fox class="i18" data-icon="sigil:app-profile" size="18"></glyph-fox><span>Generale</span></button>
+        </div>
+        <div class="p-panel" v-tab-panel="p-whatsapp">
+          <p class="p-meta"><span class="p-meta-k">Pacchetto Android</span><span translate="no">com.whatsapp, com.whatsapp.w4b</span></p>
+          <table class="bindings">
+            <caption class="sr-only">WhatsApp: gesti e relative azioni</caption>
+            <thead class="sr-only"><tr><th scope="col">Gesto</th><th scope="col">Azione</th></tr></thead>
+            <tbody>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-flick" size="20" variant="duotone"></glyph-fox><span>Scorrimento rapido a destra</span></th><td>Scorre a destra dal cursore, per rispondere a quel messaggio</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-left" size="20" variant="duotone"></glyph-fox><span>Due dita a sinistra</span></th><td>Scorre lo schermo a sinistra</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-right" size="20" variant="duotone"></glyph-fox><span>Due dita a destra</span></th><td>Scorre lo schermo a destra</td></tr>
+            </tbody>
+          </table>
+          <p class="p-note">Il resto arriva dal profilo generale. I piani vocali usano il campo di ricerca, la casella del messaggio e il pulsante di invio di WhatsApp, e si fermano comunque prima dell’invio.</p>
+        </div>
+        <div class="p-panel" v-tab-panel="p-instagram" hidden>
+          <p class="p-meta"><span class="p-meta-k">Pacchetto Android</span><span translate="no">com.instagram.android</span></p>
+          <table class="bindings">
+            <caption class="sr-only">Instagram: gesti e relative azioni</caption>
+            <thead class="sr-only"><tr><th scope="col">Gesto</th><th scope="col">Azione</th></tr></thead>
+            <tbody>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-flick" size="20" variant="duotone"></glyph-fox><span>Scorrimento rapido in alto</span></th><td>Reel successivo</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-flick" size="20" variant="duotone"></glyph-fox><span>Scorrimento rapido in basso</span></th><td>Reel precedente</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-left" size="20" variant="duotone"></glyph-fox><span>Due dita a sinistra</span></th><td>Scorre lo schermo a sinistra</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-right" size="20" variant="duotone"></glyph-fox><span>Due dita a destra</span></th><td>Scorre lo schermo a destra</td></tr>
+            </tbody>
+          </table>
+          <p class="p-note">Il resto arriva dal profilo generale.</p>
+        </div>
+        <div class="p-panel" v-tab-panel="p-youtube" hidden>
+          <p class="p-meta"><span class="p-meta-k">Pacchetto Android</span><span translate="no">com.google.android.youtube</span></p>
+          <table class="bindings">
+            <caption class="sr-only">YouTube: gesti e relative azioni</caption>
+            <thead class="sr-only"><tr><th scope="col">Gesto</th><th scope="col">Azione</th></tr></thead>
+            <tbody>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-flick" size="20" variant="duotone"></glyph-fox><span>Scorrimento rapido in alto</span></th><td>Short successivo</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-flick" size="20" variant="duotone"></glyph-fox><span>Scorrimento rapido in basso</span></th><td>Short precedente</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-left" size="20" variant="duotone"></glyph-fox><span>Due dita a sinistra</span></th><td>Video successivo</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-right" size="20" variant="duotone"></glyph-fox><span>Due dita a destra</span></th><td>Video precedente</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-pinch-hold" size="20" variant="duotone"></glyph-fox><span>Pizzico prolungato</span></th><td>Riproduci o pausa</td></tr>
+            </tbody>
+          </table>
+          <p class="p-note">Il resto arriva dal profilo generale.</p>
+        </div>
+        <div class="p-panel" v-tab-panel="p-general" hidden>
+          <p class="p-meta"><span class="p-meta-k">Ogni profilo di app parte da questi gesti</span></p>
+          <table class="bindings">
+            <caption class="sr-only">Generale: gesti e relative azioni</caption>
+            <thead class="sr-only"><tr><th scope="col">Gesto</th><th scope="col">Azione</th></tr></thead>
+            <tbody>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-pinch" size="20" variant="duotone"></glyph-fox><span>Pizzico</span></th><td>Tocco sul cursore</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-double-pinch" size="20" variant="duotone"></glyph-fox><span>Doppio pizzico</span></th><td>Doppio tocco sul cursore</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-pinch-hold" size="20" variant="duotone"></glyph-fox><span>Pizzico prolungato</span></th><td>Pressione prolungata sul cursore</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-open-palm" size="20" variant="duotone"></glyph-fox><span>Palmo aperto</span></th><td>Aprire la Sfera di controllo</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-fist" size="20" variant="duotone"></glyph-fox><span>Pugno</span></th><td>Ascoltare una richiesta</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-up" size="20" variant="duotone"></glyph-fox><span>Due dita in alto o in basso</span></th><td>Scorrere la pagina</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-swipe-left" size="20" variant="duotone"></glyph-fox><span>Due dita ai lati</span></th><td>Scorrere di lato</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-three-fingers" size="20" variant="duotone"></glyph-fox><span>Tre dita</span></th><td>Indietro, home, app recenti, notifiche</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-circle-cw" size="20" variant="duotone"></glyph-fox><span>Cerchio nell’aria</span></th><td>Alzare o abbassare il volume</td></tr>
+            <tr><th scope="row"><glyph-fox class="i20" data-icon="sigil:gesture-flick" size="20" variant="duotone"></glyph-fox><span>Scorrimento rapido</span></th><td>Scorrere in quella direzione</td></tr>
+            </tbody>
+          </table>
+          <p class="p-note">Le app senza un profilo proprio usano questi gesti.</p>
+        </div>
+      </div>
+      <figure class="code-frame">
+        <figcaption class="code-head"><span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-file" translate="no">src/app-profiles/profiles/youtube.json</span></figcaption>
+        <pre translate="no"><code><span class="tk-p">{</span>
+  <span class="tk-k">"id"</span><span class="tk-p">:</span> <span class="tk-s">"youtube"</span><span class="tk-p">,</span>
+  <span class="tk-k">"packages"</span><span class="tk-p">:</span> <span class="tk-p">[</span><span class="tk-s">"com.google.android.youtube"</span><span class="tk-p">],</span>
+  <span class="tk-k">"bindings"</span><span class="tk-p">:</span> <span class="tk-p">{</span>
+    <span class="tk-k">"flick_up"</span><span class="tk-p">:</span> <span class="tk-p">{</span> <span class="tk-k">"type"</span><span class="tk-p">:</span> <span class="tk-s">"swipe"</span><span class="tk-p">,</span> <span class="tk-k">"direction"</span><span class="tk-p">:</span> <span class="tk-s">"up"</span> <span class="tk-p">},</span>
+    <span class="tk-k">"swipe_two_left"</span><span class="tk-p">:</span> <span class="tk-p">{</span>
+      <span class="tk-k">"type"</span><span class="tk-p">:</span> <span class="tk-s">"media"</span><span class="tk-p">,</span> <span class="tk-k">"action"</span><span class="tk-p">:</span> <span class="tk-s">"next"</span>
+    <span class="tk-p">},</span>
+    <span class="tk-k">"pinch_hold"</span><span class="tk-p">:</span> <span class="tk-p">{</span>
+      <span class="tk-k">"type"</span><span class="tk-p">:</span> <span class="tk-s">"media"</span><span class="tk-p">,</span> <span class="tk-k">"action"</span><span class="tk-p">:</span> <span class="tk-s">"play_pause"</span>
+    <span class="tk-p">}</span>
+  <span class="tk-p">}</span>
+<span class="tk-p">}</span></code></pre>
+        <p class="code-note">Un file JSON per app, verificato con uno schema all’avvio. Nessun gesto può inviare, pubblicare o pagare da solo.</p>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- Voice to action: the wave becomes the chain -->
+<section class="scene" id="voice" data-scene="chain" aria-labelledby="voice-title">
+  <header class="chapter-head wrap">
+    <p class="kicker"><span class="mono-num">05</span>Dalla voce all’azione</p>
+    <h2 id="voice-title" class="chapter-title">Dillo una volta. Segui ogni passo.</h2>
+    <p class="chapter-lead">Chiudi il pugno o di’ «Sigil» e chiedi. La richiesta diventa un breve piano di passi visibili, e il piano si ferma prima che qualcosa lasci il tuo telefono.</p>
+  </header>
+  <div class="scene-track">
+    <div class="scene-pin">
+      <figure class="scene-stage frame" data-src="../assets/scenes/chain.svg">
+        <img src="../assets/illustrations/it/voice-action-chain.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="A sinistra la Sfera di controllo ascolta. La voce ne esce come un’onda che diventa una linea di luce attraverso quattro nodi di vetro: aprire Messaggi, trovare Ana, scrivere il messaggio, inviare.">
+        <span class="stage-chip stage-chip-end stage-ask" data-at="1362 408" aria-hidden="true"><glyph-fox class="i16" data-icon="sigil:confirm-action" size="16"></glyph-fox>Inviare ad Ana? Pizzica per confermare.</span>
+      </figure>
+      <div class="scene-copy">
+        <ol class="beats" role="list">
+          <li class="beat"><p class="beat-k">01 &#183; Chiedere</p><h3 class="beat-h">Dillo una volta.</h3><p class="beat-p">«Di’ ad Ana che arrivo con dieci minuti di ritardo.» La voce diventa testo direttamente sul telefono.</p></li>
+          <li class="beat"><p class="beat-k">02 &#183; Pianificare</p><h3 class="beat-h">Segui ogni passo.</h3><p class="beat-p">La richiesta diventa una catena di passi. Ogni nodo si accende solo quando il suo passo è davvero concluso.</p></li>
+          <li class="beat"><p class="beat-k">03 &#183; Confermare</p><h3 class="beat-h">Niente parte senza il tuo sì.</h3><p class="beat-p">Prima di inviare, la catena si ferma e chiede. Un pizzico, un tocco o «sì» proseguono, e 8 secondi di silenzio annullano.</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="wrap ruled">
+    <div class="voice-grid">
+      <div class="demo" aria-labelledby="demo-title">
+        <div class="demo-head">
+          <h3 id="demo-title" class="demo-title">Prova la catena</h3>
+          <span class="hud-chip hud-chip-sm"><glyph-fox class="i14" data-icon="sigil:on-device-model" size="14"></glyph-fox>Simulazione</span>
+        </div>
+        <p class="demo-request"><glyph-fox class="i20" data-icon="sigil:voice" size="20"></glyph-fox><span>«Sigil, scrivi ad Ana su WhatsApp che sto arrivando.»</span></p>
+        <ol class="chain" role="list" v-cloak>
+          {$store.chain.steps.map((step, i) => (
+            <li class="chain-node" :class="$store.chain.cls(i)">
+              <span class="node-orb"><glyph-fox size="18" :name="step.icon"></glyph-fox></span>
+              <span class="node-num">{step.num}</span>
+              <span class="node-label">{step.label}</span>
+            </li>
+          ))}
+        </ol>
+        <noscript>
+          <ol class="chain" role="list">
+            <li class="chain-node"><span class="node-num">01</span><span class="node-label">Aprire WhatsApp</span></li>
+            <li class="chain-node"><span class="node-num">02</span><span class="node-label">Trovare Ana</span></li>
+            <li class="chain-node"><span class="node-num">03</span><span class="node-label">Scrivere «Sto arrivando»</span></li>
+            <li class="chain-node"><span class="node-num">04</span><span class="node-label">Inviare ad Ana? Pizzica per confermare.</span></li>
+            <li class="chain-node"><span class="node-num">05</span><span class="node-label">Inviare</span></li>
+          </ol>
+        </noscript>
+        <div class="demo-actions" v-cloak>
+          <button class="btn btn-primary btn-pill" type="button" v-show="$store.chain.phase === 'idle' || $store.chain.phase === 'sent' || $store.chain.phase === 'canceled'" @click="$store.chain.run()">
+            <glyph-fox class="i18" data-icon="sigil:action-chain" size="18"></glyph-fox><span v-text="$store.chain.phase === 'idle' ? $store.chain.t.run : $store.chain.t.again">Esegui il piano</span>
+          </button>
+          <button class="btn btn-primary btn-pill" type="button" v-show="$store.chain.phase === 'waiting'" @click="$store.chain.confirm()">
+            <glyph-fox class="i18" data-icon="sigil:gesture-pinch" size="18"></glyph-fox><span>Pizzica per confermare</span>
+          </button>
+          <button class="btn btn-ghost btn-pill btn-quiet" type="button" v-show="$store.chain.phase === 'waiting' || $store.chain.phase === 'running'" @click="$store.chain.cancel()">
+            <glyph-fox class="i18" data-icon="sigil:gesture-fist" size="18"></glyph-fox><span>Chiudi il pugno per annullare</span>
+          </button>
+          <span class="demo-timer" v-show="$store.chain.phase === 'waiting'" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15"/><circle class="demo-timer-run" cx="18" cy="18" r="15" pathLength="100" :style="{ strokeDashoffset: 100 - $store.chain.left * 12.5 }"/></svg><b v-text="$store.chain.left">8</b></span>
+        </div>
+        <p class="demo-status" role="status" v-text="$store.chain.status">Pronto. Niente parte finché non lo chiedi.</p>
+        <p class="demo-note">Una simulazione nel tuo browser. Sul telefono, lo stesso piano si svolge dentro WhatsApp, un passo visibile alla volta.</p>
+      </div>
+      <aside class="rule" aria-labelledby="rule-title">
+        <p class="kicker">La regola della conferma</p>
+        <h3 id="rule-title" class="rule-title">Non invia e non pubblica mai senza la tua conferma.</h3>
+        <ul class="rule-list" role="list">
+          <li><glyph-fox class="i20" data-icon="sigil:confirm-action" size="20"></glyph-fox><span>Inviare, pubblicare, chiamare, pagare, eliminare e cambiare le impostazioni aspettano sempre un sì esplicito.</span></li>
+          <li><glyph-fox class="i20" data-icon="clock" size="20"></glyph-fox><span>8 secondi senza risposta annullano. Niente viene mai confermato per tempo scaduto.</span></li>
+          <li><glyph-fox class="i20" data-icon="sigil:recent-people" size="20"></glyph-fox><span>Un messaggio a una persona per richiesta. Niente cicli, niente programmazioni, niente invii di massa.</span></li>
+          <li><glyph-fox class="i20" data-icon="sigil:wake-word" size="20"></glyph-fox><span>Di’ «Sigil, fermati» in qualsiasi passo e il resto viene annullato.</span></li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- On device privacy -->
+<section class="chapter chapter-privacy" id="privacy" aria-labelledby="privacy-title">
+  <div class="wrap ruled">
+    <header class="chapter-head chapter-head-center">
+      <p class="kicker"><span class="mono-num">06</span>Sul dispositivo</p>
+      <h2 id="privacy-title" class="chapter-title chapter-title-xl"><span class="l">Lo vede il tuo telefono.</span> <span class="l">Lo custodisce lui.</span></h2>
+      <p class="chapter-lead">Tracciamento della mano, riconoscimento vocale e modello linguistico funzionano sul telefono. Niente account, niente server, niente registrazioni.</p>
+    </header>
+    <figure class="figure">
+      <div class="frame">
+        <img src="../assets/illustrations/it/on-device-brain.svg" width="1600" height="1000" loading="lazy" decoding="async" alt="Un telefono custodisce una sfera neurale luminosa. I fotogrammi della fotocamera da sinistra e un’onda vocale da destra entrano e restano dentro. Il cloud resta fuori, segnato come non necessario.">
+      </div>
+      <figcaption><span class="fig-k">FIG. 06</span>Fotogrammi e voce entrano e restano dentro. Il cloud non serve.</figcaption>
+    </figure>
+    <ul class="facts" role="list">
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:camera-tracking" size="24" variant="duotone"></glyph-fox><h3>I fotogrammi restano in memoria</h3><p>I fotogrammi della fotocamera vengono elaborati e scartati. Solo 42 numeri per fotogramma, i punti della tua mano, arrivano all’interfaccia.</p></li>
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:wake-word" size="24" variant="duotone"></glyph-fox><h3>La parola di attivazione resta in locale</h3><p>Il rilevatore della parola funziona sul telefono e scarta di continuo l’audio che la precede.</p></li>
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:offline" size="24" variant="duotone"></glyph-fox><h3>Niente account, niente analisi</h3><p>Niente del tuo schermo viene caricato, registrato o contato. I dati di taratura restano sul telefono.</p></li>
+      <li class="fact"><glyph-fox class="i24" data-icon="sigil:camera-off" size="24" variant="duotone"></glyph-fox><h3>La fotocamera non si nasconde mai</h3><p>Un indicatore di tracciamento resta sullo schermo finché la fotocamera è attiva. Un tocco o le parole «spegni la fotocamera» la fermano.</p></li>
+    </ul>
+    <div class="tiers" v-data="{ i: 3, rams: [3, 4, 6, 8, 12, 16] }">
+      <div class="tiers-copy">
+        <h3 class="tiers-title">Un modello su misura per il tuo telefono.</h3>
+        <p class="tiers-text">Sigil sceglie il livello più grande che sta nel 35 per cento della memoria del telefono. I modelli si scaricano solo con il tuo consenso, via Wi-Fi in modo predefinito, e vengono verificati prima dell’uso.</p>
+        <div class="tiers-control">
+          <label class="tiers-label" for="ram">Memoria del telefono</label>
+          <output class="tiers-value" for="ram" v-text="rams[i] + ' GB'">8 GB</output>
+          <input id="ram" class="range range-primary" type="range" min="0" max="5" step="1" value="3" v-model.number="i" :aria-valuetext="rams[i] + ' GB'" aria-valuetext="8 GB">
+          <div class="tiers-ticks" aria-hidden="true"><span>3</span><span>4</span><span>6</span><span>8</span><span>12</span><span>16</span></div>
+          <p class="tiers-budget">Sigil si riserva <b v-text="$store.site.num(rams[i] * 0.35) + ' GB'">2,8 GB</b></p>
+        </div>
+      </div>
+      <div class="tiers-table-wrap">
+        <table class="tiers-table">
+          <caption class="sr-only">Livelli di modello secondo la memoria del telefono</caption>
+          <thead>
+            <tr><th scope="col">Livello</th><th scope="col">Cosa funziona</th><th scope="col">Download</th><th scope="col">Memoria di picco</th></tr>
+          </thead>
+          <tbody>
+            <tr :class="{ 'is-on': rams[i] < 6 }"><th scope="row"><span class="tier-name">Solo regole</span><span class="tier-from">Da 3 GB</span><span class="tier-pick" v-show="rams[i] < 6" style="display:none">Adatto a questo telefono</span></th><td data-label="Cosa funziona">Tracciamento della mano, il riconoscimento vocale di sistema e un interprete di regole per inglese e portoghese</td><td class="num" data-label="Download">circa 8 MB</td><td class="num" data-label="Memoria di picco">circa 60 MB</td></tr>
+            <tr :class="{ 'is-on': rams[i] >= 6 && rams[i] < 8 }"><th scope="row"><span class="tier-name">Leggero</span><span class="tier-from">Da 6 GB</span><span class="tier-pick" v-show="rams[i] >= 6 && rams[i] < 8" style="display:none">Adatto a questo telefono</span></th><td data-label="Cosa funziona">Tracciamento della mano, Whisper base e Qwen2.5 1.5B</td><td class="num" data-label="Download">circa 1,07 GB</td><td class="num" data-label="Memoria di picco">circa 1,4 GB</td></tr>
+            <tr :class="{ 'is-on': rams[i] >= 8 }"><th scope="row"><span class="tier-name">Completo</span><span class="tier-from">Da 8 GB</span><span class="tier-pick" v-show="rams[i] >= 8">Adatto a questo telefono</span></th><td data-label="Cosa funziona">Tracciamento della mano, Whisper small e Qwen2.5 3B</td><td class="num" data-label="Download">circa 2,15 GB</td><td class="num" data-label="Memoria di picco">circa 2,6 GB</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Honest about the platform -->
+<section class="chapter" id="platforms" aria-labelledby="platforms-title">
+  <div class="wrap ruled">
+    <header class="chapter-head">
+      <p class="kicker"><span class="mono-num">07</span>Piattaforme</p>
+      <h2 id="platforms-title" class="chapter-title">Onesto su ogni piattaforma.</h2>
+      <p class="chapter-lead">Controllare altre app è possibile solo su Android. Su iPhone, Sigil funziona nelle proprie schermate e tramite Comandi, e lo dice chiaramente.</p>
+    </header>
+    <div class="platforms">
+      <article class="platform">
+        <p class="platform-k"><glyph-fox class="i20" data-icon="smartphone" size="20"></glyph-fox>Android</p>
+        <h3 class="platform-title">Controllo completo.</h3>
+        <p class="platform-text">Tramite un servizio di Accessibilità che attivi tu, Sigil tocca, scorre, digita e torna indietro, alla home o alle app recenti in qualsiasi app. Il cursore appare sopra tutte le app, e la fotocamera resta attiva con una notifica visibile che puoi fermare.</p>
+        <ul class="ticks" role="list">
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>Dichiarato come strumento di accessibilità per il controllo senza mani</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>Attivato da te, in Impostazioni, Accessibilità</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>Agisce solo dove indichi e solo quando chiedi</span></li>
+        </ul>
+      </article>
+      <article class="platform">
+        <p class="platform-k"><glyph-fox class="i20" data-icon="brand-apple" size="20"></glyph-fox>iOS</p>
+        <h3 class="platform-title">Dentro Sigil e tramite Comandi.</h3>
+        <p class="platform-text">iOS non permette a un’app di leggere, toccare o disegnare sopra altre app, né di usare la fotocamera in background. Su iPhone, Sigil segue la tua mano nelle proprie schermate, apre app e ricerche tramite link, esegue i tuoi Comandi e offre le sue azioni come App Intents all’app Comandi e al tasto Azione.</p>
+        <ul class="ticks" role="list">
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>Gesti, cursore e sfera dentro Sigil</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>Piani vocali tramite link e Comandi</span></li>
+          <li><glyph-fox class="i18" data-icon="check" size="18"></glyph-fox><span>I passi che iOS non consente risultano non riusciti, mai simulati</span></li>
+        </ul>
+      </article>
+    </div>
+    <div class="platform-table-wrap">
+      <table class="platform-table">
+        <caption class="sr-only">Cosa consente ogni piattaforma</caption>
+        <thead><tr><th scope="col">Funzione</th><th scope="col">Android</th><th scope="col">iOS</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Cursore e Sfera di controllo</th><td data-label="Android"><span class="yes">Sopra tutte le app</span></td><td data-label="iOS"><span class="part">Dentro Sigil</span></td></tr>
+          <tr><th scope="row">Gesti in altre app</th><td data-label="Android"><span class="yes">Sì, tramite l’Accessibilità</span></td><td data-label="iOS"><span class="no">No</span></td></tr>
+          <tr><th scope="row">Piani vocali</th><td data-label="Android"><span class="yes">Passo dopo passo, in qualsiasi app</span></td><td data-label="iOS"><span class="part">Tramite link e Comandi</span></td></tr>
+          <tr><th scope="row">Fotocamera con altre app aperte</th><td data-label="Android"><span class="yes">Sì, con una notifica visibile</span></td><td data-label="iOS"><span class="no">No</span></td></tr>
+          <tr><th scope="row">Modelli sul telefono</th><td data-label="Android"><span class="yes">Sì</span></td><td data-label="iOS"><span class="yes">Sì</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Follow the build -->
+<section class="chapter chapter-follow" id="follow" aria-labelledby="follow-title">
+  <div class="follow-glow" aria-hidden="true"></div>
+  <div class="wrap ruled">
+    <header class="chapter-head chapter-head-center">
+      <p class="kicker"><span class="mono-num">08</span>Segui lo sviluppo</p>
+      <h2 id="follow-title" class="chapter-title chapter-title-xl">Costruito alla luce del sole.</h2>
+      <p class="chapter-lead">Sigil è in sviluppo. Il motore dei gesti, i profili per app, il pianificatore e la regola di conferma sono scritti e testati. Il prossimo passo è il tracciamento della mano dal vivo.</p>
+      <div class="follow-ctas">
+        <a class="btn btn-primary btn-lg btn-pill" href="https://github.com/kwy404/sigil">
+          <glyph-fox class="i20" data-icon="brand-github" size="20"></glyph-fox><span>Seguilo su GitHub</span>
+        </a>
+        <a class="btn btn-ghost btn-lg btn-pill btn-quiet" href="https://github.com/kwy404/sigil/blob/main/docs/VISION.md">
+          <span>Leggi la visione</span><glyph-fox class="i18" data-icon="arrow-up-right" size="18"></glyph-fox>
+        </a>
+      </div>
+      <p class="follow-hint">Segui il repository per sapere quando sarà pronta la prima versione.</p>
+    </header>
+    <ol class="milestones" role="list">
+      <li class="milestone is-done"><span class="ms-k">M1 &#183; Fatto</span><h3>Struttura</h3><p>Motore dei gesti con test, profili per app, pianificatore, regola di conferma, esecutore dei piani e il modulo di controllo Android.</p></li>
+      <li class="milestone is-next"><span class="ms-k">M2 &#183; Prossimo</span><h3>Mani dal vivo</h3><p>Tracciamento della mano con MediaPipe sulla fotocamera, calibrato per ogni persona.</p></li>
+      <li class="milestone"><span class="ms-k">M3 &#183; Previsto</span><h3>Android da capo a fondo</h3><p>Gesti e piani che agiscono in WhatsApp, YouTube, TikTok e Chrome su telefoni veri.</p></li>
+      <li class="milestone"><span class="ms-k">M4 &#183; Previsto</span><h3>Linguaggio sul dispositivo</h3><p>Voce e un modello che chiama strumenti sul telefono, dimensionati sulla sua memoria.</p></li>
+      <li class="milestone"><span class="ms-k">M5 &#183; Previsto</span><h3>Store</h3><p>App Intents e Comandi su iOS, e la revisione di accessibilità su Google Play.</p></li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap ruled">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <img src="../assets/logo/sigil-lockup-dark.svg" width="136" height="48" alt="SIGIL" loading="lazy">
+        <p class="foot-tagline">Disegna un segno. Il telefono obbedisce.</p>
+        <p class="foot-built">Realizzato con <a href="https://github.com/kwy404/glyphfox">glyphfox</a>, <a href="https://github.com/kwy404/monsoon">Monsoon</a> e <a href="https://github.com/kwy404/Voodoo.js">Voodoo.js</a>.</p>
+      </div>
+      <nav class="foot-col" aria-label="Prodotto">
+        <p class="foot-k">Prodotto</p>
+        <a href="#how">Come funziona</a>
+        <a href="#gestures">Gesti</a>
+        <a href="#sphere">Sfera</a>
+        <a href="#voice">Voce</a>
+        <a href="#privacy">Privacy</a>
+      </nav>
+      <nav class="foot-col" aria-label="Progetto">
+        <p class="foot-k">Progetto</p>
+        <a href="https://github.com/kwy404/sigil">Codice su GitHub</a>
+        <a href="https://github.com/kwy404/sigil/blob/main/docs/VISION.md">Visione</a>
+        <a href="https://github.com/kwy404/sigil/blob/main/docs/ARCHITECTURE.md">Architettura</a>
+      </nav>
+      <div class="foot-col">
+        <p class="foot-k">Creato da</p>
+        <p class="foot-name">Alexandre Kohler</p>
+        <a class="foot-social" href="https://github.com/kwy404" rel="me"><glyph-fox class="i18" data-icon="brand-github" size="18"></glyph-fox><span>GitHub</span></a>
+        <a class="foot-social" href="https://www.linkedin.com/in/alexandre-silva-173687256/" rel="me"><glyph-fox class="i18" data-icon="brand-linkedin" size="18"></glyph-fox><span>LinkedIn</span></a>
+      </div>
+    </div>
+    <div class="foot-langs">
+      <p class="foot-k">Lingue</p>
+      <ul class="foot-lang-list" role="list"><li><a href="../" hreflang="en" lang="en" data-lang="en">English</a></li><li><a href="../pt-br/" hreflang="pt-BR" lang="pt-BR" data-lang="pt-BR">Português (Brasil)</a></li><li><a href="../es/" hreflang="es" lang="es" data-lang="es">Español</a></li><li><a href="../fr/" hreflang="fr" lang="fr" data-lang="fr">Français</a></li><li><a href="../de/" hreflang="de" lang="de" data-lang="de">Deutsch</a></li><li><a href="../it/" hreflang="it" lang="it" data-lang="it" aria-current="page">Italiano</a></li><li><a href="../ja/" hreflang="ja" lang="ja" data-lang="ja">日本語</a></li><li><a href="../zh-hans/" hreflang="zh-Hans" lang="zh-Hans" data-lang="zh-Hans">简体中文</a></li></ul>
+    </div>
+    <div class="foot-bottom">
+      <p>&#169; 2026 Alexandre Kohler. Codice con licenza MIT.</p>
+      <p>WhatsApp, Instagram, YouTube, Android e iOS sono marchi dei rispettivi proprietari. Sigil non è affiliato con loro.</p>
+      <a class="foot-top-link" href="#top"><span>Torna su</span><glyph-fox class="i16" data-icon="arrow-up" size="16"></glyph-fox></a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
