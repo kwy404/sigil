@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 
+import { getOnDeviceModel } from '../adapters/model/platform';
 import type { ProfileRegistry } from '../app-profiles';
 import {
   ActionPlanner,
@@ -28,6 +29,8 @@ export interface PlanRunner {
   confirmation: PendingConfirmation | null;
   running: boolean;
   plan(text: string): Promise<void>;
+  /** Starts loading the on device model, for example when the user starts to speak. */
+  prepare(): void;
   /** Plans again with the app picked from the options of a choose outcome. */
   choose(choice: AppChoice): void;
   run(): Promise<void>;
@@ -35,16 +38,23 @@ export interface PlanRunner {
 }
 
 /**
- * Plans requests against the apps on the phone and runs the plans with the
- * device controller of this build. A confirm step waits for an explicit
- * answer from the screen; the voice and gesture answers come with the voice
- * session.
+ * Plans requests against the apps on the phone, with the on device model when
+ * one is downloaded and loaded and with the rules otherwise, and runs the
+ * plans with the device controller of this build. A confirm step waits for an
+ * explicit answer from the screen; the voice and gesture answers come with
+ * the voice session.
  */
 export function usePlanRunner(registry: ProfileRegistry, ui: SigilInterface, locale: string): PlanRunner {
-  const planner = useMemo(
-    () => new ActionPlanner({ profiles: registry, installedApps, platform: planPlatform() }),
-    [registry],
-  );
+  const planner = useMemo(() => {
+    const onDevice = getOnDeviceModel();
+    return new ActionPlanner({
+      profiles: registry,
+      installedApps,
+      platform: planPlatform(),
+      model: onDevice.plannerModel,
+      modelTimeoutMs: () => onDevice.plannerTimeoutMs(),
+    });
+  }, [registry]);
   const [request, setRequest] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<PlanOutcome | null>(null);
   const [events, setEvents] = useState<StepEvent[]>([]);
@@ -62,6 +72,8 @@ export function usePlanRunner(registry: ProfileRegistry, ui: SigilInterface, loc
     },
     [planner, locale],
   );
+
+  const prepare = useCallback(() => planner.prepareModel({ locale, foregroundPackage: foregroundApp() }), [planner, locale]);
 
   const choose = useCallback(
     (choice: AppChoice) => {
@@ -111,5 +123,5 @@ export function usePlanRunner(registry: ProfileRegistry, ui: SigilInterface, loc
 
   const stop = useCallback(() => abort.current?.abort(), []);
 
-  return { request, outcome, events, result, confirmation, running, plan, choose, run, stop };
+  return { request, outcome, events, result, confirmation, running, plan, prepare, choose, run, stop };
 }

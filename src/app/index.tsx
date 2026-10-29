@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProfileRegistry } from '@/app-profiles';
 import { GestureLab } from '@/features/gesture-lab';
 import { LanguagePanel } from '@/features/language-panel';
+import { ModelPanel } from '@/features/model-panel';
 import { PlannerPanel } from '@/features/planner-panel';
 import { ProfilesPanel } from '@/features/profiles-panel';
 import { SphereQuickActions } from '@/features/sphere-quick-actions';
@@ -68,6 +69,7 @@ export default function HomeScreen() {
       </Card>
 
       <PlannerPanel registry={registry} ui={ui} />
+      <ModelPanel />
       <GestureLab selectedId={sampleId} onSelect={setSampleId} />
       <ProfilesPanel registry={registry} />
       <SystemPanel />

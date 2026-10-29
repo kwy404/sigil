@@ -34,7 +34,8 @@ function statusTone(outcome: PlanOutcome): Tone {
 const STEP_TONES: Record<StepStatus, Tone> = { running: 'accent', done: 'success', failed: 'danger', cancelled: 'neutral' };
 
 /**
- * Turns a request into a plan with the rule based fallback, shows the steps in
+ * Turns a request into a plan with the on device model when one is
+ * downloaded and loaded, or with the rule based fallback, shows the steps in
  * the app language and runs them on request. A name that fits several apps
  * shows the options; every send, post or close all waits for a yes on screen.
  */
@@ -47,6 +48,8 @@ export function PlannerPanel({ registry, ui }: { registry: ProfileRegistry; ui: 
   const { outcome, events, result, confirmation, running } = runner;
 
   const listen = async () => {
+    // The model loads while the user speaks, so the request may find it ready.
+    runner.prepare();
     setListening(true);
     try {
       const transcript = await speech.listen({ locale: speechLocale });

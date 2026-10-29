@@ -6,7 +6,7 @@ Read [docs/VISION.md](docs/VISION.md) for the product, [docs/ARCHITECTURE.md](do
 
 ## Status
 
-Hands free control runs on Android: milestones M2 (live hands) and M3 (Android end to end), and the speech half of M4. GitHub Actions builds the release APK, and a smoke test runs it on an emulator with a recorded demo hand. Real hands and voices on real phones are the next test.
+Hands free control runs on Android: milestones M2 (live hands), M3 (Android end to end) and M4 (speech and the on device language model). GitHub Actions builds the release APK, and a smoke test runs it on an emulator with a recorded demo hand. Real hands and voices on real phones are the next test.
 
 On an Android phone:
 
@@ -26,14 +26,28 @@ Works and is tested without a device:
 - App requests: open, close and switch apps by the name the launcher shows or a nickname ("insta", "zap"), with a question when a name fits several apps; places inside apps, chats, websites, timers, alarms, the flashlight and the tutorial.
 - Voice requests: the voice session checks each transcript (confidence, alternatives, unclear speech) before planning, asks to repeat once at most, and takes yes and no by voice, pinch, fist or tap. The Kotlin voice gate has its own unit tests.
 - System controls: volume up, down, to a percent, mute and unmute (media by default, ring and alarm when named), play, pause, next and previous for any player, skipping seconds and changing the playback speed, likes, brightness, back, home, recent apps, notifications, quick settings, lock screen, screenshot, power menu, and the Wi-Fi, Bluetooth and Do Not Disturb panels. The Control Sphere has volume and brightness quick actions with live level rings.
-- Voice and model adapters with mocks, and the download and memory budget of the candidate models.
+- On device language model (milestone M4): llama.rn (llama.cpp) runs Qwen2.5 1.5B Instruct on phones with 6 GB of RAM (lite tier) or Qwen2.5 3B Instruct with 8 GB (full tier), picked from the RAM expo-device reports. The settings section "On device model" shows the recommended tier, its size and memory, and downloads the model once from Hugging Face over Wi-Fi, resumable and checked against a SHA-256 pinned in the code; it can pause, cancel and delete. The planner uses the model when it is loaded and falls back to the rules on a timeout, an invalid call or no model; without a model the rule parser still understands the built in commands. See [On device model](#on-device-model).
 
 Needs real phones or the next milestones:
 
 - Tuning with real hands: the control box, the gesture thresholds, light and distance, and the battery cost of the camera. The emulator only proves that the pieces start, draw and talk to each other.
 - Plans inside other apps (WhatsApp, Instagram, YouTube) depend on their screens, so their selectors must be checked on phones.
 - Speech depends on the phone: an on device recognizer for the language needs Android 12 or later, and the cleaned audio Android 13 or later.
-- A local language model (llama.rn); until it lands, the rule parser plans every request.
+- The language model: llama.rn is in the release APK and the app starts with it on the emulator, but no model has run on a phone yet. Speed, memory and the quality of the tool calls in the eight languages need real phones.
+
+## On device model
+
+| Tier | Model | File (Q4_K_M GGUF) | Phones |
+| --- | --- | --- | --- |
+| Rules only | none | none | all |
+| Lite | Qwen2.5 1.5B Instruct | 1.12 GB, Apache 2.0 | 6 GB of RAM and more |
+| Full | Qwen2.5 3B Instruct | 2.10 GB, Qwen Research License | 8 GB of RAM and more |
+
+- The files come from the official Qwen repositories on Hugging Face, pinned to a commit, with their size and SHA-256 in `src/adapters/catalog.ts`. A file that does not match is deleted.
+- Downloads use Wi-Fi only unless the user allows mobile data, check the free storage first, continue after a pause, a lost connection or a restart, and can be cancelled. The model file is the only thing Sigil downloads; requests never leave the phone, and there is no backend.
+- The model runs on the CPU with a 2,048 token context and about half the cores. It loads when the user starts to speak or at the first request, and is released in the background, under memory pressure and after five minutes without requests.
+- The answer is constrained by a JSON schema to exactly one call to one of the intent tools, through the model's own chat template, and then goes through the same validation and confirmation rules as the rule parser's.
+- The full tier's license allows research and evaluation; commercial use of Qwen2.5 3B needs a license from Alibaba Cloud.
 
 ## Languages
 
@@ -78,12 +92,12 @@ The guided tour asks for each access on the first launch. By hand: open Settings
 ```
 src/
   app/               screens (Expo Router)
-  features/          home screen sections
+  features/          home screen sections, the on device model settings included
   i18n/              typed messages in eight languages, language detection and picker
   gesture-engine/    landmarks, One Euro filter, classifier, synthetic hands
   app-profiles/      JSON gesture profiles and their registry
   sigil-core/        intents, voice parser in eight languages, planner, confirmation policy, executor
-  adapters/          speech to text and local model ports, model catalog
+  adapters/          speech to text port, on device model (llama.rn engine, downloader, tiers), model catalog
   system-control/    device controllers, gesture dispatch, volume and brightness levels
   cursor-overlay/    holographic cursor (Skia, Reanimated)
   control-sphere/    Control Sphere hub and level rings (Skia, Reanimated)
@@ -96,6 +110,7 @@ src/
   settings/          the settings file: language, tour, voice and speech
 modules/
   sigil-control/     Android native module (Kotlin) and its config plugin
+  sigil-memory/      Android native module (Kotlin): CPU cores, free memory and memory pressure for the model
 store/
   descriptions/      store title and short description per language
 docs/

@@ -581,4 +581,81 @@ export const es: Messages = {
       cameraService: (error) => `Servicio de cámara: ${error}`,
     },
   },
+  model: {
+    title: 'Modelo en el dispositivo',
+    caption:
+      'Un modelo de lenguaje pequeño, en el propio teléfono, entiende peticiones dichas con tus propias palabras y elige una acción para ellas. Sin él, el analizador de reglas sigue entendiendo los comandos integrados.',
+    privacy:
+      'El modelo se descarga una sola vez de Hugging Face y se comprueba con su SHA-256. Después funciona sin conexión: tus peticiones nunca salen del teléfono.',
+    unsupported:
+      'Esta compilación no tiene el motor del modelo (Expo Go o la web), así que Sigil usa el analizador de reglas. Instala la compilación de Android para descargar un modelo.',
+    rows: {
+      memory: 'Memoria del teléfono',
+      recommended: 'Recomendado para este teléfono',
+      model: 'Modelo',
+      size: 'Descarga',
+      peak: 'Memoria en uso',
+      license: 'Licencia',
+    },
+    tiers: {
+      rules: { name: 'Solo reglas', description: 'Sin descarga. El analizador de reglas entiende los comandos integrados en ocho idiomas.' },
+      lite: { name: 'Ligero', description: 'Qwen2.5 1.5B. Entiende peticiones dichas con tus propias palabras. Teléfonos con 6 GB de memoria o más.' },
+      full: { name: 'Completo', description: 'Qwen2.5 3B. Mejor con peticiones indirectas y más largas. Teléfonos con 8 GB de memoria o más.' },
+    },
+    auto: (tier) => `Automático: ${tier}`,
+    chips: {
+      recommended: 'recomendado',
+      downloaded: 'descargado',
+      partial: 'descargado en parte',
+      needsMemory: (size) => `necesita ${size}`,
+    },
+    status: {
+      absent: 'No descargado.',
+      downloading: (done, total, percent) => `Descargando: ${done} de ${total} (${percent}).`,
+      paused: {
+        user: (done, total) => `En pausa en ${done} de ${total}.`,
+        network: (done, total) => `Esperando el Wi-Fi en ${done} de ${total}.`,
+        interrupted: (done, total) => `Se detuvo en ${done} de ${total} al cerrarse Sigil.`,
+      },
+      verifying: 'Comprobando el archivo con su SHA-256.',
+      ready: 'Descargado y verificado.',
+      failed: {
+        offline: 'Sin conexión. Conéctate a internet y vuelve a intentarlo.',
+        wifi_required: 'Esperando el Wi-Fi. Conéctate a una red Wi-Fi o permite los datos móviles abajo.',
+        no_space: (size) => `No hay suficiente espacio libre. La descarga necesita ${size}.`,
+        network: 'La descarga se detuvo. Vuelve a intentarlo para seguir donde se quedó.',
+        checksum: 'El archivo no coincidía con su SHA-256, así que Sigil lo borró. Vuelve a intentarlo.',
+        storage: 'El almacenamiento del teléfono no pudo guardar el archivo.',
+      },
+    },
+    engine: {
+      none: 'Se carga en memoria con la primera petición de voz.',
+      idle: 'Fuera de la memoria. Se carga de nuevo con la próxima petición de voz.',
+      loading: 'Cargando en memoria.',
+      ready: 'En memoria. Se libera tras cinco minutos sin peticiones, en segundo plano o cuando el teléfono necesita memoria.',
+      failed: 'El modelo no se pudo cargar, así que por ahora Sigil usa el analizador de reglas.',
+    },
+    buttons: {
+      download: (size) => `Descargar (${size})`,
+      resume: 'Reanudar la descarga',
+      pause: 'Pausar',
+      cancel: 'Cancelar la descarga',
+      retry: 'Volver a intentarlo',
+      delete: 'Borrar el modelo',
+    },
+    confirmDelete: {
+      title: '¿Borrar el modelo?',
+      message: (size) => `Así liberas ${size}. Puedes volver a descargarlo más tarde.`,
+      confirm: 'Borrar',
+      keep: 'Conservar',
+    },
+    cellular: {
+      label: 'Usar datos móviles',
+      caption: 'Desactivado: el modelo se descarga solo por Wi-Fi.',
+    },
+    units: {
+      gb: (value) => `${value} GB`,
+      mb: (value) => `${value} MB`,
+    },
+  },
 };

@@ -1,6 +1,7 @@
 import { AppRegistry, AppState, PermissionsAndroid, Platform } from 'react-native';
 
 import type { ControlAction } from '../../modules/sigil-control';
+import { getOnDeviceModel } from '../adapters/model/platform';
 import { MockSpeechToText, NativeSpeechToText, SpeechUnavailableError, type SpeechToText } from '../adapters/voice';
 import { ProfileRegistry } from '../app-profiles/registry';
 import { gestureKey } from '../gesture-engine/gestures';
@@ -126,7 +127,14 @@ if (Platform.OS === 'android') {
  */
 export class Sigil {
   readonly profiles = ProfileRegistry.withBuiltins();
-  readonly planner = new ActionPlanner({ profiles: this.profiles, installedApps, platform: planPlatform() });
+  /** Plans with the on device model when one is downloaded and loaded, and with the rules otherwise. */
+  readonly planner = new ActionPlanner({
+    profiles: this.profiles,
+    installedApps,
+    platform: planPlatform(),
+    model: getOnDeviceModel().plannerModel,
+    modelTimeoutMs: () => getOnDeviceModel().plannerTimeoutMs(),
+  });
   readonly native = getNativeControl();
   /** The speech engine of this build, for the voice session and the tutorial's dry run. */
   readonly speech: SpeechToText;

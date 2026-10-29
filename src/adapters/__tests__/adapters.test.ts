@@ -3,7 +3,7 @@ import { describe, expect, it } from '@jest/globals';
 import { ProfileRegistry } from '../../app-profiles';
 import { ActionPlanner, toolDefinitions } from '../../sigil-core';
 import { footprint, MODEL_CATALOG, MODEL_TIERS, recommendTier } from '../catalog';
-import { extractToolCallsFromText, MockChatEngine, ToolCallingModel, type ChatEngine } from '../model';
+import { buildMessages, extractToolCallsFromText, MockChatEngine, ToolCallingModel, type ChatEngine } from '../model';
 import { ListenAbortedError, MockSpeechToText } from '../voice';
 
 const profiles = ProfileRegistry.withBuiltins();
@@ -58,8 +58,19 @@ describe('ToolCallingModel', () => {
     expect(request.toolChoice).toBe('required');
     expect(request.tools).toEqual(toolDefinitions());
     expect(request.messages[0].content).toContain('exactly one tool call');
-    expect(request.messages[0].content).toContain('WhatsApp');
-    expect(request.messages[1]).toEqual({ role: 'user', content: 'search for lofi beats on YouTube' });
+    expect(request.messages[0].content).toContain('Write app names as the user said them');
+    expect(request.messages[1]).toEqual({ role: 'system', content: 'App on screen: unknown. Request language: en-US.' });
+    expect(request.messages[2]).toEqual({ role: 'user', content: 'search for lofi beats on YouTube' });
+  });
+
+  it('keeps the first system message the same for every request, so the runtime can cache it with the tools', () => {
+    const first = buildMessages('open YouTube', { locale: 'en-US', foregroundApp: null, knownApps: ['WhatsApp', 'zap'] });
+    // A phone with hundreds of apps installed gets the same system message: the names are not listed.
+    const installed = Array.from({ length: 300 }, (_, i) => `App ${i}`);
+    const second = buildMessages('manda oi pra Ana', { locale: 'pt-BR', foregroundApp: 'WhatsApp', knownApps: installed });
+    expect(second[0]).toEqual(first[0]);
+    expect(first[0].content).not.toContain('zap');
+    expect(second[1].content).toBe('App on screen: WhatsApp. Request language: pt-BR.');
   });
 
   it('falls back to JSON in the text channel', async () => {
@@ -95,7 +106,7 @@ describe('model catalog', () => {
 
   it('adds up downloads and counts speech and language models as taking turns', () => {
     expect(footprint(['hand-landmarker', 'whisper-base-q5_1', 'qwen2.5-1.5b-q4_k_m'])).toEqual({
-      downloadMb: 1068,
+      downloadMb: 1134,
       peakMemoryMb: 1410,
       residentMemoryMb: 1610,
     });

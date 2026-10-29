@@ -19,6 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "allowBackup": false,
       "package": "com.kwy404.sigil"
     },
     "web": {
@@ -44,7 +45,13 @@
           }
         }
       ],
-      "./modules/sigil-control/app.plugin.js"
+      "./modules/sigil-control/app.plugin.js",
+      [
+        "llama.rn",
+        {
+          "enableOpenCLAndHexagon": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

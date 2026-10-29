@@ -1,13 +1,24 @@
 import type { LanguageModel, ModelContext, ModelReply } from '../../sigil-core/model';
 import type { RawToolCall, ToolDefinition } from '../../sigil-core/tools';
-import type { ChatEngine, ChatMessage } from './chat-engine';
+import type { ChatEngine, ChatMessage, ChatRequest } from './chat-engine';
 
 export interface ToolCallingModelOptions {
   temperature?: number;
   maxTokens?: number;
 }
 
-/** System prompt for small instruction tuned models. Short on purpose: every token costs time on a phone. */
+/**
+ * Messages for small instruction tuned models. Short on purpose: every token
+ * costs time on a phone. The first system message (and the tool list an
+ * engine adds to it) never changes between requests, so the runtime keeps it
+ * in its KV cache and evaluates only the short context note and the request.
+ * Anything that varies comes after it.
+ *
+ * The app names Sigil knows are not listed: with the apps installed on the
+ * phone they run to hundreds of names, change with every install and would
+ * not fit the context. The model copies the name the user said, and Sigil
+ * finds the app, nicknames included.
+ */
 export function buildMessages(request: string, context: ModelContext): ChatMessage[] {
   const system = [
     'You are Sigil, a hands free phone companion. Turn the user request into exactly one tool call.',
@@ -15,12 +26,13 @@ export function buildMessages(request: string, context: ModelContext): ChatMessa
     '- Call one tool only. If the request needs several actions, call the first one.',
     '- Use clarify when the request is ambiguous or misses a contact, an app or a message text.',
     '- Never invent contacts, messages or captions. Copy them from the request, in the language the user used.',
+    '- Write app names as the user said them, nicknames included; Sigil finds the app on the phone.',
     '- One contact per message. Sigil applies its own safety rules after you, so just pick the tool.',
-    `Known apps: ${[...new Set(context.knownApps)].join(', ')}.`,
-    `App on screen: ${context.foregroundApp ?? 'unknown'}. Request language: ${context.locale}.`,
   ].join('\n');
+  const note = `App on screen: ${context.foregroundApp ?? 'unknown'}. Request language: ${context.locale}.`;
   return [
     { role: 'system', content: system },
+    { role: 'system', content: note },
     { role: 'user', content: request },
   ];
 }
@@ -77,7 +89,7 @@ export function extractToolCallsFromText(text: string): RawToolCall[] {
 /**
  * LanguageModel backed by an on device chat engine with tool calling. The
  * engine is looked up on every call so the weights can be loaded lazily and
- * released when idle.
+ * released when idle; the getter returns null while no model is installed.
  */
 export class ToolCallingModel implements LanguageModel {
   readonly kind = 'local' as const;
@@ -88,8 +100,15 @@ export class ToolCallingModel implements LanguageModel {
     private readonly options: ToolCallingModelOptions = {},
   ) {}
 
+  /** True when an engine is installed and its weights are loaded. */
   isReady(): boolean {
-    return this.engine() !== null;
+    const engine = this.engine();
+    return engine !== null && (engine.isReady?.() ?? true);
+  }
+
+  /** Loads the weights and caches the system prompt and the tools, without a request. */
+  prepare(context: ModelContext, tools: readonly ToolDefinition[]): void {
+    this.engine()?.prepare?.(this.request('', context, tools));
   }
 
   async propose(
@@ -102,17 +121,18 @@ export class ToolCallingModel implements LanguageModel {
     if (!engine) {
       throw new Error(`${this.id} is not loaded.`);
     }
-    const response = await engine.complete(
-      {
-        messages: buildMessages(request, context),
-        tools,
-        toolChoice: 'required',
-        temperature: this.options.temperature ?? 0.1,
-        maxTokens: this.options.maxTokens ?? 200,
-      },
-      signal,
-    );
+    const response = await engine.complete(this.request(request, context, tools), signal);
     const toolCalls = response.toolCalls.length > 0 ? response.toolCalls : extractToolCallsFromText(response.text);
     return { toolCalls, text: response.text };
+  }
+
+  private request(text: string, context: ModelContext, tools: readonly ToolDefinition[]): ChatRequest {
+    return {
+      messages: buildMessages(text, context),
+      tools,
+      toolChoice: 'required',
+      temperature: this.options.temperature ?? 0.1,
+      maxTokens: this.options.maxTokens ?? 200,
+    };
   }
 }
