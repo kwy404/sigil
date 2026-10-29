@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: color.hairlineStrong,
   },
-  chips: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   micStage: { height: 200, alignItems: 'center', justifyContent: 'center' },
   ring: {
     position: 'absolute',

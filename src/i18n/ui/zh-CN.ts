@@ -60,6 +60,7 @@ export const uiZhCN: UiMessages = {
   },
   pill: {
     placeholder: '说出或输入指令',
+    short: '对 Sigil 说',
     openLive: '打开实时',
     openCommand: '打开指令面板',
     start: '启动 Sigil',
@@ -408,6 +409,7 @@ export const uiZhCN: UiMessages = {
       body: '随时可以从底部栏启动 Sigil。也可以随时在设置中重新开始教程。',
       later: '留待以后',
       allDone: '全部设置完成。',
+      more: (count: number) => `还有 ${count} 项`,
       finish: '开始使用 Sigil',
     },
   },

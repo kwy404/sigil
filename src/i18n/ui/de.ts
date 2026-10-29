@@ -60,6 +60,7 @@ export const uiDe: UiMessages = {
   },
   pill: {
     placeholder: 'Befehl sagen oder tippen',
+    short: 'Frag Sigil',
     openLive: 'Live öffnen',
     openCommand: 'Öffnet das Befehlsfenster',
     start: 'Sigil starten',
@@ -430,6 +431,7 @@ export const uiDe: UiMessages = {
       body: 'Starte Sigil jederzeit über die Leiste unten. Wiederhole dieses Tutorial jederzeit in den Einstellungen.',
       later: 'Für später',
       allDone: 'Alles ist eingerichtet.',
+      more: (count: number) => `und ${count} weitere`,
       finish: 'Sigil verwenden',
     },
   },

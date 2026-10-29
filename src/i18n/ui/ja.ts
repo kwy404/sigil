@@ -60,6 +60,7 @@ export const uiJa: UiMessages = {
   },
   pill: {
     placeholder: 'コマンドを話すか入力',
+    short: 'Sigil に伝える',
     openLive: 'ライブを開く',
     openCommand: 'コマンドシートを開きます',
     start: 'Sigil を開始',
@@ -414,6 +415,7 @@ export const uiJa: UiMessages = {
       body: 'いつでも下のバーから Sigil を開始できます。チュートリアルは設定からいつでもやり直せます。',
       later: 'あとまわし',
       allDone: 'すべて設定済みです。',
+      more: (count: number) => `ほか ${count} 件`,
       finish: 'Sigil を使いはじめる',
     },
   },

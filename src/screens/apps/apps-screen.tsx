@@ -40,7 +40,7 @@ export function AppsScreen() {
             {t.featured}
           </Txt>
           <Txt variant="title2">{ctx.appName(GENERAL_PROFILE_ID)}</Txt>
-          <Txt variant="footnote" tone="secondary" numberOfLines={3}>
+          <Txt variant="footnote" tone="secondary">
             {t.about.general}
           </Txt>
           <Txt variant="mono" tone="tertiary">

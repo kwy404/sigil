@@ -187,7 +187,7 @@ export function CommandSheet() {
                     onPress={() => void plan(suggestion)}
                     scaleTo={0.98}
                     style={[styles.suggestion, continuous]}>
-                    <Txt variant="callout" numberOfLines={2} style={styles.flex}>
+                    <Txt variant="callout" style={styles.flex}>
                       {m.quote(suggestion)}
                     </Txt>
                     <Txt variant="monoTag" tone="accent">

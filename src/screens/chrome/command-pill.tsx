@@ -1,4 +1,5 @@
 import { router, type Href } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useI18n } from '../../i18n';
@@ -38,6 +39,11 @@ export function CommandPill({ style }: { style?: StyleProp<ViewStyle> }) {
   const status = sessionStatus(session, m);
   const t = m.ui.pill;
   const running = session.phase === 'tracking' || session.phase === 'starting';
+  // The long placeholder when it fits the field, the short one on narrow
+  // phones and in long languages, so it is never cut.
+  const [fieldWidth, setFieldWidth] = useState(0);
+  const [placeholderWidth, setPlaceholderWidth] = useState(0);
+  const placeholder = fieldWidth > 0 && placeholderWidth > fieldWidth ? t.short : t.placeholder;
 
   const transport = () => {
     if (session.phase === 'tracking') session.pause();
@@ -63,6 +69,7 @@ export function CommandPill({ style }: { style?: StyleProp<ViewStyle> }) {
           accessibilityHint={t.openCommand}
           onPress={() => router.push('/command' as Href)}
           scaleTo={0.98}
+          onLayout={(event) => setFieldWidth(Math.floor(event.nativeEvent.layout.width) - FIELD_PAD * 2)}
           style={styles.field}>
           <View style={styles.statusRow}>
             <StatusDot tone={status.tone} live={status.live} size={6} />
@@ -73,10 +80,23 @@ export function CommandPill({ style }: { style?: StyleProp<ViewStyle> }) {
           {session.listening ? (
             <LevelBars level={session.micLevel} />
           ) : (
-            <Txt variant="callout" tone="tertiary" numberOfLines={1}>
-              {t.placeholder}
+            <Txt variant="callout" tone="tertiary" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+              {placeholder}
             </Txt>
           )}
+          <View
+            aria-hidden
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            pointerEvents="none"
+            style={styles.measure}>
+            <Txt
+              variant="callout"
+              onLayout={(event) => setPlaceholderWidth(Math.ceil(event.nativeEvent.layout.width))}
+              style={styles.measureText}>
+              {t.placeholder}
+            </Txt>
+          </View>
         </PressableScale>
         <IconButton
           icon="mic"
@@ -99,6 +119,8 @@ export function CommandPill({ style }: { style?: StyleProp<ViewStyle> }) {
     </View>
   );
 }
+
+const FIELD_PAD = 8;
 
 const styles = StyleSheet.create({
   shadow: {
@@ -127,7 +149,10 @@ const styles = StyleSheet.create({
     borderColor: color.hairline,
     overflow: 'hidden',
   },
-  field: { flex: 1, justifyContent: 'center', gap: 2, paddingHorizontal: 8, minHeight: 48 },
+  field: { flex: 1, justifyContent: 'center', gap: 2, paddingHorizontal: FIELD_PAD, minHeight: 48 },
+  // Wide enough that the measured placeholder never wraps.
+  measure: { position: 'absolute', left: 0, top: -400, width: 1200, opacity: 0 },
+  measureText: { alignSelf: 'flex-start' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   statusText: { flexShrink: 1 },
 });

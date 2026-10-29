@@ -51,7 +51,7 @@ export function CommandCard({
         </View>
         <Glyph name="arrow-up-right" size={16} color={color.text3} />
       </View>
-      <Txt variant="subhead" numberOfLines={3} style={styles.text}>
+      <Txt variant="subhead" style={styles.text}>
         {m.quote(text)}
       </Txt>
     </PressableScale>

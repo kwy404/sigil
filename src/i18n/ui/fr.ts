@@ -60,6 +60,7 @@ export const uiFr: UiMessages = {
   },
   pill: {
     placeholder: 'Dites ou tapez une commande',
+    short: 'Demandez à Sigil',
     openLive: 'Ouvrir En direct',
     openCommand: 'Ouvre la feuille de commande',
     start: 'Démarrer Sigil',
@@ -422,6 +423,7 @@ export const uiFr: UiMessages = {
       body: 'Démarrez Sigil depuis la barre du bas quand vous voulez. Refaites ce tutoriel à tout moment dans Réglages.',
       later: 'Laissé pour plus tard',
       allDone: 'Tout est configuré.',
+      more: (count: number) => `et ${count} de plus`,
       finish: 'Commencer avec Sigil',
     },
   },

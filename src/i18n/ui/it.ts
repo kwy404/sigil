@@ -60,6 +60,7 @@ export const uiIt: UiMessages = {
   },
   pill: {
     placeholder: 'Di’ o scrivi un comando',
+    short: 'Chiedi a Sigil',
     openLive: 'Apri Live',
     openCommand: 'Apre il foglio dei comandi',
     start: 'Avvia Sigil',
@@ -422,6 +423,7 @@ export const uiIt: UiMessages = {
       body: 'Avvia Sigil dalla barra in basso quando vuoi. Ripeti questo tutorial quando vuoi in Impostazioni.',
       later: 'Rimandato',
       allDone: 'È tutto configurato.',
+      more: (count: number) => `e altri ${count}`,
       finish: 'Inizia a usare Sigil',
     },
   },

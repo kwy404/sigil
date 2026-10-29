@@ -63,6 +63,8 @@ export const uiEn = {
   },
   pill: {
     placeholder: 'Say or type a command',
+    /** The placeholder when the long one does not fit the pill. */
+    short: 'Ask Sigil',
     openLive: 'Open Live',
     openCommand: 'Opens the command sheet',
     start: 'Start Sigil',
@@ -427,6 +429,7 @@ export const uiEn = {
       body: 'Start Sigil from the bar at the bottom whenever you want. Redo this tutorial any time in Settings.',
       later: 'Left for later',
       allDone: 'Everything is set up.',
+      more: (count: number) => `and ${count} more`,
       finish: 'Start using Sigil',
     },
   },

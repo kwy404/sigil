@@ -452,15 +452,17 @@ export function DonePage({ later }: { later: string[] }) {
           <>
             {later.slice(0, 4).map((line) => (
               <View key={line} style={styles.bullet}>
-                <StatusDot tone="warning" />
+                <View style={styles.dotLine}>
+                  <StatusDot tone="warning" />
+                </View>
                 <Txt variant="callout" tone="secondary" style={styles.flex}>
                   {line}
                 </Txt>
               </View>
             ))}
             {later.length > 4 ? (
-              <Txt variant="monoTag" tone="tertiary">
-                {`+${later.length - 4}`}
+              <Txt variant="callout" tone="tertiary" style={styles.laterMore}>
+                {t.more(later.length - 4)}
               </Txt>
             ) : null}
           </>
@@ -592,6 +594,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Lines up with the text of the bullets above (dot 7 plus gap 10).
+  laterMore: { paddingLeft: 17 },
+  // Centers the dot on the first line of its callout text.
+  dotLine: { height: 22, justifyContent: 'center' },
   laterCard: {
     gap: 10,
     padding: 16,

@@ -21,10 +21,8 @@ export function AlbumCard({ album, width, onPress }: { album: GestureAlbum; widt
       style={{ width }}>
       <Artwork glyph={album.icon as GlyphName} size={width} index={index} ornament={album.ornament} />
       <View style={styles.texts}>
-        <Txt variant="subhead" numberOfLines={1}>
-          {text.title}
-        </Txt>
-        <Txt variant="footnote" tone="tertiary" numberOfLines={2}>
+        <Txt variant="subhead">{text.title}</Txt>
+        <Txt variant="footnote" tone="tertiary">
           {text.does}
         </Txt>
       </View>

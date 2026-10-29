@@ -60,6 +60,7 @@ export const uiPtBR: UiMessages = {
   },
   pill: {
     placeholder: 'Fale ou digite um comando',
+    short: 'Peça ao Sigil',
     openLive: 'Abrir Ao vivo',
     openCommand: 'Abre a folha de comando',
     start: 'Iniciar o Sigil',
@@ -423,6 +424,7 @@ export const uiPtBR: UiMessages = {
       body: 'Inicie o Sigil pela barra de baixo quando quiser. Refaça este tutorial quando quiser em Ajustes.',
       later: 'Ficou para depois',
       allDone: 'Tudo configurado.',
+      more: (count: number) => `e mais ${count}`,
       finish: 'Começar a usar o Sigil',
     },
   },
