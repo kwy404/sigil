@@ -151,7 +151,8 @@ export class Sigil {
       lastGesture: null,
       lastCommand: null,
       demo: false,
-      microphone: readSettings().voice?.microphone === true,
+      // On unless the user turned it off: without it, voice requests over other apps hear nothing.
+      microphone: readSettings().voice?.microphone !== false,
       needsAccess: null,
       error: null,
     };

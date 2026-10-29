@@ -14,7 +14,7 @@ export interface SavedSettings {
   language?: string;
   tutorial?: SavedTutorial;
   voice?: {
-    /** Voice requests while other apps are in front: the camera service also keeps the microphone. */
+    /** Voice requests while other apps are in front: the camera service also keeps the microphone. On unless set to false. */
     microphone?: boolean;
   };
   speech?: {

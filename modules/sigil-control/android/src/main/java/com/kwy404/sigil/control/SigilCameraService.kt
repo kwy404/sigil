@@ -46,6 +46,33 @@ class SigilCameraService : Service(), LifecycleOwner {
 
   override fun onBind(intent: Intent?): IBinder? = null
 
+  /**
+   * Enters the foreground with the camera type, plus the microphone type when
+   * asked, and keeps that choice for the notification text. Returns why
+   * Android refused, or null.
+   */
+  private fun enterForeground(withMicrophone: Boolean): Exception? {
+    val before = microphone
+    microphone = withMicrophone
+    return try {
+      ensureChannel()
+      val notification = buildNotification()
+      if (Build.VERSION.SDK_INT >= 30) {
+        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+        if (withMicrophone) {
+          types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        }
+        startForeground(NOTIFICATION_ID, notification, types)
+      } else {
+        startForeground(NOTIFICATION_ID, notification)
+      }
+      null
+    } catch (error: Exception) {
+      microphone = before
+      error
+    }
+  }
+
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     when (intent?.action) {
       ACTION_STOP -> {
@@ -62,27 +89,26 @@ class SigilCameraService : Service(), LifecycleOwner {
         return START_NOT_STICKY
       }
     }
-    microphone = intent?.getBooleanExtra(EXTRA_MICROPHONE, false) == true &&
+    val wanted = intent?.getBooleanExtra(EXTRA_MICROPHONE, false) == true &&
       hasPermission(this, Manifest.permission.RECORD_AUDIO)
-
-    try {
-      ensureChannel()
-      val notification = buildNotification()
-      if (Build.VERSION.SDK_INT >= 30) {
-        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
-        if (microphone) {
-          types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-        }
-        startForeground(NOTIFICATION_ID, notification, types)
-      } else {
-        startForeground(NOTIFICATION_ID, notification)
-      }
-    } catch (error: Exception) {
+    var failure = enterForeground(wanted)
+    if (failure != null && wanted) {
+      // Android can refuse the microphone type alone, for example when the
+      // bubble menu turns voice on over another app; tracking works without it.
+      failure = enterForeground(false)
+    }
+    if (failure != null) {
       // SecurityException when a permission is missing, or the Android 12 background start restriction.
-      SigilRuntime.emit(
-        "onCameraServiceStateChanged",
-        mapOf("running" to false, "error" to (error.message ?: error.javaClass.simpleName)),
-      )
+      val message = failure.message ?: failure.javaClass.simpleName
+      if (running) {
+        // Still in the foreground as before: keep tracking and only report the refused change.
+        SigilRuntime.emit(
+          "onCameraServiceStateChanged",
+          mapOf("running" to true, "paused" to paused, "microphone" to microphone, "error" to message),
+        )
+        return START_NOT_STICKY
+      }
+      SigilRuntime.emit("onCameraServiceStateChanged", mapOf("running" to false, "error" to message))
       stopSelf()
       return START_NOT_STICKY
     }
