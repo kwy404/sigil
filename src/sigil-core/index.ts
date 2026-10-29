@@ -1,3 +1,4 @@
+export { parseAnswer, type Answer } from './answers';
 export {
   ConfirmationPolicy,
   isSensitiveLabel,
@@ -5,6 +6,16 @@ export {
   type PolicyOptions,
   type PolicyResult,
 } from './confirmation';
+export {
+  LANGUAGE_PACKS,
+  packsFor,
+  RULE_LANGUAGES,
+  ruleLanguage,
+  type LanguagePack,
+  type Rule,
+  type RuleArgs,
+  type RuleLanguage,
+} from './languages';
 export {
   nodeMatches,
   PlanExecutor,

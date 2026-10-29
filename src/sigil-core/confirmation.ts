@@ -1,67 +1,45 @@
 import type { ProfileRegistry } from '../app-profiles/registry';
 import { foldText } from '../app-profiles/text';
+import { LANGUAGE_PACKS } from './languages';
+import { loose } from './languages/helpers';
 import { describeTarget, type PlanStep } from './steps';
+
+const CJK = /[぀-ヿ㐀-鿿豈-﫿]/u;
+
+// The policy is the same in every language: every request and every control
+// label is checked against the words and patterns of all eight languages, so
+// the language of the request never weakens it.
 
 /** Words that mark a control as one that sends, posts, calls, pays, deletes or changes something. */
 const SENSITIVE_WORDS = new Set(
-  [
-    'send',
-    'enviar',
-    'envia',
-    'post',
-    'postar',
-    'publish',
-    'publicar',
-    'share',
-    'compartilhar',
-    'call',
-    'ligar',
-    'delete',
-    'excluir',
-    'apagar',
-    'remove',
-    'remover',
-    'pay',
-    'pagar',
-    'buy',
-    'comprar',
-    'purchase',
-    'order',
-    'checkout',
-    'subscribe',
-    'assinar',
-    'transfer',
-    'transferir',
-    'confirm',
-    'confirmar',
-    'uninstall',
-    'desinstalar',
-  ].map(foldText),
+  LANGUAGE_PACKS.flatMap((pack) => pack.sensitive)
+    .filter((word) => !CJK.test(word))
+    .map((word) => foldText(word).replace(/ß/g, 'ss')),
 );
 
+/** The same for Japanese and Chinese, which have no spaces between words and are matched inside the label. */
+const SENSITIVE_CJK = LANGUAGE_PACKS.flatMap((pack) => pack.sensitive).filter((word) => CJK.test(word));
+
 /** Requests that ask for repeated or mass actions. Sigil acts once, for one person, per request. */
-const BULK_PATTERNS: RegExp[] = [
-  /\b(?:all|every|each)\s+(?:of\s+)?(?:my\s+|the\s+)?(?:contacts|friends|followers|following|groups|chats|people|users|posts|photos|videos|comments|messages)\b/i,
-  /\b(?:everyone|everybody)\b/i,
-  /(?:^|\s)(?:todos|todas)\s+(?:os\s+|as\s+)?(?:meus\s+|minhas\s+)?(?:contatos|amigos|seguidores|grupos|conversas|pessoas|posts|fotos|v[ií]deos|coment[aá]rios|mensagens)(?:\s|$)/iu,
-  /(?:^|\s)todo mundo(?:\s|$)/iu,
-  /\b\d+\s*(?:times|x)\b/i,
-  /(?:^|\s)\d+\s*vezes(?:\s|$)/iu,
-  /\b(?:every|each)\s+(?:\d+\s+)?(?:second|minute|hour|day|morning|night)s?\b/i,
-  /(?:^|\s)(?:a cada|todo|toda)\s+(?:\d+\s+)?(?:segundo|minuto|hora|dia|manh[aã]|noite)s?(?:\s|$)/iu,
-  /\b(?:spam|bulk|mass\s+\w+|auto\s*like|auto\s*follow)\b/i,
-  /(?:^|\s)em massa(?:\s|$)/iu,
-];
+const BULK_PATTERNS: RegExp[] = LANGUAGE_PACKS.flatMap((pack) =>
+  pack.bulk.map((pattern) => new RegExp(loose(pattern.source), pattern.flags)),
+);
+
+const SEVERAL_PEOPLE: RegExp[] = LANGUAGE_PACKS.flatMap((pack) => pack.severalPeople);
 
 export function isSensitiveLabel(label: string): boolean {
+  if (SENSITIVE_CJK.some((word) => label.includes(word))) {
+    return true;
+  }
   return foldText(label)
+    .replace(/ß/g, 'ss')
     .split(/[^a-z0-9]+/)
     .some((word) => SENSITIVE_WORDS.has(word));
 }
 
-/** True when a contact string names more than one person. */
+/** True when a contact string names more than one person, in any of the eight languages. */
 export function namesSeveralPeople(contact: string): boolean {
-  return /,|\s(?:and|e|&)\s/iu.test(contact);
+  return SEVERAL_PEOPLE.some((pattern) => pattern.test(contact.trim()));
 }
 
 export type PolicyResult = { ok: true; steps: PlanStep[]; commits: number } | { ok: false; reason: string };

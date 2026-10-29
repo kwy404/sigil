@@ -214,9 +214,16 @@ export class ProfileRegistry {
     return this.profiles.get(profileId)?.links;
   }
 
-  /** Finds an app by id, name or alias, ignoring case, accents and a trailing "app". */
+  /**
+   * Finds an app by id, name or alias, ignoring case, accents, a leading
+   * article ("the", "o", "la", "die"...) and a trailing word for app ("app",
+   * "アプリ", "应用").
+   */
   findApp(spoken: string): AppProfile | undefined {
-    const wanted = normalizeName(spoken).replace(/\s+app$/, '').replace(/^(the|o|a)\s+/, '');
+    const wanted = normalizeName(spoken)
+      .replace(/(?:\s+app|\s*アプリ|\s*应用)$/u, '')
+      .replace(/^(?:the|o|a|el|la|los|las|le|les|l|il|lo|gli|die|der|das|den)\s+/u, '')
+      .trim();
     if (!wanted) {
       return undefined;
     }

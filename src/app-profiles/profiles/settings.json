@@ -4,7 +4,19 @@
   "name": "Settings",
   "description": "System settings. Planned taps that change a setting ask for confirmation.",
   "packages": ["com.android.settings"],
-  "aliases": ["configurações", "configuracoes", "ajustes", "preferences"],
+  "aliases": [
+    "configurações",
+    "configuracoes",
+    "ajustes",
+    "preferences",
+    "configuración",
+    "paramètres",
+    "réglages",
+    "einstellungen",
+    "impostazioni",
+    "設定",
+    "设置"
+  ],
   "bindings": {
     "flick_up": { "type": "scroll", "direction": "down" },
     "flick_down": { "type": "scroll", "direction": "up" }

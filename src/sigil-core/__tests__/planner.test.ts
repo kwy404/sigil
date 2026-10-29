@@ -108,7 +108,7 @@ describe('ActionPlanner with the rule based fallback', () => {
   it('plans single step requests', async () => {
     expect(planned(await planner.plan({ text: 'scroll down' })).steps).toEqual([{ kind: 'scroll', direction: 'down' }]);
     expect(planned(await planner.plan({ text: 'voltar' })).steps).toEqual([{ kind: 'navigate', action: 'back' }]);
-    expect(planned(await planner.plan({ text: 'pause' })).steps).toEqual([{ kind: 'media', action: 'play_pause' }]);
+    expect(planned(await planner.plan({ text: 'pause' })).steps).toEqual([{ kind: 'media', action: 'pause' }]);
   });
 
   it('asks for confirmation before tapping a control that sends or buys', async () => {

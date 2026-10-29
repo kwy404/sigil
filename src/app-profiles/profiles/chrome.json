@@ -4,7 +4,7 @@
   "name": "Chrome",
   "description": "Web browsing. Searches open as Google result pages.",
   "packages": ["com.android.chrome"],
-  "aliases": ["google chrome", "browser", "navegador", "google"],
+  "aliases": ["google chrome", "browser", "navegador", "google", "navigateur", "ブラウザ", "クローム", "浏览器", "谷歌浏览器"],
   "bindings": {
     "swipe_two_right": { "type": "global", "action": "back" }
   },

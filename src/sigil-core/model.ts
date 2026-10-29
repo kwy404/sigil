@@ -41,7 +41,7 @@ export class RuleBasedModel implements LanguageModel {
   }
 
   async propose(request: string, context: ModelContext): Promise<ModelReply> {
-    const match = parseRequest(request, context.knownApps);
+    const match = parseRequest(request, context.knownApps, context.locale);
     if (!match) {
       return { toolCalls: [] };
     }

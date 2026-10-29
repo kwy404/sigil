@@ -4,7 +4,7 @@
   "name": "YouTube",
   "description": "Videos and Shorts. Media gestures use the system media session.",
   "packages": ["com.google.android.youtube"],
-  "aliases": ["yt", "you tube"],
+  "aliases": ["yt", "you tube", "ユーチューブ", "油管"],
   "bindings": {
     "flick_up": { "type": "swipe", "direction": "up" },
     "flick_down": { "type": "swipe", "direction": "down" },

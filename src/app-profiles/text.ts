@@ -30,9 +30,10 @@ export function foldText(value: string): string {
   return value.toLowerCase().replace(/[áàâãäéèêëíìîïóòôõöúùûüçñ]/g, (c) => ACCENTS[c] ?? c);
 }
 
-/** Folds accents and case, drops punctuation and collapses spaces. */
+/** Folds accents and case, drops punctuation and collapses spaces. Japanese and Chinese characters are kept. */
 export function normalizeName(value: string): string {
   return foldText(value)
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9぀-ヿ㐀-鿿豈-﫿]+/gu, ' ')
     .trim();
 }

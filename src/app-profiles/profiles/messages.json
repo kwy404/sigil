@@ -4,7 +4,7 @@
   "name": "Messages",
   "description": "SMS and RCS conversations in Google Messages and Samsung Messages.",
   "packages": ["com.google.android.apps.messaging", "com.samsung.android.messaging"],
-  "aliases": ["sms", "text messages", "mensagens", "torpedo"],
+  "aliases": ["sms", "text messages", "mensagens", "torpedo", "mensajes", "nachrichten", "messaggi", "メッセージ", "短信", "信息"],
   "bindings": {
     "flick_right": { "type": "swipe", "direction": "right", "origin": "cursor" }
   },
