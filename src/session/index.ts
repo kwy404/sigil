@@ -1,28 +1,67 @@
-import { useSyncExternalStore } from 'react';
-import { AppState, Linking, PermissionsAndroid, Platform, type NativeEventSubscription } from 'react-native';
+import { getLocales } from 'expo-localization';
+import { router } from 'expo-router';
+import { useMemo, useSyncExternalStore } from 'react';
+import { AppState, PermissionsAndroid, Platform } from 'react-native';
 
-import { createSpeechToText, ListenAbortedError } from '../adapters/voice';
-import { ProfileRegistry } from '../app-profiles';
-import { GestureClassifier, gestureKey, unflattenLandmarks } from '../gesture-engine';
-import { ActionPlanner } from '../sigil-core';
-import { getNativeControl, getSystemControl, readLevels, requestControlPermissions } from '../system-control';
-import type { ChecklistItem, SessionActions, SessionState } from './types';
+import { resolveLanguage, speechLocaleFor, type AppLanguage, type DeviceLocale } from '../i18n/languages';
+import { loadLanguageChoice } from '../i18n/storage';
+import { Sigil } from '../runtime/sigil';
+import { foregroundApp, getSystemControl, readLevels, requestControlPermissions } from '../system-control';
+import { isListening, micLevel, sessionPhase } from './state';
+import type { ChecklistItem, PlanRequestResult, SessionActions, SessionState } from './types';
 
-/**
- * Provisional Sigil session, built only on what the app has today: the
- * Android control module (camera service, cursor, settings shortcuts and
- * levels) and the mock speech engine with the rule planner. The native work
- * replaces this file with the real session; the screens use only the
- * contract in ./types.
- *
- * Where the Android module is missing (the web, Expo Go, iOS) it runs a
- * preview that behaves like a fresh Android install, so every screen and
- * state can be seen and tested.
- */
+export type { ChecklistItem, PlanRequestResult, SessionActions, SessionPhase, SessionState } from './types';
 
-export type { ChecklistItem, SessionActions, SessionPhase, SessionState } from './types';
+/** Screens can say where the Control Sphere and the tour are; until then both lead home. */
+const handlers = {
+  openSphere: () => router.navigate('/'),
+  openTutorial: () => router.navigate('/'),
+};
 
-const ALL_MISSING: Record<ChecklistItem, boolean> = {
+export function setSessionHandlers(next: Partial<typeof handlers>): void {
+  Object.assign(handlers, next);
+}
+
+/** Shows the Control Sphere where the screens put it, as the bubble and the open palm do. */
+export function openControlSphere(): void {
+  handlers.openSphere();
+}
+
+function deviceLocales(): DeviceLocale[] {
+  return getLocales().map((locale) => ({
+    languageTag: locale.languageTag,
+    languageCode: locale.languageCode ?? null,
+    regionCode: locale.regionCode ?? null,
+    languageScriptCode: locale.languageScriptCode ?? null,
+  }));
+}
+
+/** The app language outside React: the saved choice, or the phone language. */
+function appLanguage(locales: DeviceLocale[] = deviceLocales()): AppLanguage {
+  const choice = loadLanguageChoice();
+  return choice === 'system' ? resolveLanguage(locales) : choice;
+}
+
+/** BCP 47 locale of the app language, for speech and the planner. */
+function appLocale(): string {
+  const locales = deviceLocales();
+  return speechLocaleFor(appLanguage(locales), locales);
+}
+
+let sigil: Sigil | null = null;
+
+/** The one runtime of the app: hand control, bubble, voice. Created on first use. */
+export function getSigil(): Sigil {
+  sigil ??= new Sigil({
+    openSphere: () => handlers.openSphere(),
+    openTutorial: () => handlers.openTutorial(),
+    locale: appLocale,
+    language: () => appLanguage(),
+  });
+  return sigil;
+}
+
+const NOT_READY: Record<ChecklistItem, boolean> = {
   accessibility: false,
   overlay: false,
   camera: false,
@@ -31,325 +70,205 @@ const ALL_MISSING: Record<ChecklistItem, boolean> = {
   restrictedSettings: false,
 };
 
-const INITIAL: SessionState = {
-  phase: 'off',
-  hand: 'none',
-  listening: false,
-  micLevel: 0,
-  lastGesture: null,
-  lastCommand: null,
-  checklist: ALL_MISSING,
-  levels: { volume: null, brightness: null },
-  error: null,
-};
-
-const LEVELS_MS = 1000;
-const MIC_MS = 90;
-
-type Listener = () => void;
-
-class SessionStore implements SessionActions {
-  private state: SessionState = INITIAL;
-  private readonly listeners = new Set<Listener>();
-  private readonly native = Platform.OS === 'android' ? getSystemControl().native ?? getNativeControl() : null;
-  private readonly preview = this.native === null;
-  private subscriptions: { remove(): void }[] = [];
-  private appState: NativeEventSubscription | null = null;
-  private levelsTimer: ReturnType<typeof setInterval> | null = null;
-  private micTimer: ReturnType<typeof setInterval> | null = null;
-  private listenAbort: AbortController | null = null;
-  private classifier: GestureClassifier | null = null;
-  private planner: ActionPlanner | null = null;
-
-  constructor() {
-    if (this.preview) {
-      this.state = { ...INITIAL, levels: { volume: 0.62, brightness: 0.74 } };
-    } else if (this.native) {
-      const status = this.native.getStatus();
-      this.state = { ...INITIAL, phase: status.cameraServiceRunning ? 'tracking' : 'off' };
-    }
+async function readChecklist(): Promise<Record<ChecklistItem, boolean>> {
+  const native = getSigil().native;
+  if (!native || Platform.OS !== 'android') return NOT_READY;
+  const status = native.getStatus();
+  const { PERMISSIONS } = PermissionsAndroid;
+  const check = (permission: (typeof PERMISSIONS)[keyof typeof PERMISSIONS]) => PermissionsAndroid.check(permission).catch(() => false);
+  let restricted = false;
+  try {
+    restricted = !status.accessibilityEnabled && native.getInstallSource().restrictedSettings;
+  } catch {
+    restricted = false;
   }
+  const notifications = typeof Platform.Version === 'number' && Platform.Version >= 33 ? await check(PERMISSIONS.POST_NOTIFICATIONS) : true;
+  return {
+    accessibility: status.accessibilityEnabled,
+    overlay: status.overlayPermission,
+    camera: await check(PERMISSIONS.CAMERA),
+    microphone: await check(PERMISSIONS.RECORD_AUDIO),
+    notifications,
+    restrictedSettings: !restricted,
+  };
+}
 
-  getSnapshot = (): SessionState => this.state;
+/** Polls the checklist and the levels only while a screen shows the session. */
+const POLL_MS = 1500;
 
-  subscribe = (listener: Listener): (() => void) => {
+class SessionStore {
+  private snapshot: SessionState | null = null;
+  private readonly listeners = new Set<() => void>();
+  private checklist: Record<ChecklistItem, boolean> = NOT_READY;
+  private levels: SessionState['levels'] = { volume: null, brightness: null };
+  private startError: string | null = null;
+  private teardown: (() => void) | null = null;
+
+  getSnapshot = (): SessionState => {
+    this.snapshot ??= this.compute();
+    return this.snapshot;
+  };
+
+  subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
-    if (this.listeners.size === 1) this.activate();
+    if (this.listeners.size === 1) this.connect();
     return () => {
       this.listeners.delete(listener);
-      if (this.listeners.size === 0) this.deactivate();
+      if (this.listeners.size === 0) this.disconnect();
     };
   };
 
-  private set(patch: Partial<SessionState>): void {
-    this.state = { ...this.state, ...patch };
+  /** Recomputes the state and tells the screens. */
+  changed = (): void => {
+    this.snapshot = this.compute();
     this.listeners.forEach((listener) => listener());
+  };
+
+  setStartError(error: string | null): void {
+    this.startError = error;
+    this.changed();
   }
 
-  private activate(): void {
-    this.refreshChecklist();
-    this.refreshLevels();
-    this.levelsTimer = setInterval(() => {
-      if (AppState.currentState === 'active') this.refreshLevels();
-    }, LEVELS_MS);
-    this.appState = AppState.addEventListener('change', (next) => {
-      if (next === 'active') {
-        this.refreshChecklist();
-        this.refreshLevels();
-      }
+  refresh = async (): Promise<void> => {
+    const native = getSigil().native;
+    const [checklist, levels] = await Promise.all([readChecklist(), readLevels(native)]);
+    this.checklist = checklist;
+    this.levels = { volume: levels.volume, brightness: levels.brightness };
+    this.changed();
+  };
+
+  private compute(): SessionState {
+    const runtime = getSigil();
+    const state = runtime.current;
+    const voice = runtime.voice.current;
+    return {
+      phase: sessionPhase(state, this.startError),
+      hand: state.hand,
+      listening: isListening(voice),
+      micLevel: micLevel(voice),
+      lastGesture: state.lastGesture,
+      lastCommand: state.lastCommand,
+      checklist: this.checklist,
+      levels: this.levels,
+      error: this.startError ?? state.error,
+    };
+  }
+
+  private connect(): void {
+    const runtime = getSigil();
+    const unsubscribeRuntime = runtime.subscribe(this.changed);
+    const unsubscribeVoice = runtime.voice.subscribe(this.changed);
+    const appState = AppState.addEventListener('change', (next) => {
+      if (next === 'active') void this.refresh();
     });
-    const native = this.native;
-    if (native) {
-      this.subscriptions = [
-        native.addListener('onServiceStateChanged', () => this.refreshChecklist()),
-        native.addListener('onCameraServiceStateChanged', (event) => {
-          if (event.running) {
-            if (this.state.phase === 'starting' || this.state.phase === 'off') this.set({ phase: 'tracking', error: null });
-          } else if (this.state.phase === 'tracking' || this.state.phase === 'starting') {
-            this.set({ phase: event.error ? 'error' : 'off', hand: 'none', error: event.error ?? null });
-          }
-        }),
-        native.addListener('onHandFrame', (event) => this.onHandFrame(event.t, event.landmarks, event.score)),
-      ];
-    }
+    const accessibility = runtime.native?.addListener('onServiceStateChanged', () => void this.refresh());
+    const timer = setInterval(() => {
+      if (AppState.currentState === 'active') void this.refresh();
+    }, POLL_MS);
+    void this.refresh();
+    this.teardown = () => {
+      unsubscribeRuntime();
+      unsubscribeVoice();
+      appState.remove();
+      accessibility?.remove();
+      clearInterval(timer);
+    };
   }
 
-  private deactivate(): void {
-    if (this.levelsTimer) clearInterval(this.levelsTimer);
-    this.levelsTimer = null;
-    this.appState?.remove();
-    this.appState = null;
-    this.subscriptions.forEach((subscription) => subscription.remove());
-    this.subscriptions = [];
+  private disconnect(): void {
+    this.teardown?.();
+    this.teardown = null;
   }
+}
 
-  private onHandFrame(t: number, values: number[], score: number): void {
-    if (this.state.phase !== 'tracking') return;
-    const landmarks = values.length > 0 && score >= 0.5 ? unflattenLandmarks(values) : null;
-    const hand = landmarks ? 'right' : 'none';
-    if (hand !== this.state.hand) this.set({ hand });
-    this.classifier ??= new GestureClassifier();
-    const events = this.classifier.push({ t, landmarks, score });
-    const last = events.filter((event) => event.phase !== 'end').pop();
-    if (last) this.set({ lastGesture: gestureKey(last) });
-  }
+const store = new SessionStore();
 
-  private async refreshChecklist(): Promise<void> {
-    const native = this.native;
-    if (!native) return;
-    try {
-      const status = native.getStatus();
-      const { PERMISSIONS } = PermissionsAndroid;
-      const [camera, microphone] = await Promise.all([
-        PermissionsAndroid.check(PERMISSIONS.CAMERA),
-        PermissionsAndroid.check(PERMISSIONS.RECORD_AUDIO),
-      ]);
-      this.set({
-        checklist: {
-          accessibility: status.accessibilityEnabled,
-          overlay: status.overlayPermission,
-          camera,
-          microphone,
-          notifications: status.mediaAccess,
-          // Android 13 blocks the accessibility switch of sideloaded apps until restricted settings are allowed.
-          restrictedSettings: status.accessibilityEnabled || status.sdkInt < 33,
-        },
-      });
-    } catch {
-      // The module answers again on the next resume.
-    }
-  }
+const START_ERRORS: Record<string, string> = {
+  camera_permission: 'camera_permission',
+  unavailable: 'unavailable',
+  failed: 'failed',
+};
 
-  private async refreshLevels(): Promise<void> {
-    if (this.preview) return;
-    const levels = await readLevels(this.native);
-    const volume = levels.muted ? 0 : levels.volume;
-    if (volume !== this.state.levels.volume || levels.brightness !== this.state.levels.brightness) {
-      this.set({ levels: { volume, brightness: levels.brightness } });
-    }
-  }
-
-  start = async (): Promise<void> => {
-    if (this.state.phase === 'starting' || this.state.phase === 'tracking') return;
-    this.set({ phase: 'starting', error: null });
-    if (this.preview) {
-      setTimeout(() => this.set({ phase: 'tracking' }), 700);
-      setTimeout(() => {
-        if (this.state.phase === 'tracking') this.set({ hand: 'right' });
-      }, 1300);
-      this.startDemoGestures();
-      return;
-    }
-    const native = this.native;
-    if (!native) return;
-    const granted = await requestControlPermissions({ microphone: false });
-    if (!granted.camera) {
-      this.set({ phase: 'error', error: 'camera_permission' });
-      this.refreshChecklist();
-      return;
-    }
-    if (!native.startCameraService(false)) {
-      this.set({ phase: 'error', error: 'camera_service' });
-      return;
-    }
-    native.showCursor();
-    this.classifier = new GestureClassifier();
-    this.set({ phase: 'tracking' });
-    this.refreshChecklist();
-  };
-
-  private demoTimer: ReturnType<typeof setInterval> | null = null;
-
-  /** The preview has no camera; it reports a short loop of gestures while tracking. */
-  private startDemoGestures(): void {
-    if (this.demoTimer) clearInterval(this.demoTimer);
-    const loop = ['point', 'pinch', 'swipe_two_up', 'pinch_circle_cw', 'open_palm', 'fist'];
-    let index = 0;
-    this.demoTimer = setInterval(() => {
-      if (this.state.phase !== 'tracking') return;
-      this.set({ lastGesture: loop[index % loop.length] });
-      index += 1;
-    }, 4200);
-  }
-
-  private halt(phase: 'off' | 'paused'): void {
-    if (this.demoTimer) clearInterval(this.demoTimer);
-    this.demoTimer = null;
-    const native = this.native;
-    if (native) {
-      native.stopCameraService();
-      native.hideCursor();
-    }
-    this.set({ phase, hand: 'none', error: null });
-  }
-
-  stop = (): void => this.halt('off');
-
-  pause = (): void => this.halt('paused');
-
-  resume = (): void => {
-    void this.start();
-  };
-
-  listen = (): void => {
-    if (this.state.listening) return;
-    const abort = new AbortController();
-    this.listenAbort = abort;
-    this.set({ listening: true, micLevel: 0 });
-    let phase = 0;
-    this.micTimer = setInterval(() => {
-      phase += 1;
-      const voice = 0.35 + 0.3 * Math.abs(Math.sin(phase * 0.55)) + 0.2 * Math.abs(Math.sin(phase * 1.7));
-      this.set({ micLevel: Math.min(1, voice) });
-    }, MIC_MS);
-    void this.hear(abort);
-  };
-
-  private async hear(abort: AbortController): Promise<void> {
-    const at = Date.now();
-    try {
-      const transcript = await createSpeechToText().listen({ locale: 'en-US', signal: abort.signal });
-      this.planner ??= new ActionPlanner({ profiles: ProfileRegistry.withBuiltins() });
-      const outcome = await this.planner.plan({ text: transcript.text, locale: transcript.locale });
-      const result = outcome.status === 'planned' ? 'done' : outcome.status === 'blocked' ? 'cancelled' : 'not_understood';
-      this.set({ lastCommand: { text: transcript.text, at: Date.now(), outcome: result } });
-    } catch (error) {
-      if (!(error instanceof ListenAbortedError)) {
-        this.set({ lastCommand: { text: '', at, outcome: 'failed' } });
-      }
-    } finally {
-      if (this.micTimer) clearInterval(this.micTimer);
-      this.micTimer = null;
-      if (this.listenAbort === abort) this.listenAbort = null;
-      this.set({ listening: false, micLevel: 0 });
-    }
-  }
-
-  stopListening = (): void => {
-    this.listenAbort?.abort();
-  };
-
-  fix = (item: ChecklistItem): void => {
-    if (this.preview) {
-      setTimeout(() => this.set({ checklist: { ...this.state.checklist, [item]: true } }), 400);
-      return;
-    }
-    const native = this.native;
-    if (!native) return;
+/** The actions of the session, also usable outside React (the bubble menu, links from the tile and the widget). */
+export const sessionActions: SessionActions = {
+  async start() {
+    store.setStartError(null);
+    const problem = await getSigil().start();
+    store.setStartError(problem ? START_ERRORS[problem] : null);
+    void store.refresh();
+  },
+  stop() {
+    getSigil().stop();
+    store.setStartError(null);
+  },
+  pause() {
+    getSigil().pause(true);
+  },
+  resume() {
+    getSigil().pause(false);
+  },
+  listen() {
+    void getSigil().voice.start();
+  },
+  stopListening() {
+    getSigil().voice.cancel();
+  },
+  fix(item) {
+    const native = getSigil().native;
+    const { PERMISSIONS } = PermissionsAndroid;
+    const after = () => void store.refresh();
     switch (item) {
-      case 'camera':
-        void requestControlPermissions({ microphone: false }).then(() => this.refreshChecklist());
-        break;
-      case 'microphone':
-        void PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO).then(() => this.refreshChecklist());
-        break;
       case 'accessibility':
-        native.openAccessibilitySettings();
-        break;
+        native?.openAccessibilitySettings();
+        return;
       case 'overlay':
-        native.openOverlaySettings();
-        break;
-      case 'notifications':
-        native.openMediaAccessSettings();
-        break;
+        native?.openOverlaySettings();
+        return;
       case 'restrictedSettings':
-        void Linking.openSettings();
-        break;
+        native?.openAppInfo();
+        return;
+      case 'camera':
+        void requestControlPermissions({ microphone: false }).then(after);
+        return;
+      case 'microphone':
+        if (Platform.OS === 'android') void PermissionsAndroid.request(PERMISSIONS.RECORD_AUDIO).then(after);
+        return;
+      case 'notifications':
+        if (Platform.OS === 'android') void PermissionsAndroid.request(PERMISSIONS.POST_NOTIFICATIONS).then(after);
+        return;
     }
-  };
+  },
+  async setVolume(percent) {
+    await getSystemControl().device.volume({ stream: 'media', action: 'set', level: Math.round(percent) });
+    await store.refresh();
+  },
+  async setBrightness(percent) {
+    await getSystemControl().device.brightness({ action: 'set', level: Math.round(percent) });
+    await store.refresh();
+  },
+};
 
-  setVolume = async (percent: number): Promise<void> => {
-    const level = Math.max(0, Math.min(100, Math.round(percent)));
-    if (this.preview) {
-      this.set({ levels: { ...this.state.levels, volume: level / 100 } });
-      return;
-    }
-    const native = this.native;
-    if (!native) return;
-    try {
-      await native.changeVolume('media', 'set', level);
-    } finally {
-      await this.refreshLevels();
-    }
-  };
-
-  setBrightness = async (percent: number): Promise<void> => {
-    const level = Math.max(0, Math.min(100, Math.round(percent)));
-    if (this.preview) {
-      this.set({ levels: { ...this.state.levels, brightness: level / 100 } });
-      return;
-    }
-    const native = this.native;
-    if (!native) return;
-    try {
-      const outcome = await native.changeBrightness('set', level);
-      if (outcome === 'write_settings') native.openWriteSettings();
-    } finally {
-      await this.refreshLevels();
-    }
-  };
-}
-
-let store: SessionStore | null = null;
-
-function session(): SessionStore {
-  store ??= new SessionStore();
-  return store;
-}
-
+/** The shared session for screens: the same phase the bubble, the tile and the widget show. */
 export function useSigilSession(): SessionState & SessionActions {
-  const current = session();
-  const state = useSyncExternalStore(current.subscribe, current.getSnapshot, current.getSnapshot);
-  return {
-    ...state,
-    start: current.start,
-    stop: current.stop,
-    pause: current.pause,
-    resume: current.resume,
-    listen: current.listen,
-    stopListening: current.stopListening,
-    fix: current.fix,
-    setVolume: current.setVolume,
-    setBrightness: current.setBrightness,
-  };
+  const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  return useMemo(() => ({ ...state, ...sessionActions }), [state]);
+}
+
+/**
+ * Plans a typed or spoken request. A dry run only plans and returns the
+ * outcome, as the tour does; otherwise the voice session carries it out, with
+ * the same questions and confirmations as a spoken request, and the result
+ * comes back too.
+ */
+export async function planRequest(text: string, options: { dryRun?: boolean } = {}): Promise<PlanRequestResult> {
+  const runtime = getSigil();
+  if (options.dryRun !== false || runtime.voice.busy) {
+    const outcome = await runtime.planner.plan({ text, locale: appLocale(), foregroundPackage: foregroundApp() });
+    return { outcome, result: null };
+  }
+  await runtime.voice.startTyped(text);
+  const state = runtime.voice.current;
+  if (state.phase === 'done') return { outcome: state.outcome, result: state.result };
+  const outcome = await runtime.planner.plan({ text, locale: appLocale(), foregroundPackage: foregroundApp() });
+  return { outcome, result: null };
 }

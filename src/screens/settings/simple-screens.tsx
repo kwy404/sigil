@@ -12,6 +12,7 @@ import { SphereQuickActions } from '../../features/sphere-quick-actions';
 import { SphereStage } from '../../features/sphere-stage';
 import { SystemPanel } from '../../features/system-panel';
 import { sampleRecordings } from '../../gesture-engine';
+import type { SigilInterface } from '../../sigil-core';
 import { useI18n } from '../../i18n';
 import { usePreferences } from '../../preferences/provider';
 import { Button } from '../../ui/button';
@@ -75,7 +76,7 @@ export function TutorialSettingsScreen() {
         ) : null}
       </View>
       <View style={styles.blockPadded}>
-        <Button label={t.redo} icon="refresh" size="lg" block onPress={() => router.push('/welcome?replay=1' as Href)} />
+        <Button label={t.redo} icon="refresh" size="lg" block onPress={() => router.push('/tutorial?replay=1' as Href)} />
       </View>
     </Screen>
   );
@@ -92,6 +93,13 @@ export function LabScreen() {
   const [sampleId, setSampleId] = useState<string | null>('circle-cw');
   const [segment, setSegment] = useState<string | null>(null);
   const recording = samples.find((sample) => sample.id === sampleId) ?? null;
+  const labUi = useMemo<SigilInterface>(
+    () => ({
+      sphere: (action) => (action === 'open' ? router.push('/live' as Href) : undefined),
+      tutorial: () => router.push('/tutorial?replay=1' as Href),
+    }),
+    [],
+  );
   const stage = Math.max(1, Math.min(width - GUTTER * 2 - 32, 340));
 
   return (
@@ -113,7 +121,7 @@ export function LabScreen() {
           )}
         </Card>
         <GestureLab selectedId={sampleId} onSelect={setSampleId} />
-        <PlannerPanel registry={registry} />
+        <PlannerPanel registry={registry} ui={labUi} />
         <ProfilesPanel registry={registry} />
         <SystemPanel />
       </View>

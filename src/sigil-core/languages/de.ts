@@ -1,11 +1,19 @@
+import type { AppPlace } from '../../app-profiles/schema';
 import {
+  clockTime,
+  compactTime,
   composeNumbers,
   contactCleaner,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
   fixed,
+  hourBefore,
   lookup,
   messageArgs,
   NumberWords,
   percent,
+  placeArgs,
   speedRate,
   toSeconds,
   unquote,
@@ -77,16 +85,74 @@ function rate(g: Groups): RuleArgs | null {
 
 const RAISE = /^(?:hoch|rauf|höher|erhöhen|erhöhe|erhöh|lauter|heller|aufdrehen)$/iu;
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^reels?$/iu, 'reels'],
+  [/^shorts?$/iu, 'shorts'],
+  [/^(?:abos|abonnements|kan(?:ä|ae|a)le)$/iu, 'subscriptions'],
+  [/^(?:direktnachrichten|dms?|direct|nachrichten|posteingang|chats)$/iu, 'messages'],
+  [/^profil$/iu, 'profile'],
+  [/^(?:entdecken|erkunden)$/iu, 'explore'],
+];
+/** Words that only name a place with an app: "öffne die Nachrichten" opens the messaging app. */
+const GENERIC_PLACE = /^(?:nachrichten|posteingang|chats)$/iu;
+const SPAN_UNITS: DurationUnits = { hour: /^stunden?$/iu, minute: /^min(?:uten?)?$/iu, second: /^sek(?:unden?)?$/iu };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  if (g.halfhour) return { seconds: 1800 };
+  const seconds = g.oneandhalf
+    ? durationSeconds([[1, g.u3]], SPAN_UNITS, true)
+    : durationSeconds(
+        [
+          [numbers.parse(g.n1), g.u1],
+          [numbers.parse(g.n2), g.u2],
+        ],
+        SPAN_UNITS,
+      );
+  return seconds === null ? null : { seconds };
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = !g.period
+    ? null
+    : /nachts$/iu.test(g.period)
+      ? 'night'
+      : /(?:nachmittags|abends|nachmittag|abend)$/iu.test(g.period)
+        ? 'pm'
+        : 'am';
+  if (g.noon) return clockTime(/nacht$/iu.test(g.noon) ? 0 : 12);
+  if (g.hm) {
+    const time = compactTime(g.hm);
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  if (g.halfh) return clockTime(hourBefore(numbers.parse(g.halfh)), 30, period);
+  if (g.qh) return clockTime(numbers.parse(g.qh), 15, period);
+  if (g.th) return clockTime(hourBefore(numbers.parse(g.th)), 45, period);
+  return clockTime(numbers.parse(g.h), g.m === undefined ? 0 : numbers.parse(g.m), period);
+}
+
 export const de: LanguagePack = {
   id: 'de',
   code: 'de',
   vocab: {
+    SPAN: '(?:(?<n1>NUM) (?<u1>stunden?|minuten?|min|sekunden?|sek)(?:(?: und|,)? (?<n2>NUM) (?<u2>minuten?|min|sekunden?|sek))?|(?<halfhour>eine halbe stunde|halbe stunde)|(?<oneandhalf>anderthalb|eineinhalb) (?<u3>stunden?|minuten?))',
+    CLOCK:
+      '(?:(?<hm>\\d{1,2}[:.]\\d{2})|(?<h>NUM)(?: uhr)?(?: (?<m>NUM))?|halb (?<halfh>NUM)|viertel nach (?<qh>NUM)|viertel vor (?<th>NUM)|(?<noon>mittag|mitternacht))(?: uhr)?(?: (?<period>morgens|früh|vormittags|nachmittags|abends|nachts|am morgen|am nachmittag|am abend))?',
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.| punkt )[a-z0-9-]+)*(?:\\.| punkt )[a-z]{2,}(?:/[^ ]*)?',
     NUM: numbers.pattern(),
     PCT: '(?:\\s*%| prozent)',
     UNIT: '(?<unit>sekunden?|minuten?)',
     STREAM: '(?<stream>klingelton|wecker|alarm|medien)?',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source: [
+        '^(?:öffne|zeig|zeige|zeig mir|zeige mir|geh zu|gehe zu|geh auf|gehe auf)(?: (?:die|den|das|meine|mein|meinen))? (?<place>reels?|shorts?|abos|abonnements|kanäle|direktnachrichten|dms?|direct|nachrichten|posteingang|chats|profil|entdecken)(?: (?:von|in|auf|bei) (?<app>APPS))?$',
+        '^(?:meine |die |das )?(?<app>APPS)[ -](?<place>reels?|shorts?|abos|direktnachrichten|dms?|nachrichten|profil) (?:öffnen|zeigen)$',
+      ],
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-on-app-saying',
       tool: 'send_message',
@@ -259,6 +325,109 @@ export const de: LanguagePack = {
       tool: 'settings_panel',
       source: '^(?:(?:aktiviere|deaktiviere|schalte|öffne) )?(?:bitte )?nicht stören(?:[ -]?modus)?(?: (?:an|aus|ein|einschalten|ausschalten|aktivieren|deaktivieren))?$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:schließe|schließ|schließen|beende|beenden)(?: alle(?: meine)?| die| meine) (?:apps|anwendungen)(?: im hintergrund)?$',
+        '^alle (?:apps|anwendungen) (?:schließen|beenden)$',
+        '^(?:alles schließen|schließe alles|schließ alles|letzte apps löschen|lösche die letzten apps)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: [
+        '^(?:schließe|schließ|beende) (?:das|diese app|die app|die aktuelle app)$',
+        '^(?:mach|mache) (?:das|diese app|die app) zu$',
+        '^(?:diese|die aktuelle) app (?:schließen|beenden|zumachen)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: [
+        '^(?:(?:geh|gehe|wechsle|wechsel|zurück) (?:zur|zu der) )?(?:vorherigen|letzten) app$',
+        '^(?:vorherige|letzte) app$',
+        '^(?:app wechseln|wechsle die app|wechsel die app)$',
+      ],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: [
+        '^(?:geteilter bildschirm|geteilten bildschirm|bildschirm teilen|splitscreen|split screen)(?: (?:aktivieren|an|öffnen|starten))?$',
+        '^(?:teile|aktiviere|öffne|starte) (?:den )?(?:bildschirm|geteilten bildschirm|splitscreen)$',
+      ],
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:(?:öffne|zeig|zeige|starte|wiederhole|mach|mache|spiel|spiele)(?: mir)?(?: das| die)? )?(?:tutorial|einführung|anleitung)(?: (?:nochmal|noch einmal|erneut))?(?: (?:öffnen|starten|zeigen|wiederholen|machen))?$',
+        '^(?:zeig|zeige) mir,? wie (?:sigil|man sigil) funktioniert$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:(?:stell|stelle|starte|setz|setze|mach|mache)(?: einen| den| mir einen| mir den)? )?(?:timer|countdown|kurzzeitwecker) (?:auf |für |von )?SPAN(?: (?:stellen|starten))?$',
+        '^(?:(?:stell|stelle|starte|setz|setze|mach|mache)(?: einen| mir einen)? )?SPAN[ -]?timer(?: (?:stellen|starten))?$',
+        '^(?:erinnere mich|sag mir bescheid|sag bescheid) in SPAN$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: [
+        '^(?:(?:stell|stelle|setz|setze|mach|mache)(?: einen| den| mir einen| mir den)? )?(?:wecker|alarm) (?:auf |für |um )*CLOCK(?: (?:stellen|setzen))?$',
+        '^(?:weck|wecke) mich (?:um |auf )?CLOCK(?: auf)?$',
+      ],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: [
+        '^(?:schalte|schalt|mach|mache) (?:die )?(?:taschenlampe|lampe) (?<state>an|ein|aus)$',
+        '^(?:die )?(?:taschenlampe|lampe)(?: (?<state>an|ein|aus|einschalten|ausschalten|anmachen|ausmachen))?$',
+      ],
+      build: (g) => ({ on: !/^aus/iu.test(g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: [
+        '^(?:öffne|geh auf|gehe auf|geh zu|gehe zu|besuche|zeig|zeige)(?: die)? (?:webseite|website|seite|internetseite) (?<url>.+)$',
+        '^(?:öffne|geh auf|gehe auf|geh zu|gehe zu|besuche) (?<url>DOMAIN)$',
+        '^(?<url>DOMAIN) (?:öffnen|aufrufen)$',
+      ],
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source:
+        '^(?:öffne|zeig|zeige|geh zu|gehe zu)(?: den| die| das| meinen| meine)? (?:chat|unterhaltung|konversation) mit (?<contact>.+?)(?: (?:in|auf|bei|über) (?<app>APPS))?$',
+      build: (g) => withApp(g, { contact: cleanContact(unquote(g.contact ?? '')) }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source: [
+        '^(?:schließe|schließ|beende|stoppe)(?: die| den| das)?(?: app)? (?<app>.+?)$',
+        '^(?:mach|mache)(?: die| den| das)? (?<app>.+?) zu$',
+        '^(?:die |den |das )?(?<app>.+?) (?:schließen|beenden|zumachen)$',
+      ],
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     { id: 'back', tool: 'navigate', source: '^(?:geh |gehe )?zurück$', build: fixed({ action: 'back' }) },
     {

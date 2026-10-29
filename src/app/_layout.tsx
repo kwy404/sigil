@@ -52,7 +52,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="live" options={SHEET} />
               <Stack.Screen name="command" options={SHEET} />
-              <Stack.Screen name="welcome" options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
+              <Stack.Screen name="tutorial" options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             </Stack>
           </ThemeProvider>
         </PreferencesProvider>

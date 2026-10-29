@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">ジェスチャーと音声のために前面カメラとマイクがオンになっています。</string>
   <string name="sigil_stop">停止</string>
   <string name="sigil_media_access_label">Sigil メディア操作</string>
+  <string name="sigil_start">開始</string>
+  <string name="sigil_pause">一時停止</string>
+  <string name="sigil_resume">再開</string>
+  <string name="sigil_state_on">オン</string>
+  <string name="sigil_state_off">オフ</string>
+  <string name="sigil_state_paused">一時停止中</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">ハンズフリー操作を開始または停止し、Sigil の状態を確認します。</string>
+  <string name="sigil_widget_running">手を追跡中</string>
+  <string name="sigil_widget_paused">一時停止中</string>
+  <string name="sigil_widget_stopped">停止中</string>
+  <string name="sigil_bubble_pause">追跡を一時停止</string>
+  <string name="sigil_bubble_resume">追跡を再開</string>
+  <string name="sigil_bubble_mic_on">マイクをオン</string>
+  <string name="sigil_bubble_mic_off">マイクをオフ</string>
+  <string name="sigil_bubble_open">Sigil を開く</string>
+  <string name="sigil_bubble_stop">Sigil を停止</string>
+  <string name="sigil_camera_notification_paused">一時停止中です。再開するまでカメラはオフです。</string>
 </resources>

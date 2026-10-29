@@ -1,11 +1,19 @@
+import type { AppPlace } from '../../app-profiles/schema';
 import {
+  clockTime,
+  compactTime,
   composeNumbers,
   contactCleaner,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
   fixed,
+  hourBefore,
   lookup,
   messageArgs,
   NumberWords,
   percent,
+  placeArgs,
   speedRate,
   toSeconds,
   unquote,
@@ -78,16 +86,69 @@ function rate(g: Groups): RuleArgs | null {
 const UP = '(?:aumenta|aumentar|aumente|sobe|subir|suba|levanta|levantar|levante)';
 const DOWN = '(?:diminui|diminuir|diminua|abaixa|abaixar|abaixe|baixa|baixar|baixe|reduz|reduzir|reduza)';
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^reels?$/iu, 'reels'],
+  [/^shorts?$/iu, 'shorts'],
+  [/^inscri[çc](?:õ|o)es$/iu, 'subscriptions'],
+  [/^(?:direct|dms?|mensagens diretas|mensagens|caixa de entrada|conversas)$/iu, 'messages'],
+  [/^perfil$/iu, 'profile'],
+  [/^explorar$/iu, 'explore'],
+];
+/** Words that only name a place with an app: "abre as mensagens" opens the messaging app. */
+const GENERIC_PLACE = /^(?:mensagens|caixa de entrada|conversas)$/iu;
+const SPAN_UNITS: DurationUnits = { hour: /^horas?$/iu, minute: /^min(?:utos?)?$/iu, second: /^seg(?:undos?)?$/iu };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  if (g.halfhour) return { seconds: 1800 };
+  const seconds = durationSeconds(
+    [
+      [numbers.parse(g.n1), g.u1],
+      [numbers.parse(g.n2), g.u2],
+    ],
+    SPAN_UNITS,
+    Boolean(g.half),
+  );
+  return seconds === null ? null : { seconds };
+}
+
+function minuteOf(word: string | undefined): number | null {
+  if (word === undefined) return 0;
+  return /^meia$/iu.test(word) ? 30 : numbers.parse(word);
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = g.period ? (/(?:tarde|noite)$/iu.test(g.period) ? 'pm' : 'am') : null;
+  if (g.noon) return clockTime(/noite$/iu.test(g.noon) ? 0 : 12, minuteOf(g.nm));
+  if (g.hm) {
+    const time = compactTime(g.hm);
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  return clockTime(numbers.parse(g.h), minuteOf(g.m), period);
+}
+
 export const pt: LanguagePack = {
   id: 'pt',
   code: 'pt',
   vocab: {
+    SPAN: '(?:(?<n1>NUM) (?<u1>horas?|minutos?|min|segundos?|seg)(?:(?: e|,) (?<n2>NUM) (?<u2>minutos?|min|segundos?|seg))?(?<half> e meia| e meio)?|(?<halfhour>meia hora))',
+    CLOCK:
+      '(?:(?<hm>\\d{1,2}(?::|h)\\d{2})|(?<h>NUM)(?: ?h| horas?)?(?: e (?<m>NUM|meia)(?: minutos?)?)?|(?<noon>meio-dia|meio dia|meia-noite|meia noite)(?: e (?<nm>NUM|meia))?)(?: (?<period>da manhã|da madrugada|da tarde|da noite))?',
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.| ponto )[a-z0-9-]+)*(?:\\.| ponto )[a-z]{2,}(?:/[^ ]*)?',
     NUM: numbers.pattern(),
     PCT: '(?:\\s*%| por cento)',
     UNIT: '(?<unit>segundos?|minutos?)',
     STREAM: '(?:d[oa] )?(?<stream>toque|campainha|chamada|alarme|despertador)',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source: [
+        '^(?:abr(?:e|ir|a)|mostr(?:a|ar|e)|me mostr(?:a|e)|v(?:ai|ou|er)|ir|entr(?:a|ar|e))(?: (?:para|pra|pro|no|na|nos|nas|em))?(?: (?:o|os|a|as|meu|minha|meus|minhas))? (?<place>reels?|shorts?|inscrições|direct|dms?|mensagens diretas|mensagens|caixa de entrada|perfil|explorar)(?: (?:do|da|no|na) (?<app>APPS))?$',
+        '^(?:(?:o|os) )?(?<place>reels|shorts)(?: (?:do|da|no|na) (?<app>APPS))?$',
+      ],
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-on-app-saying',
       tool: 'send_message',
@@ -263,6 +324,104 @@ export const pt: LanguagePack = {
       tool: 'settings_panel',
       source: '^(?:(?:liga|ligar|ligue|ativa|ativar|ative|desliga|desligar|desligue|desativa|desativar|abre|abrir|abra|coloca|põe) (?:o |no |em )?)?(?:modo )?não perturbe$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:fech(?:a|ar|e)|encerr(?:a|ar|e)|limp(?:a|ar|e))(?: todos os| todas as| os| as| todos| todas)(?: meus| minhas)? (?:apps|aplicativos|aplicações)(?: abertos| abertas| recentes| em segundo plano)?$',
+        '^(?:fech(?:a|ar|e)|encerr(?:a|ar|e)) tudo$',
+        '^limp(?:a|ar|e)(?: os)? (?:apps |aplicativos )?recentes$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: [
+        '^(?:fech(?:a|ar|e)|encerr(?:a|ar|e)) (?:isso|isto|esse app|este app|esse aplicativo|este aplicativo|o app|o aplicativo)(?: atual)?$',
+        '^sa(?:i|ir|ia) (?:daqui|desse app|deste app|do app|desse aplicativo|deste aplicativo|do aplicativo)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: [
+        '^(?:(?:volt(?:a|ar|e)|v(?:ai|ou)|ir|troc(?:a|ar|e)) (?:pro|para o|ao|pra o) )?(?:app|aplicativo) anterior$',
+        '^(?:(?:volt(?:a|ar|e)|v(?:ai|ou)|ir) (?:pro|para o|ao) )?último (?:app|aplicativo)$',
+        '^(?:troc(?:a|ar|e)|altern(?:a|ar|e)) (?:de )?(?:app|aplicativo)$',
+      ],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: [
+        '^(?:(?:ativ(?:a|ar|e)|abr(?:e|ir|a)|lig(?:a|ar|ue)|us(?:a|ar|e)|entr(?:a|ar|e) (?:na|em)|coloc(?:a|ar|que) (?:em|na)) )?(?:a )?tela dividida$',
+        '^divid(?:e|ir|a) a tela$',
+      ],
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:(?:abr(?:e|ir|a)|mostr(?:a|ar|e)|ver|vê|refaz(?:er)?|refaça|faz(?:er)?|faça|repet(?:e|ir)|recomeç(?:a|ar)|inici(?:a|ar|e)|começ(?:a|ar)|rev(?:er|ê))(?: o)? )?tutorial(?: de novo| novamente| outra vez)?$',
+        '^(?:me )?(?:ensin(?:a|e)|mostr(?:a|e)) (?:a usar|como usar|como usa) o sigil$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:(?:coloc(?:a|ar|que)|põe|pôr|ponha|bot(?:a|ar|e)|cri(?:a|ar|e)|faz(?:er)?|faça|inici(?:a|ar|e)|ativ(?:a|ar|e)|lig(?:a|ar|ue)|marc(?:a|ar|que)|program(?:a|ar|e)|defin(?:e|ir|a))(?: um| o)? )?(?:timer|temporizador|cronômetro|contagem regressiva) (?:de |para |por |pra |com )?SPAN$',
+        '^(?:me )?(?:avis(?:a|e)|cham(?:a|e)) (?:daqui a |em |daqui )SPAN$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: [
+        '^(?:(?:coloc(?:a|ar|que)|põe|pôr|ponha|bot(?:a|ar|e)|cri(?:a|ar|e)|faz(?:er)?|faça|ativ(?:a|ar|e)|lig(?:a|ar|ue)|marc(?:a|ar|que)|program(?:a|ar|e)|defin(?:e|ir|a)|acert(?:a|ar|e))(?: um| o)? )?(?:alarme|despertador) (?:para |pra |às |as |de |pras )*CLOCK$',
+        '^(?:me )?(?:acord(?:a|ar|e)|despert(?:a|ar|e))(?: me)? (?:às |as |pras |para as |pra as |de )*CLOCK$',
+      ],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: [
+        '^(?<verb>lig(?:a|ar|ue)|acend(?:e|er|a)|ativ(?:a|ar|e)|abr(?:e|ir|a)|deslig(?:a|ar|ue)|apag(?:a|ar|ue)|desativ(?:a|ar|e)|fech(?:a|ar|e))(?: a| o)? (?:lanterna|luz do celular|flash)$',
+        '^lanterna(?: (?<state>ligada|desligada|on|off))?$',
+      ],
+      build: (g) => ({ on: !/^(?:desl|apag|desativ|fech)/iu.test(g.verb ?? '') && !/^(?:desligada|off)$/iu.test(g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: [
+        '^(?:abr(?:e|ir|a)|entr(?:a|ar|e) n[oa]|v(?:ai|ou|á) (?:no|na|para o|pro|para)|acess(?:a|ar|e)|ir (?:para o|pro|no))(?: o| a)? (?:site|página|endereço) (?<url>.+)$',
+        '^(?:abr(?:e|ir|a)|entr(?:a|ar|e) n[oa]|v(?:ai|ou|á) (?:no|na|para o|pro|para)|acess(?:a|ar|e)|ir (?:para o|pro|no))(?: o)? (?<url>DOMAIN)$',
+      ],
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source: [
+        `^(?:abr(?:e|ir|a)|entr(?:a|ar|e) n[ao]|v(?:ai|ou) (?:pra|para a|na|no))(?: a| o)? (?:conversa|chat|papo) (?:com|da|do|de) (?<contact>.+?)(?: ${ON} (?<app>APPS))?$`,
+        '^(?:abr(?:e|ir|a)|entr(?:a|ar|e) no) (?:o )?(?<app>whatsapp|zap|zapzap|wpp|whats|telegram|messenger) (?:da|do|de|com) (?<contact>.+)$',
+      ],
+      build: (g) => withApp(g, { contact: cleanContact(unquote(g.contact ?? '')) }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source: '^(?:fech(?:a|ar|e)|encerr(?:a|ar|e)|sa(?:i|ir|ia) d[oa]|mat(?:a|ar|e)|finaliz(?:a|ar|e)|forç(?:a|ar|e) o fechamento d[oa])(?: o| a)? (?<app>.+?)$',
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     { id: 'back', tool: 'navigate', source: '^volt[ae]r?$|^volta$|^voltar para trás$', build: fixed({ action: 'back' }) },
     {

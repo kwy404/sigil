@@ -65,6 +65,11 @@ export function validateProfile(raw: unknown): ValidationResult {
       add(`bindings.${key}`, 'drag needs a gesture with a start and an end, so it only works on pinch_hold.');
     }
   }
+  for (const [place, target] of Object.entries(profile.places ?? {})) {
+    if (target?.tab && !profile.selectors?.[target.tab]) {
+      add(`places.${place}.tab`, `No selector named "${target.tab}" in this profile.`);
+    }
+  }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, profile };
 }
 

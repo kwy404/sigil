@@ -9,4 +9,23 @@
   <string name="sigil_camera_notification_text_voice">The front camera and the microphone are on for gestures and voice.</string>
   <string name="sigil_stop">Stop</string>
   <string name="sigil_media_access_label">Sigil media control</string>
+  <string name="sigil_start">Start</string>
+  <string name="sigil_pause">Pause</string>
+  <string name="sigil_resume">Resume</string>
+  <string name="sigil_state_on">On</string>
+  <string name="sigil_state_off">Off</string>
+  <string name="sigil_state_paused">Paused</string>
+  <string name="sigil_tile_label">Sigil</string>
+  <string name="sigil_widget_label">Sigil</string>
+  <string name="sigil_widget_description">Start or stop hands free control and see whether Sigil is on.</string>
+  <string name="sigil_widget_running">Following your hand</string>
+  <string name="sigil_widget_paused">Paused</string>
+  <string name="sigil_widget_stopped">Stopped</string>
+  <string name="sigil_bubble_pause">Pause tracking</string>
+  <string name="sigil_bubble_resume">Resume tracking</string>
+  <string name="sigil_bubble_mic_on">Turn the microphone on</string>
+  <string name="sigil_bubble_mic_off">Turn the microphone off</string>
+  <string name="sigil_bubble_open">Open Sigil</string>
+  <string name="sigil_bubble_stop">Stop Sigil</string>
+  <string name="sigil_camera_notification_paused">Paused. The camera is off until you resume.</string>
 </resources>

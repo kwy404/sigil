@@ -1,6 +1,11 @@
-import type { GlobalAction, MediaAction, SystemPanel, VolumeStream } from '../../app-profiles/schema';
+import type { TierId } from '../../adapters/catalog';
+import type { DownloadError, PauseReason } from '../../adapters/model/downloader';
+import type { EngineStatus } from '../../adapters/model/llama-engine';
+import type { AppPlace, GlobalAction, MediaAction, SystemPanel, VolumeStream } from '../../app-profiles/schema';
 import type { GestureKey, SampleId } from '../../gesture-engine';
-import type { NoticeCode } from '../../sigil-core/notices';
+import type { SystemApp } from '../../sigil-core/apps';
+import type { ExecutionFailure } from '../../sigil-core/executor';
+import type { AndroidOnlyFeature, NoticeCode } from '../../sigil-core/notices';
 import type { ControlMode } from '../../system-control';
 
 const q = (text: string) => `"${text}"`;
@@ -11,6 +16,8 @@ const q = (text: string) => `"${text}"`;
  */
 export const en = {
   quote: q,
+  /** Between the names of a short list. */
+  listSeparator: ', ',
   language: {
     name: 'English',
     title: 'Language',
@@ -122,6 +129,8 @@ export const en = {
       lock_screen: 'Lock screen',
       screenshot: 'Screenshot',
       power_menu: 'Power menu',
+      previous_app: 'Previous app',
+      split_screen: 'Split screen',
     } satisfies Record<GlobalAction, string>,
     media: {
       play_pause: 'Play or pause',
@@ -145,7 +154,7 @@ export const en = {
     everyApp: 'Every app without its own profile',
     gestures: (count: number) => `${count} gestures`,
     ownShared: (own: number, shared: number) => `${own} own, ${shared} shared`,
-    names: { general: 'General', messages: 'Messages', settings: 'Settings' } as Record<string, string>,
+    names: { general: 'General', messages: 'Messages', settings: 'Settings', launcher: 'Home screen' } as Record<string, string>,
   },
   planner: {
     title: 'Voice planner',
@@ -164,12 +173,23 @@ export const en = {
     status: {
       planned: 'planned',
       clarify: 'question',
+      choose: 'pick one',
       blocked: 'blocked',
       unsupported: 'not yet',
       not_understood: 'not understood',
     },
     source: { rules: 'from rules', model: 'from model' },
     afterYes: 'only after your yes',
+    run: 'Run',
+    stop: 'Stop',
+    yes: 'Yes',
+    no: 'No',
+    result: {
+      completed: 'Done.',
+      failed: (step: string) => `Stopped at: ${step}`,
+      cancelled: 'Cancelled. Nothing more was done.',
+      refused: 'Sigil did not run this plan.',
+    },
   },
   plan: {
     open: (app: string) => `Open ${app}`,
@@ -179,6 +199,11 @@ export const en = {
     tap: (label: string) => `Tap ${q(label)}`,
     type: (text: string) => `Type ${q(text)}`,
     like: (app: string) => `Like this on ${app}`,
+    close: (app: string) => `Close ${app}`,
+    closeAll: 'Close all apps',
+    openPlace: (place: string, app: string) => `Open ${place} in ${app}`,
+    openChat: (contact: string, app: string) => `Open the chat with ${contact} on ${app}`,
+    website: (site: string) => `Open ${site}`,
   },
   steps: {
     open: (app: string) => `Open ${app}`,
@@ -227,7 +252,46 @@ export const en = {
     } satisfies Record<SystemPanel, string>,
     sphere: { open: 'Open the Control Sphere', close: 'Close the Control Sphere' },
     ask: (question: string) => `Ask: ${question}`,
+    close: (app: string) => `Close ${app}`,
+    tutorial: 'Open the tutorial',
+    timer: (duration: string) => `Start a timer for ${duration}`,
+    alarm: (time: string) => `Set an alarm for ${time}`,
+    torch: { on: 'Turn the flashlight on', off: 'Turn the flashlight off' },
   },
+  time: {
+    duration: (h: number, m: number, s: number) =>
+      [h ? `${h} h` : '', m ? `${m} min` : '', s ? `${s} s` : ''].filter(Boolean).join(' '),
+    clock: (hour: number, minute: number) => `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+  },
+  places: {
+    reels: 'Reels',
+    shorts: 'Shorts',
+    subscriptions: 'Subscriptions',
+    messages: 'Messages',
+    profile: 'Profile',
+    explore: 'Explore',
+  } satisfies Record<AppPlace, string>,
+  roles: {
+    camera: 'Camera',
+    phone: 'Phone',
+    contacts: 'Contacts',
+    calculator: 'Calculator',
+    calendar: 'Calendar',
+    clock: 'Clock',
+    gallery: 'Gallery',
+    music: 'Music',
+    email: 'Email',
+    maps: 'Maps',
+    files: 'Files',
+    messages: 'Messages',
+    browser: 'Browser',
+  } satisfies Record<SystemApp, string>,
+  failures: {
+    went_background: (app: string) => `${app} went to the background, but Sigil did not find its card in recent apps to close it.`,
+    not_open: (app: string) => `${app} is not open.`,
+    still_open: (app: string) => `Sigil swiped ${app} away, but it is still in recent apps.`,
+    busy: () => 'The flashlight is busy while a camera is in use.',
+  } satisfies Record<ExecutionFailure, (app: string) => string>,
   targets: {
     selectors: {
       search: 'the search button',
@@ -247,11 +311,24 @@ export const en = {
     focused: 'the focused field',
   },
   confirm: {
+    closeAll: 'Close all apps? Anything not saved in them may be lost.',
     send: (text: string, contact: string, app: string) => `Send ${q(text)} to ${contact} on ${app}?`,
     post: (app: string, caption: string) => `Share this post on ${app} with the caption ${q(caption)}?`,
     tap: (target: string) => `Tap ${target}?`,
   },
+  androidOnly: {
+    close: 'iOS does not let apps close other apps. Swipe it up in the app switcher.',
+    timer: 'iOS does not let apps start a timer in the Clock app. Ask Siri or use a shortcut.',
+    alarm: 'iOS does not let apps set an alarm in the Clock app. Ask Siri or use a shortcut.',
+    flashlight: 'Sigil cannot control the flashlight on iOS yet. Use the Control Center.',
+    chat: 'On iOS, Sigil can open the app but cannot find a chat inside it.',
+    open: 'On iOS, Sigil can only open apps that have a public link.',
+  } satisfies Record<AndroidOnlyFeature, string>,
   notices: {
+    which_app: (options: string) => `Which one: ${options}?`,
+    not_installed: (app: string) => `${app} is not installed on this phone.`,
+    no_app_in_front: () => `Sigil does not know which app is on screen. Say its name, as in ${q('close YouTube')}.`,
+    cannot_open_place: (place: string, app: string) => `Sigil cannot open ${place} in ${app} yet.`,
     nothing_heard: () => 'Nothing was heard.',
     not_understood: () => 'Sigil did not understand that. Try "open YouTube" or "turn the volume up".',
     bulk: () =>
@@ -266,7 +343,199 @@ export const en = {
     cannot_post: (app: string) => `Sigil cannot post on ${app} yet.`,
     cannot_like: (app: string) => `Sigil cannot like in ${app} yet.`,
     like_needs_app: () => 'Open the post or video first, or say which app it is in.',
-  } satisfies Record<Exclude<NoticeCode, 'question'>, (...args: never[]) => string>,
+  } satisfies Record<Exclude<NoticeCode, 'question' | 'android_only'>, (...args: never[]) => string>,
+  main: {
+    start: 'Start',
+    stop: 'Stop',
+    pause: 'Pause',
+    resume: 'Resume',
+    starting: 'Starting',
+    status: {
+      stopped: 'Off. Start Sigil to move the cursor with your hand.',
+      running: 'On. Point to move the cursor, pinch to tap.',
+      hand: 'Hand seen. Pinch to tap where the cursor is.',
+      paused: 'Paused. The camera is off until you resume.',
+      demo: 'Demo hand: the cursor moves on its own and never taps.',
+    },
+    problems: {
+      camera_permission: 'Sigil needs the camera to follow your hand.',
+      unavailable: 'This build cannot control other apps (iOS, the web or Expo Go).',
+      failed: 'The camera service could not start. Open Sigil and try again.',
+    },
+    checklist: {
+      title: 'Ready to control other apps',
+      accessibility: 'Hands free control',
+      overlay: 'Display over other apps',
+      camera: 'Camera',
+      microphone: 'Microphone, for voice',
+      restricted: 'Allow restricted settings',
+      ok: 'Ready',
+      fix: 'Fix',
+      allow: 'Allow',
+      optional: 'Optional',
+    },
+    preview: {
+      title: 'Camera view',
+      caption: 'Keep your hand in the frame, about an arm away, with light on it.',
+      off: 'Start Sigil to see what the camera sees.',
+    },
+    voice: {
+      title: 'Voice',
+      talk: 'Talk',
+      placeholder: 'Or type a request',
+      go: 'Go',
+      microphone: 'Voice over other apps',
+    },
+    settings: 'Settings',
+    demo: 'Show the demo hand',
+    stopDemo: 'Stop the demo',
+  },
+  settingsScreen: {
+    title: 'Settings',
+    lab: 'Lab',
+    labCaption: 'Gesture recordings, the planner, app profiles and system details, for testing and tuning.',
+    open: 'Open',
+    speechTitle: 'Speech recognition',
+    allowOffDevice: 'Allow a recognizer that may use the network',
+    offDeviceCaption:
+      'Sigil uses the speech recognizer on the phone. Some phones only have one that may send audio to its service; Sigil asks it to stay offline but cannot guarantee it.',
+    on: 'On',
+    off: 'Off',
+  },
+  sphereScreen: {
+    title: 'Control Sphere',
+    caption: 'Tap a segment, or point and pinch.',
+    done: 'Done',
+  },
+  voice: {
+    listening: 'Listening',
+    repeat: 'I did not catch that well. Can you repeat?',
+    gaveUp: 'I still did not catch it, so nothing was done. Try again or type it.',
+    notUnderstood: 'I did not understand that request. Can you say it another way?',
+    tooNoisy: 'Too noisy here. Move somewhere quieter or speak closer to the phone.',
+    thinking: (heard: string) => `Planning ${q(heard)}`,
+    answerHint: 'Say yes or no. A pinch confirms, a fist cancels.',
+    chooseHint: 'Say the name, tap an option, or make a fist to cancel.',
+    seconds: (seconds: number) => `${seconds} s`,
+    unsure: (heard: string) => `I heard ${q(heard)}. Check it before you confirm.`,
+    cancelled: 'Cancelled. Nothing was done.',
+    download: 'Download the speech model',
+    unavailable: {
+      permission: 'Sigil needs the microphone permission to listen.',
+      on_device_unavailable:
+        'This phone has no speech recognizer that works only on the phone. Its other one may send audio over the network, so Sigil uses it only if you allow it in Settings. You can type instead.',
+      no_recognizer: 'This phone has no speech recognizer Sigil can use. Type your request instead.',
+      language_unsupported: 'The speech recognizer on this phone does not know this language yet. Type instead.',
+      language_unavailable: 'The speech model for this language is not on the phone yet.',
+      busy: 'The speech recognizer is busy. Try again in a moment.',
+      failed: 'Speech recognition failed. Try again or type instead.',
+    },
+    prompt: { listening: 'Sigil is listening', question: 'Sigil asks', done: 'Sigil' },
+  },
+  tutorial: {
+    label: 'Guided tour',
+    progress: (current: number, total: number) => `Step ${current} of ${total}`,
+    back: 'Back',
+    next: 'Next',
+    skip: 'Skip this step',
+    notNow: 'Not now',
+    skipAll: 'Skip the tour',
+    start: 'Start using Sigil',
+    allowed: 'Allowed. Tap Next to go on.',
+    waiting: 'Show your hand to the front camera.',
+    noTracking: 'Hand tracking is not running yet, so this is a demo. Tap Next when you are ready.',
+    gotIt: 'Recognized.',
+    notInBuild: 'This build cannot ask for this here. You can allow it later in the system settings.',
+    redo: 'Redo the tour',
+    redoCaption: 'Walk through permissions, gestures, voice and confirmations again.',
+    restrictedTitle: 'Allow restricted settings first',
+    steps: {
+      welcome: {
+        title: 'Welcome to Sigil',
+        body: 'Sigil moves your phone with your hands and your voice. The camera image, your voice and every plan stay on this phone: nothing is uploaded. This tour takes about three minutes.',
+      },
+      camera: {
+        title: 'Camera',
+        body: 'Sigil follows your hand through the front camera to move a cursor and read gestures. Frames are read on the phone and never saved.',
+        button: 'Allow the camera',
+      },
+      microphone: {
+        title: 'Microphone',
+        body: 'Sigil listens only when you ask, with a fist or the listen button, and only on the phone. Nothing it hears is sent anywhere.',
+        button: 'Allow the microphone',
+      },
+      accessibility: {
+        title: 'Hands free control',
+        body: 'To tap, scroll and go back in other apps, Android asks you to turn on "Sigil hands free control" in the accessibility settings. Sigil acts only on your gestures and on plans you confirm.',
+        button: 'Open accessibility settings',
+      },
+      overlay: {
+        title: 'Cursor over other apps',
+        body: 'The cursor shows where a pinch will land. Allow Sigil to display over other apps to see it everywhere.',
+        button: 'Allow display over other apps',
+      },
+      media_access: {
+        title: 'Media access (optional)',
+        body: 'To skip seconds and change the speed of what is playing, Android asks for notification access. Sigil only reaches the active player and never reads your notifications.',
+        button: 'Allow media access',
+      },
+      write_settings: {
+        title: 'Screen brightness (optional)',
+        body: 'To set the brightness with a gesture or your voice, Android asks you to let Sigil modify system settings. Without it, Sigil opens the display settings instead.',
+        button: 'Allow brightness changes',
+      },
+      practice_point: {
+        title: 'Point',
+        body: 'Raise your index finger toward the camera. The cursor follows your fingertip.',
+      },
+      practice_pinch: {
+        title: 'Pinch to tap',
+        body: 'Point at the target, then touch your thumb and index finger together. A pinch taps where the cursor is.',
+        target: 'Pinch here',
+      },
+      practice_palm: {
+        title: 'Open palm',
+        body: 'Show your open hand and hold it still for a moment. It opens the Control Sphere, your hub for apps, voice and settings.',
+      },
+      practice_knob: {
+        title: 'Pinch and turn',
+        body: 'Pinch and draw a small circle, like turning a knob. Clockwise turns the volume up, counterclockwise turns it down.',
+      },
+      practice_fist: {
+        title: 'Fist to talk',
+        body: 'Close your hand into a fist and hold it. Sigil starts listening for a request.',
+      },
+      voice: {
+        title: 'Try your voice',
+        body: (example: string) => `Say ${q(example)}. Sigil shows the plan it would run; in this practice nothing is opened.`,
+        example: 'open YouTube',
+        listen: 'Listen',
+        placeholder: 'Or type a request',
+        show: 'Show the plan',
+        dryRun: 'Practice: nothing was run.',
+      },
+      confirm: {
+        title: 'Confirm or cancel',
+        body: 'Before Sigil sends, posts or closes all apps, it asks. A pinch says yes, a fist says no, and eight seconds of silence cancel.',
+        sampleText: 'On my way',
+        sampleContact: 'Ana',
+        countdown: (seconds: number) => `Cancels in ${seconds} s`,
+        confirmed: 'Confirmed. In this practice nothing was sent.',
+        cancelled: 'Cancelled. Nothing was sent.',
+        timedOut: 'No answer, so it was cancelled. Nothing was sent.',
+        again: 'Try again',
+      },
+      profiles: {
+        title: 'Every app its own gestures',
+        body: 'A gesture means what the app in front needs. App profiles change a few bindings per app; every other app uses the general profile. The main screen lists them all.',
+      },
+      done: {
+        title: 'You are ready',
+        body: 'Make a fist and say what you want, like "open Instagram" or "close YouTube". Redo this tour from the main screen or by saying "redo the tutorial".',
+        skipped: (steps: string) => `Left for later: ${steps}. You can allow them on the main screen.`,
+      },
+    },
+  },
   system: {
     title: 'System control',
     modeLabels: {
@@ -305,6 +574,7 @@ export const en = {
       allowBrightness: 'Allow brightness changes',
       displaySettings: 'Open display settings',
       allowMedia: 'Allow media access',
+      appInfo: 'Open Sigil app info',
     },
     access: {
       brightness:
@@ -313,7 +583,7 @@ export const en = {
         'To skip seconds and change the playback speed of the player in front, Android asks for notification access. Sigil uses it only to reach the active media session and never reads your notifications.',
     },
     restricted:
-      'On Android 13 and later, a build installed outside the Play Store must first allow restricted settings in App info before its accessibility service can be turned on.',
+      'This copy of Sigil was not installed from the Play Store, so Android 13 and later keep its accessibility service locked until you allow restricted settings: open Settings, then Apps, then Sigil, tap the menu at the top right and choose "Allow restricted settings". Then turn on Sigil hands free control.',
     iosOnly:
       'On iOS, Sigil reads gestures and voice inside its own screens, opens apps through links and runs Shortcuts. It cannot tap or draw inside other apps.',
     devClient: 'Build a development client with EAS to include the Android control module. Expo Go only has the JavaScript side.',
@@ -322,6 +592,83 @@ export const en = {
       cameraStart: 'The camera service could not start.',
       cursor: 'Turn on the accessibility service, or allow Sigil to display over other apps, to see the cursor.',
       cameraService: (error: string) => `Camera service: ${error}`,
+    },
+  },
+  model: {
+    title: 'On device model',
+    caption:
+      'A small language model on the phone understands requests in your own words and picks one action for them. Without it, the rule parser still understands the built in commands.',
+    privacy:
+      'The model downloads once from Hugging Face and is checked against its SHA-256. After that it runs offline: your requests never leave the phone.',
+    unsupported:
+      'This build has no model runtime (Expo Go or the web), so Sigil uses the rule parser. Install the Android build to download a model.',
+    rows: {
+      memory: 'Phone memory',
+      recommended: 'Recommended for this phone',
+      model: 'Model',
+      size: 'Download',
+      peak: 'Memory while it runs',
+      license: 'License',
+    },
+    tiers: {
+      rules: { name: 'Rules only', description: 'No download. The rule parser understands the built in commands in eight languages.' },
+      lite: { name: 'Lite', description: 'Qwen2.5 1.5B. Understands requests in your own words. Phones with 6 GB of memory or more.' },
+      full: { name: 'Full', description: 'Qwen2.5 3B. Better with indirect and longer requests. Phones with 8 GB of memory or more.' },
+    } satisfies Record<TierId, { name: string; description: string }>,
+    auto: (tier: string) => `Automatic: ${tier}`,
+    chips: {
+      recommended: 'recommended',
+      downloaded: 'downloaded',
+      partial: 'partly downloaded',
+      needsMemory: (size: string) => `needs ${size}`,
+    },
+    status: {
+      absent: 'Not downloaded.',
+      downloading: (done: string, total: string, percent: string) => `Downloading: ${done} of ${total} (${percent}).`,
+      paused: {
+        user: (done: string, total: string) => `Paused at ${done} of ${total}.`,
+        network: (done: string, total: string) => `Waiting for Wi-Fi at ${done} of ${total}.`,
+        interrupted: (done: string, total: string) => `Stopped at ${done} of ${total} when Sigil closed.`,
+      } satisfies Record<PauseReason, (done: string, total: string) => string>,
+      verifying: 'Checking the file against its SHA-256.',
+      ready: 'Downloaded and verified.',
+      failed: {
+        offline: 'No connection. Connect to the internet and try again.',
+        wifi_required: 'Waiting for Wi-Fi. Connect to Wi-Fi, or allow mobile data below.',
+        no_space: (size: string) => `Not enough free storage. The download needs ${size}.`,
+        network: 'The download stopped. Try again to continue where it stopped.',
+        checksum: 'The file did not match its SHA-256, so Sigil deleted it. Try again.',
+        storage: 'The phone storage could not save the file.',
+      } satisfies Record<DownloadError, string | ((size: string) => string)>,
+    },
+    engine: {
+      none: 'Loads into memory on the first voice request.',
+      idle: 'Not in memory. Loads again on the next voice request.',
+      loading: 'Loading into memory.',
+      ready: 'In memory. Released after five minutes without requests, in the background or when the phone needs memory.',
+      failed: 'The model could not load, so Sigil uses the rule parser for now.',
+    } satisfies Record<EngineStatus | 'none', string>,
+    buttons: {
+      download: (size: string) => `Download (${size})`,
+      resume: 'Resume download',
+      pause: 'Pause',
+      cancel: 'Cancel download',
+      retry: 'Try again',
+      delete: 'Delete the model',
+    },
+    confirmDelete: {
+      title: 'Delete the model?',
+      message: (size: string) => `This frees ${size}. You can download it again later.`,
+      confirm: 'Delete',
+      keep: 'Keep',
+    },
+    cellular: {
+      label: 'Use mobile data',
+      caption: 'Off: the model downloads over Wi-Fi only.',
+    },
+    units: {
+      gb: (value: string) => `${value} GB`,
+      mb: (value: string) => `${value} MB`,
     },
   },
 };

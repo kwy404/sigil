@@ -1,4 +1,22 @@
-import { CJK_NUM, fixed, lookup, parseCjkNumber, percent, speedRate, toSeconds, unquote, withApp } from './helpers';
+import type { AppPlace } from '../../app-profiles/schema';
+import {
+  CJK_NUM,
+  clockTime,
+  compactTime,
+  type DayPeriod,
+  durationSeconds,
+  type DurationUnits,
+  fixed,
+  hourBefore,
+  lookup,
+  parseCjkNumber,
+  percent,
+  placeArgs,
+  speedRate,
+  toSeconds,
+  unquote,
+  withApp,
+} from './helpers';
 import type { Groups, LanguagePack, RuleArgs } from './types';
 
 /** Japanese verbs for sending, in the forms people use with a phone: 送って, 送信して, 伝えて. */
@@ -49,14 +67,58 @@ function rate(g: Groups): RuleArgs | null {
 
 const UP = /^(?:上げて|上げる|大きくして|大きく|アップ|明るくして)$/u;
 
+const PLACES: [RegExp, AppPlace][] = [
+  [/^(?:リール|reels?)$/iu, 'reels'],
+  [/^(?:ショート|shorts?)$/iu, 'shorts'],
+  [/^(?:登録チャンネル|チャンネル登録)$/u, 'subscriptions'],
+  [/^(?:dm|ダイレクトメッセージ|ダイレクト|メッセージ|受信箱)$/iu, 'messages'],
+  [/^(?:プロフィール|マイページ)$/u, 'profile'],
+  [/^(?:発見|探索)$/u, 'explore'],
+];
+/** Words that only name a place with an app: 「メッセージを開いて」 opens the messaging app. */
+const GENERIC_PLACE = /^(?:メッセージ|受信箱)$/u;
+const SPAN_UNITS: DurationUnits = { hour: /^時間$/u, minute: /^分(?:間)?$/u, second: /^秒(?:間)?$/u };
+
+function timerArgs(g: Groups): RuleArgs | null {
+  const seconds = durationSeconds(
+    [
+      [parseCjkNumber(g.n1), g.u1],
+      [parseCjkNumber(g.n2), g.u2],
+    ],
+    SPAN_UNITS,
+    Boolean(g.half),
+  );
+  return seconds === null ? null : { seconds };
+}
+
+function alarmArgs(g: Groups): RuleArgs | null {
+  const period: DayPeriod = !g.period ? null : /^(?:午前|朝)$/u.test(g.period) ? 'am' : g.period === '夜' ? 'night' : 'pm';
+  if (g.noon) return clockTime(g.noon === '正午' ? 12 : 0);
+  if (g.hm) {
+    const time = compactTime(g.hm.replace('：', ':'));
+    return time ? clockTime(time[0], time[1], period) : null;
+  }
+  return clockTime(parseCjkNumber(g.h), g.half ? 30 : g.m === undefined ? 0 : parseCjkNumber(g.m), period);
+}
+
 export const ja: LanguagePack = {
   id: 'ja',
   code: 'ja',
   vocab: {
+    SPAN: '(?:(?<n1>NUM)(?<u1>時間|分間?|秒間?)(?:(?<n2>NUM)(?<u2>分間?|秒間?))?(?<half>半)?)',
+    CLOCK: '(?:(?<period>午前|午後|朝|夜|夕方|昼)の?)?(?:(?<hm>\\d{1,2}[:：]\\d{2})|(?<h>NUM)時(?:(?<m>NUM)分|(?<half>半))?|(?<noon>正午|真夜中))',
+    DOMAIN: '[a-z0-9-]+(?:(?:\\.|点|ドット)[a-z0-9-]+)*(?:\\.|点|ドット)[a-z]{2,}(?:/[^ ]*)?',
     NUM: CJK_NUM,
     PCT: '(?:%|パーセント)',
   },
   rules: [
+    {
+      id: 'place',
+      tool: 'open_place',
+      source:
+        '^(?:(?<app>APPS)の)?(?<place>リール|reels?|ショート|shorts?|登録チャンネル|dm|ダイレクトメッセージ|メッセージ|受信箱|プロフィール|マイページ|発見)(?:を)?(?:開いて|開く|見せて|表示して)$',
+      build: (g) => placeArgs(g, lookup<AppPlace | ''>(g.place, PLACES, ''), GENERIC_PLACE),
+    },
     {
       id: 'send-quoted',
       tool: 'send_message',
@@ -208,6 +270,88 @@ export const ja: LanguagePack = {
       tool: 'settings_panel',
       source: '^(?:サイレントモード|おやすみモード|サイレント)(?:を)?(?:オンにして|オフにして|にして|開いて|オン|オフ)?$',
       build: fixed({ panel: 'do_not_disturb' }),
+    },
+    {
+      id: 'close-all',
+      tool: 'close_all_apps',
+      source: [
+        '^(?:すべて|全て|全部)の(?:アプリ|アプリケーション)(?:を)?(?:閉じて|閉じる|終了して|終了)$',
+        '^(?:アプリ|アプリケーション)(?:を)?(?:すべて|全て|全部)(?:閉じて|閉じる|終了して)$',
+        '^(?:最近(?:使った)?(?:の)?アプリ|アプリ履歴|履歴)(?:を)?(?:すべて|全て|全部)?(?:消して|削除して|クリアして)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'close-this',
+      tool: 'close_app',
+      source: ['^(?:この|今の|現在の)?(?:アプリ|アプリケーション)(?:を)?(?:閉じて|閉じる|終了して|終了)$', '^(?:これ|それ)(?:を)?(?:閉じて|閉じる)$'],
+      build: fixed({}),
+    },
+    {
+      id: 'previous-app',
+      tool: 'navigate',
+      source: ['^(?:前の|直前の|さっきの)アプリ(?:に|へ)?(?:戻って|戻る|切り替えて)?$', '^アプリ(?:を)?切り替えて$'],
+      build: fixed({ action: 'previous_app' }),
+    },
+    {
+      id: 'split-screen',
+      tool: 'navigate',
+      source: '^(?:画面分割|分割画面|画面を分割)(?:して|する|にして|を開いて)?$',
+      build: fixed({ action: 'split_screen' }),
+    },
+    {
+      id: 'tutorial',
+      tool: 'open_tutorial',
+      source: [
+        '^(?:もう一度|もう一回|また)?(?:チュートリアル|使い方ガイド)(?:を)?(?:もう一度|もう一回)?(?:開いて|見せて|表示して|始めて|やり直して|やって|再生して)?$',
+        '^(?:sigilの)?使い方(?:を)?(?:教えて|見せて)$',
+      ],
+      build: fixed({}),
+    },
+    {
+      id: 'timer',
+      tool: 'set_timer',
+      source: [
+        '^(?:タイマー(?:を)?)?SPAN(?:の)?(?:タイマー)?(?:を)?(?:セットして|セット|かけて|設定して|始めて|スタートして|測って|計って)$',
+        '^SPANのタイマー$',
+        '^タイマー(?:を)?SPAN(?:に|で)?(?:セットして|設定して|かけて)?$',
+        '^SPAN後に(?:教えて|知らせて|呼んで)$',
+      ],
+      build: timerArgs,
+    },
+    {
+      id: 'alarm',
+      tool: 'set_alarm',
+      source: [
+        '^CLOCKに(?:アラーム|目覚まし)(?:を)?(?:セットして|かけて|設定して|鳴らして)?$',
+        '^(?:アラーム|目覚まし)(?:を)?CLOCKに(?:セットして|かけて|設定して)?$',
+        '^CLOCKに起こして$',
+      ],
+      build: alarmArgs,
+    },
+    {
+      id: 'flashlight',
+      tool: 'flashlight',
+      source: '^(?:ライト|懐中電灯|フラッシュライト)(?:を)?(?<state>つけて|付けて|点けて|オンにして|オン|消して|けして|オフにして|オフ)$',
+      build: (g) => ({ on: !/^(?:消して|けして|オフ)/u.test(g.state ?? '') }),
+    },
+    {
+      id: 'website',
+      tool: 'open_website',
+      source: '^(?<url>DOMAIN)(?:を)?(?:開いて|開く|表示して)$',
+      build: (g) => ({ url: unquote(g.url ?? '') }),
+    },
+    {
+      id: 'open-chat',
+      tool: 'open_chat',
+      source: '^(?:(?<app>APPS)で)?(?<contact>[^、 ]+?)(?:さん)?(?:と|との)(?:チャット|トーク|会話)(?:を)?(?:開いて|開く|見せて)$',
+      build: (g) => withApp(g, { contact: unquote(g.contact ?? '') }),
+    },
+    {
+      id: 'close-app',
+      tool: 'close_app',
+      source: '^(?<app>.+?)(?:を)?(?:閉じて|閉じる|終了して|終了|やめて)$',
+      build: (g) => ({ app: (g.app ?? '').trim() }),
     },
     { id: 'back', tool: 'navigate', source: '^(?:戻って|戻る|前の画面に戻って|前の画面に戻る|バック)$', build: fixed({ action: 'back' }) },
     {

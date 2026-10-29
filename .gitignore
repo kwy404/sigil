@@ -11,6 +11,8 @@ expo-env.d.ts
 
 # Native
 .kotlin/
+# The hand tracking model is downloaded and checked at build time (modules/sigil-control/android/build.gradle).
+modules/sigil-control/android/src/main/assets/hand_landmarker.task*
 *.orig.*
 *.jks
 *.p8

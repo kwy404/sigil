@@ -1,6 +1,8 @@
 import type { ProfileRegistry } from '../app-profiles/registry';
 import type { ProfileAction } from '../app-profiles/schema';
 import type { GestureKey } from '../gesture-engine/gestures';
+import type { SystemApp } from '../sigil-core/apps';
+import type { ExecutionFailure } from '../sigil-core/executor';
 import type { Notice } from '../sigil-core/notices';
 import type { Plan } from '../sigil-core/planner';
 import type { PlanStep, StepTarget } from '../sigil-core/steps';
@@ -78,10 +80,37 @@ export function describeTarget(target: StepTarget, ctx: DescribeContext): string
   }
 }
 
+/** The name of the app a step works on: the translated profile name, the kind of default app, or the launcher label. */
+function stepApp(step: { app: string; label: string; role?: SystemApp }, ctx: DescribeContext): string {
+  if (step.role) {
+    return ctx.m.roles[step.role];
+  }
+  const name = ctx.appName(step.app);
+  return name === step.app ? step.label : name;
+}
+
+/** A timer length such as 1 h 30 min, in the app language. */
+export function describeDuration(seconds: number, m: Messages): string {
+  return m.time.duration(Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), seconds % 60);
+}
+
+/** Why a run stopped, in the app language, when the executor named the reason. Null otherwise. */
+export function describeFailure(
+  result: { failure?: ExecutionFailure },
+  step: PlanStep | undefined,
+  ctx: DescribeContext,
+): string | null {
+  if (!result.failure) {
+    return null;
+  }
+  const app = step?.kind === 'close_app' ? stepApp(step, ctx) : '';
+  return ctx.m.failures[result.failure](app);
+}
+
 /** The app a plan works in: the one its first step opens, or the one its taps target. */
 function planApp(plan: Plan, ctx: DescribeContext): string {
   for (const step of plan.steps) {
-    if (step.kind === 'open_app') return ctx.appName(step.app);
+    if (step.kind === 'open_app') return stepApp(step, ctx);
     if ((step.kind === 'tap' || step.kind === 'find') && step.target.by === 'selector') return ctx.appName(step.target.app);
   }
   return '';
@@ -101,6 +130,9 @@ export function describeConfirmation(plan: Plan, index: number, ctx: DescribeCon
   if (step.reason === 'post' && intent.tool === 'create_post') {
     return m.confirm.post(planApp(plan, ctx), intent.args.caption);
   }
+  if (step.reason === 'close_all') {
+    return m.confirm.closeAll;
+  }
   const next = plan.steps[index + 1];
   return next?.kind === 'tap' ? m.confirm.tap(describeTarget(next.target, ctx)) : step.summary;
 }
@@ -110,7 +142,17 @@ export function describeStep(step: PlanStep, ctx: DescribeContext, plan?: Plan, 
   const { m, format } = ctx;
   switch (step.kind) {
     case 'open_app':
-      return m.steps.open(ctx.appName(step.app));
+      return m.steps.open(stepApp(step, ctx));
+    case 'close_app':
+      return m.steps.close(stepApp(step, ctx));
+    case 'tutorial':
+      return m.steps.tutorial;
+    case 'timer':
+      return m.steps.timer(describeDuration(step.seconds, m));
+    case 'alarm':
+      return m.steps.alarm(m.time.clock(step.hour, step.minute));
+    case 'torch':
+      return m.steps.torch[step.on ? 'on' : 'off'];
     case 'wait':
       return 'app' in step.until ? m.steps.waitApp(ctx.appName(step.until.app)) : m.steps.waitFor(describeTarget(step.until.target, ctx));
     case 'find':
@@ -163,6 +205,20 @@ export function describePlan(plan: Plan, ctx: DescribeContext): string {
       return m.plan.type(intent.args.text);
     case 'like':
       return m.plan.like(planApp(plan, ctx));
+    case 'close_app': {
+      const step = plan.steps[0];
+      return step?.kind === 'close_app' ? m.plan.close(stepApp(step, ctx)) : plan.summary;
+    }
+    case 'close_all_apps':
+      return m.plan.closeAll;
+    case 'open_place':
+      return m.plan.openPlace(m.places[intent.args.place], planApp(plan, ctx));
+    case 'open_chat':
+      return m.plan.openChat(intent.args.contact, planApp(plan, ctx));
+    case 'open_website': {
+      const step = plan.steps[0];
+      return step?.kind === 'open_app' && step.app === 'web' ? m.plan.website(step.label) : describeStep(plan.steps[0], ctx, plan, 0);
+    }
     default:
       return plan.steps[0] ? describeStep(plan.steps[0], ctx, plan, 0) : plan.summary;
   }
@@ -195,6 +251,16 @@ export function describeNotice(notice: Notice, ctx: DescribeContext): string {
       return m.notices.cannot_like(ctx.appName(notice.appId));
     case 'like_needs_app':
       return m.notices.like_needs_app();
+    case 'which_app':
+      return m.notices.which_app(notice.options.map((option) => option.label).join(m.listSeparator));
+    case 'not_installed':
+      return m.notices.not_installed(notice.app);
+    case 'android_only':
+      return m.androidOnly[notice.feature];
+    case 'no_app_in_front':
+      return m.notices.no_app_in_front();
+    case 'cannot_open_place':
+      return m.notices.cannot_open_place(m.places[notice.place], ctx.appName(notice.appId));
     case 'question':
       return notice.question;
   }

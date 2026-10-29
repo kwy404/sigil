@@ -121,12 +121,12 @@ class FakeWhatsApp implements DeviceController {
     return true;
   }
 
-  async scroll(): Promise<boolean> {
+  async scroll(_direction?: string): Promise<boolean> {
     this.log.push('scroll');
     return true;
   }
 
-  async navigate(): Promise<boolean> {
+  async navigate(_action?: string): Promise<boolean> {
     return true;
   }
 
@@ -163,6 +163,103 @@ class FakeWhatsApp implements DeviceController {
     this.log.push(`panel ${panel}`);
     return true;
   }
+
+  async swipe(fromX: number, fromY: number, toX: number, toY: number): Promise<boolean> {
+    this.log.push(`swipe ${fromX},${fromY} ${toX},${toY}`);
+    return true;
+  }
+
+  torchBusy = false;
+
+  async setTimer(seconds: number): Promise<ControlResult> {
+    this.log.push(`timer ${seconds}`);
+    return { ok: true };
+  }
+
+  async setAlarm(hour: number, minute: number): Promise<ControlResult> {
+    this.log.push(`alarm ${hour}:${minute}`);
+    return { ok: true };
+  }
+
+  async setTorch(on: boolean): Promise<ControlResult> {
+    if (this.torchBusy) {
+      return { ok: false, reason: 'busy' };
+    }
+    this.log.push(`torch ${on ? 'on' : 'off'}`);
+    return { ok: true };
+  }
+}
+
+interface Card {
+  label: string;
+  packageName: string;
+}
+
+/**
+ * Recent apps as a launcher shows them: one page of cards at a time, cards
+ * flicked up go away (unless sticky, as on a launcher that ignores the
+ * gesture), and home and recents change what the screen shows.
+ */
+class FakeRecents extends FakeWhatsApp {
+  view: 'app' | 'home' | 'recents' = 'app';
+  page = 0;
+  sticky = false;
+
+  constructor(
+    public cards: Card[][],
+    front: string | null,
+  ) {
+    super();
+    this.foreground = front;
+  }
+
+  override async navigate(action?: string): Promise<boolean> {
+    this.log.push(action ?? '');
+    if (action === 'home') {
+      this.view = 'home';
+      this.foreground = 'com.google.android.apps.nexuslauncher';
+    } else if (action === 'recents') {
+      this.view = 'recents';
+      this.page = 0;
+    }
+    return true;
+  }
+
+  override async scroll(direction?: string): Promise<boolean> {
+    if (this.view !== 'recents') return false;
+    const next = this.page + (direction === 'right' || direction === 'down' ? 1 : -1);
+    if (next < 0 || next >= this.cards.length) return false;
+    this.log.push(`page ${next}`);
+    this.page = next;
+    return true;
+  }
+
+  override nodes(): UiNode[] {
+    if (this.view !== 'recents') return [];
+    return (this.cards[this.page] ?? []).map((card, i) =>
+      node(`card-${card.packageName}`, {
+        description: card.label,
+        bounds: { left: 100 + i * 400, top: 600, right: 450 + i * 400, bottom: 1600 },
+      }),
+    );
+  }
+
+  override async swipe(fromX: number, fromY: number, toX: number, toY: number): Promise<boolean> {
+    this.log.push(`swipe ${fromX},${fromY} ${toX},${toY}`);
+    if (!this.sticky) {
+      const page = this.cards[this.page] ?? [];
+      this.cards[this.page] = page.filter((_, i) => fromX < 100 + i * 400 || fromX > 450 + i * 400);
+    }
+    return true;
+  }
+}
+
+const INSTAGRAM: Card = { label: 'Instagram', packageName: 'com.instagram.android' };
+const WHATSAPP: Card = { label: 'WhatsApp', packageName: 'com.whatsapp' };
+const MAPS: Card = { label: 'Maps', packageName: 'com.google.android.apps.maps' };
+
+function closePlan(card: Card): Plan {
+  return planOf([{ kind: 'close_app', app: card.packageName, label: card.label, packages: [card.packageName] }]);
 }
 
 async function messagePlan(): Promise<Plan> {
@@ -342,12 +439,110 @@ describe('PlanExecutor with system controls', () => {
       profiles,
       confirm: async () => true,
       clock: new FakeClock(),
-      ui: { sphere: (action) => opened.push(action) },
+      ui: { sphere: (action) => opened.push(action), tutorial: () => opened.push('tutorial') },
     });
     expect((await withUi.run(planOf([{ kind: 'sphere', action: 'open' }]))).status).toBe('completed');
     expect(opened).toEqual(['open']);
     const { run } = executor(new FakeWhatsApp(), async () => true);
     expect((await run.run(planOf([{ kind: 'sphere', action: 'open' }]))).status).toBe('failed');
+  });
+});
+
+describe('closing apps through recent apps', () => {
+  it('goes home, flicks the card of the app in front away, checks it is gone and goes home', async () => {
+    const device = new FakeRecents([[INSTAGRAM, WHATSAPP]], INSTAGRAM.packageName);
+    const { run } = executor(device, async () => true);
+    const result = await run.run(closePlan(INSTAGRAM));
+    expect(result).toEqual({ status: 'completed', completedSteps: 1 });
+    expect(device.cards).toEqual([[WHATSAPP]]);
+    expect(device.log).toEqual(['home', 'recents', 'swipe 275,1100 275,100', 'home']);
+  });
+
+  it('pages through recent apps to find a card', async () => {
+    const device = new FakeRecents([[WHATSAPP], [MAPS], [INSTAGRAM]], WHATSAPP.packageName);
+    const { run } = executor(device, async () => true);
+    expect((await run.run(closePlan(INSTAGRAM))).status).toBe('completed');
+    expect(device.log).toEqual(['recents', 'page 1', 'page 2', 'swipe 275,1100 275,100', 'home']);
+  });
+
+  it('says honestly that the app only went to the background when its card is missing', async () => {
+    const device = new FakeRecents([[WHATSAPP]], INSTAGRAM.packageName);
+    const { run, events } = executor(device, async () => true);
+    const result = await run.run(closePlan(INSTAGRAM));
+    expect(result).toMatchObject({ status: 'failed', failure: 'went_background' });
+    expect(events[events.length - 1]).toMatchObject({ status: 'failed', failure: 'went_background' });
+    expect(device.log[0]).toBe('home');
+    expect(device.log[device.log.length - 1]).toBe('home');
+    expect(device.log.some((entry) => entry.startsWith('swipe'))).toBe(false);
+  });
+
+  it('says a named app is not open when recent apps do not have it', async () => {
+    const device = new FakeRecents([[WHATSAPP]], WHATSAPP.packageName);
+    const { run } = executor(device, async () => true);
+    expect(await run.run(closePlan(INSTAGRAM))).toMatchObject({ status: 'failed', failure: 'not_open' });
+    expect(device.log[0]).toBe('recents');
+  });
+
+  it('reports a card that stays after the flick', async () => {
+    const device = new FakeRecents([[INSTAGRAM]], INSTAGRAM.packageName);
+    device.sticky = true;
+    const { run } = executor(device, async () => true);
+    expect(await run.run(closePlan(INSTAGRAM))).toMatchObject({ status: 'failed', failure: 'still_open' });
+    expect(device.log[device.log.length - 1]).toBe('home');
+  });
+
+  it('closes all apps only after a yes, through the launcher clear all button', async () => {
+    const planned = new ActionPlanner({ profiles }).planIntent({ tool: 'close_all_apps', args: {} }, { text: 'close all apps' });
+    if (planned.status !== 'planned') throw new Error(planned.status);
+    expect(planned.plan.needsConfirmation).toBe(true);
+    const device = new FakeRecents([[INSTAGRAM]], INSTAGRAM.packageName);
+    device.nodes = () =>
+      device.view === 'recents' ? [node('clear', { resourceId: 'com.google.android.apps.nexuslauncher:id/clear_all' })] : [];
+    const asked: string[] = [];
+    const { run } = executor(device, async (request) => {
+      asked.push(request.reason);
+      return false;
+    });
+    expect((await run.run(planned.plan)).status).toBe('cancelled');
+    expect(asked).toEqual(['close_all']);
+    expect(device.log).not.toContain('tap clear');
+    const yes = executor(device, async () => true);
+    expect((await yes.run.run(planned.plan)).status).toBe('completed');
+    expect(device.log).toContain('tap clear');
+  });
+});
+
+describe('timers, alarms, the flashlight and the tutorial', () => {
+  it('passes timers, alarms and the flashlight to the device', async () => {
+    const device = new FakeWhatsApp();
+    const { run } = executor(device, async () => true);
+    const plan = planOf([
+      { kind: 'timer', seconds: 300 },
+      { kind: 'alarm', hour: 7, minute: 30 },
+      { kind: 'torch', on: true },
+    ]);
+    expect((await run.run(plan)).status).toBe('completed');
+    expect(device.log).toEqual(['timer 300', 'alarm 7:30', 'torch on']);
+  });
+
+  it('says the flashlight is busy while a camera holds it', async () => {
+    const device = new FakeWhatsApp();
+    device.torchBusy = true;
+    const { run } = executor(device, async () => true);
+    expect(await run.run(planOf([{ kind: 'torch', on: true }]))).toMatchObject({ status: 'failed', failure: 'busy' });
+  });
+
+  it('opens the tutorial through Sigil interface', async () => {
+    const shown: string[] = [];
+    const withUi = new PlanExecutor({
+      device: new FakeWhatsApp(),
+      profiles,
+      confirm: async () => true,
+      clock: new FakeClock(),
+      ui: { sphere: () => undefined, tutorial: () => shown.push('tutorial') },
+    });
+    expect((await withUi.run(planOf([{ kind: 'tutorial' }]))).status).toBe('completed');
+    expect(shown).toEqual(['tutorial']);
   });
 });
 

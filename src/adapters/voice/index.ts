@@ -2,7 +2,18 @@ import { MockSpeechToText } from './mock-speech';
 import type { SpeechToText } from './speech-to-text';
 
 export { MockSpeechToText, type MockSpeechOptions } from './mock-speech';
-export { ListenAbortedError, type ListenOptions, type SpeechToText, type Transcript } from './speech-to-text';
+export { NativeSpeechToText, toTranscript, type SpeechModule } from './native-speech';
+export {
+  ListenAbortedError,
+  SpeechUnavailableError,
+  UnclearSpeechError,
+  type Alternative,
+  type ListenOptions,
+  type SpeechToText,
+  type Transcript,
+  type UnavailableReason,
+  type UnclearReason,
+} from './speech-to-text';
 
 /** Requests the mock engine "hears" in development builds. */
 export const DEMO_UTTERANCES: readonly string[] = [
@@ -14,10 +25,9 @@ export const DEMO_UTTERANCES: readonly string[] = [
 ];
 
 /**
- * Returns the speech engine for this build. Only the mock exists today; a
- * native engine (whisper.rn or the platform recognizer) replaces it once its
- * module is installed, without changes to the callers. The mock "hears" the
- * given sentences, so the app can pass examples in the user's language.
+ * A scripted engine that "hears" the given sentences, so screens can show the
+ * voice flow where no recognizer exists (iOS, the web, Expo Go). On Android
+ * the runtime uses NativeSpeechToText instead.
  */
 export function createSpeechToText(script: readonly string[] = DEMO_UTTERANCES): SpeechToText {
   return new MockSpeechToText(script.length > 0 ? script : DEMO_UTTERANCES);

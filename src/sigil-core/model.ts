@@ -7,7 +7,7 @@ export interface ModelContext {
   locale: string;
   /** Name of the app in the foreground, when known. */
   foregroundApp: string | null;
-  /** App names and aliases Sigil has profiles for. */
+  /** App names Sigil can open: installed apps, profiles and well known apps with their nicknames. */
   knownApps: string[];
 }
 
@@ -28,7 +28,14 @@ export interface LanguageModel {
   readonly kind: 'rules' | 'local' | 'mock';
   /** False while weights are downloading or loading. The planner then uses the fallback. */
   isReady(): boolean;
+  /** Aborting the signal must stop the work: the planner aborts it when the model runs out of time. */
   propose(request: string, context: ModelContext, tools: readonly ToolDefinition[], signal?: AbortSignal): Promise<ModelReply>;
+  /**
+   * Optional: starts loading the weights in the background, so a later
+   * request finds the model ready. Called by the planner when the model is not
+   * ready yet, and by screens when the user starts to speak.
+   */
+  prepare?(context: ModelContext, tools: readonly ToolDefinition[]): void;
 }
 
 /** Deterministic fallback built on the rule parser. Same input, same output, no weights. */

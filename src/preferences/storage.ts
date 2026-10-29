@@ -1,36 +1,30 @@
-import { File, Paths } from 'expo-file-system';
-
+import { parseTourRecord } from '../onboarding/machine';
+import { readSettings, updateSettings } from '../settings/store';
 import { DEFAULT_PREFERENCES, parsePreferences, type Preferences } from './storage.shared';
 
 export { DEFAULT_PREFERENCES, parsePreferences, type Preferences };
 
 /**
- * The preferences file sits next to the language choice (sigil-language.json)
- * in the document directory and uses the same expo-file-system store.
+ * The preferences live in the same settings file as the language choice
+ * (src/settings/store.ts, expo-file-system): the tutorial completion under
+ * tutorial, with its version, and the haptics switch.
  */
-const FILE_NAME = 'sigil-preferences.json';
-
-function preferencesFile(): File | null {
-  try {
-    return new File(Paths.document, FILE_NAME);
-  } catch {
-    return null;
-  }
-}
-
 export function loadPreferences(): Preferences {
   try {
-    const file = preferencesFile();
-    return file?.exists ? parsePreferences(file.textSync()) : DEFAULT_PREFERENCES;
+    const saved = readSettings();
+    return {
+      tour: saved.tutorial?.completed ? parseTourRecord(saved.tutorial) : null,
+      haptics: saved.haptics !== false,
+    };
   } catch {
     return DEFAULT_PREFERENCES;
   }
 }
 
 export function savePreferences(preferences: Preferences): void {
-  try {
-    preferencesFile()?.writeSync(JSON.stringify(preferences));
-  } catch {
-    // Without storage (tests) the preferences last until the app closes.
-  }
+  const tour = preferences.tour;
+  updateSettings({
+    tutorial: tour ? { version: tour.version, completed: true, completedAt: tour.completedAt, skipped: tour.skipped } : undefined,
+    haptics: preferences.haptics,
+  });
 }

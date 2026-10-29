@@ -1,8 +1,9 @@
 import { GENERAL_PROFILE_ID, type ProfileRegistry } from '../app-profiles/registry';
+import { appNamesFor, type InstalledApp } from './apps';
 import { ConfirmationPolicy } from './confirmation';
-import { expandIntent } from './flows';
+import { expandIntent, type PlanPlatform } from './flows';
 import { RuleBasedModel, type LanguageModel, type ModelContext } from './model';
-import { noticeText, type Notice } from './notices';
+import { noticeText, type AppChoice, type Notice } from './notices';
 import type { PlanStep } from './steps';
 import { parseToolCall, toolDefinitions, type Intent } from './tools';
 
@@ -34,6 +35,16 @@ export interface Plan {
 export type PlanOutcome =
   | { status: 'planned'; plan: Plan; notes: string[] }
   | { status: 'clarify'; question: string; source: IntentSource }
+  | {
+      status: 'choose';
+      message: string;
+      notice: Notice;
+      /** The apps a name matched. planChoice plans again with the one the user picks. */
+      options: AppChoice[];
+      intent: Intent;
+      source: IntentSource;
+      request: VoiceRequest;
+    }
   | { status: 'blocked'; message: string; notice: Notice }
   | { status: 'unsupported'; message: string; intent: Intent; notice: Notice }
   | { status: 'not_understood'; message: string; notes: string[]; notice: Notice };
@@ -45,22 +56,47 @@ export interface PlannerOptions {
   /** Deterministic fallback. Defaults to RuleBasedModel. */
   fallback?: LanguageModel;
   policy?: ConfirmationPolicy;
-  /** How long to wait for the model before using the fallback. */
-  modelTimeoutMs?: number;
+  /** How long to wait for the model before using the fallback; a function is read on every request. */
+  modelTimeoutMs?: number | (() => number);
   defaultMessagingApp?: string;
   defaultSearchApp?: string;
+  /** Launchable apps of the phone, read on every request so a new install is heard at once. */
+  installedApps?: () => readonly InstalledApp[];
+  /** Where plans run. Defaults to android. */
+  platform?: PlanPlatform;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+const NO_APPS: readonly InstalledApp[] = [];
+
+/**
+ * Runs work with its own abort signal, and aborts that signal when the time
+ * runs out or when the outer signal aborts, so a model that is too slow stops
+ * generating instead of holding the phone's CPU after the rules answered.
+ */
+function withTimeout<T>(work: (signal: AbortSignal) => Promise<T>, ms: number, outer?: AbortSignal): Promise<T> {
+  const controller = new AbortController();
+  const forward = () => controller.abort();
+  if (outer?.aborted) {
+    controller.abort();
+  } else {
+    outer?.addEventListener('abort', forward);
+  }
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`no answer after ${ms} ms`)), ms);
-    promise.then(
+    const timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`no answer after ${ms} ms`));
+    }, ms);
+    const settle = () => {
+      clearTimeout(timer);
+      outer?.removeEventListener('abort', forward);
+    };
+    work(controller.signal).then(
       (value) => {
-        clearTimeout(timer);
+        settle();
         resolve(value);
       },
       (error: unknown) => {
-        clearTimeout(timer);
+        settle();
         reject(error);
       },
     );
@@ -78,9 +114,11 @@ export class ActionPlanner {
   private readonly model: LanguageModel | null;
   private readonly fallback: LanguageModel;
   readonly policy: ConfirmationPolicy;
-  private readonly modelTimeoutMs: number;
+  private readonly modelTimeoutMs: number | (() => number);
   private readonly defaultMessagingApp: string;
   private readonly defaultSearchApp: string;
+  private readonly installedApps: () => readonly InstalledApp[];
+  private readonly platform: PlanPlatform;
 
   constructor(options: PlannerOptions) {
     this.profiles = options.profiles;
@@ -90,14 +128,13 @@ export class ActionPlanner {
     this.modelTimeoutMs = options.modelTimeoutMs ?? 4000;
     this.defaultMessagingApp = options.defaultMessagingApp ?? 'whatsapp';
     this.defaultSearchApp = options.defaultSearchApp ?? 'chrome';
+    this.installedApps = options.installedApps ?? (() => NO_APPS);
+    this.platform = options.platform ?? 'android';
   }
 
-  /** App names and aliases the rules and the model may refer to. */
+  /** App names the rules and the model may refer to: installed apps, profiles, known apps and their nicknames. */
   knownApps(): string[] {
-    return this.profiles
-      .list()
-      .filter((p) => p.id !== GENERAL_PROFILE_ID)
-      .flatMap((p) => [p.name, p.id, ...(p.aliases ?? [])]);
+    return appNamesFor({ profiles: this.profiles, installed: this.installedApps() });
   }
 
   async plan(request: VoiceRequest, signal?: AbortSignal): Promise<PlanOutcome> {
@@ -112,30 +149,37 @@ export class ActionPlanner {
       return { status: 'blocked', message: refusal, notice: { code: 'bulk' } };
     }
 
-    const foreground = request.foregroundPackage ? this.profiles.forPackage(request.foregroundPackage) : null;
-    const context: ModelContext = {
-      locale: request.locale ?? 'en-US',
-      foregroundApp: foreground && foreground.id !== GENERAL_PROFILE_ID ? foreground.name : null,
-      knownApps: this.knownApps(),
-    };
-
+    const context = this.modelContext(request);
     const proposal = await this.propose(text, context, notes, signal);
     if (!proposal) {
       const notice: Notice = { code: 'not_understood' };
       return { status: 'not_understood', message: noticeText(notice), notes, notice };
     }
     const { intent, source } = proposal;
+    return this.planIntent(intent, { ...request, text }, source, notes);
+  }
+
+  /**
+   * Plans an intent that is already chosen, by the model, the rules or
+   * planChoice. The flows and the confirmation policy apply as in plan.
+   */
+  planIntent(intent: Intent, request: VoiceRequest, source: IntentSource = 'rules', notes: string[] = []): PlanOutcome {
     if (intent.tool === 'clarify') {
       return { status: 'clarify', question: intent.args.question, source };
     }
-
     const flow = expandIntent(intent, {
       profiles: this.profiles,
       foregroundPackage: request.foregroundPackage,
       defaultMessagingApp: this.defaultMessagingApp,
       defaultSearchApp: this.defaultSearchApp,
+      installedApps: this.installedApps(),
+      platform: this.platform,
     });
     if (!flow.ok) {
+      if (flow.notice.code === 'which_app') {
+        const { options } = flow.notice;
+        return { status: 'choose', message: flow.message, notice: flow.notice, options, intent, source, request };
+      }
       return flow.reason === 'blocked'
         ? { status: 'blocked', message: flow.message, notice: flow.notice }
         : { status: 'unsupported', message: flow.message, intent, notice: flow.notice };
@@ -147,7 +191,7 @@ export class ActionPlanner {
     return {
       status: 'planned',
       plan: {
-        request: text,
+        request: request.text.trim(),
         intent,
         source,
         summary: flow.summary,
@@ -158,6 +202,36 @@ export class ActionPlanner {
     };
   }
 
+  /** Plans a choose outcome again with the app the user picked from its options. */
+  planChoice(outcome: Extract<PlanOutcome, { status: 'choose' }>, choice: AppChoice): PlanOutcome {
+    const { intent } = outcome;
+    const picked = 'app' in intent.args ? ({ ...intent, args: { ...intent.args, app: choice.app } } as Intent) : intent;
+    return this.planIntent(picked, outcome.request, outcome.source);
+  }
+
+  /**
+   * Lets an on device model start loading before the request arrives, for
+   * example when the user starts to speak. Does nothing without a model.
+   */
+  prepareModel(request: Omit<VoiceRequest, 'text'> = {}): void {
+    if (this.model && !this.model.isReady()) {
+      this.model.prepare?.(this.modelContext(request), toolDefinitions());
+    }
+  }
+
+  private modelContext(request: Omit<VoiceRequest, 'text'>): ModelContext {
+    const foreground = request.foregroundPackage ? this.profiles.forPackage(request.foregroundPackage) : null;
+    return {
+      locale: request.locale ?? 'en-US',
+      foregroundApp: foreground && foreground.id !== GENERAL_PROFILE_ID ? foreground.name : null,
+      knownApps: this.knownApps(),
+    };
+  }
+
+  private timeoutMs(): number {
+    return typeof this.modelTimeoutMs === 'function' ? this.modelTimeoutMs() : this.modelTimeoutMs;
+  }
+
   private async propose(
     text: string,
     context: ModelContext,
@@ -165,9 +239,15 @@ export class ActionPlanner {
     signal?: AbortSignal,
   ): Promise<{ intent: Intent; source: IntentSource } | null> {
     const tools = toolDefinitions();
-    if (this.model && this.model.isReady()) {
+    const model = this.model;
+    if (model && !model.isReady()) {
+      // An installed model that is not loaded starts loading now; this request
+      // goes to the rules instead of waiting for the weights.
+      model.prepare?.(context, tools);
+      notes.push('The model is not loaded yet. The rules planned this request.');
+    } else if (model) {
       try {
-        const reply = await withTimeout(this.model.propose(text, context, tools, signal), this.modelTimeoutMs);
+        const reply = await withTimeout((inner) => model.propose(text, context, tools, inner), this.timeoutMs(), signal);
         if (reply.toolCalls.length > 1) {
           notes.push(`The model proposed ${reply.toolCalls.length} actions. Sigil runs one per request.`);
         }

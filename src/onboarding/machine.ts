@@ -6,8 +6,8 @@ import type { ChecklistItem } from '../session/types';
  * storage, so every rule is covered by unit tests.
  */
 
-/** Raise when the tutorial changes enough that everyone should see it again. */
-export const TOUR_VERSION = 1;
+/** Raise when the tutorial changes enough that everyone should see it again. Version 1 was the first guided tour. */
+export const TOUR_VERSION = 2;
 
 export const TOUR_STEPS = [
   'welcome',
