@@ -38,49 +38,74 @@ sleep 20
 shot 01-open
 tree 01-open
 
-for i in 2 3 4 5 6; do
-  adb shell input swipe 540 1700 540 600 400
-  sleep 2
-  shot "0$i-scroll"
-done
-tree 06-scroll
+# The first launch shows the guided tour. Keep a few of its pages, then skip it.
+tap_text "Get started"
+sleep 3
+shot 02-tour-about
+tap_text "Continue"
+sleep 3
+shot 03-tour-permission
+tree 03-tour-permission
+tap_text "Back"
+sleep 2
+tap_text "Back"
+sleep 2
+tap_text "Skip tutorial"
+sleep 3
+shot 04-tour-done
+tap_text "Start using Sigil"
+sleep 5
+shot 05-now
+tree 05-now
 
 adb shell input keyevent KEYCODE_HOME
 sleep 4
-shot 07-home
-tree 07-home
+shot 06-home
 
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 > /dev/null
 sleep 6
-shot 08-reopen
-
-# The first launch shows the guided tour; skip it to reach the main screen.
-tap_text "Skip the tour"
-sleep 4
-shot 09-main
-tree 09-main
+shot 07-reopen
 
 # Start: camera service, cursor and bubble.
 tap_text "Start"
 sleep 8
-shot 10-started
-tree 10-started
+shot 08-started
+tree 08-started
 
 # The emulator has no real hand: the demo hand moves the cursor (and never taps).
 adb shell am start -a android.intent.action.VIEW -d "sigil://control/demo" "$PKG" > /dev/null
 sleep 6
-shot 11-demo
+shot 09-demo
 adb shell input keyevent KEYCODE_HOME
 sleep 3
-shot 12-demo-over-home
+shot 10-demo-over-home
 sleep 2
-shot 13-demo-over-home-later
-tree 13-demo-over-home
+shot 11-demo-over-home-later
+tree 11-demo-over-home
 
+# The bubble and the tile open the Live sheet through the session.
 adb shell am start -a android.intent.action.VIEW -d "sigil://control/sphere" "$PKG" > /dev/null
 sleep 5
-shot 14-sphere
-tree 14-sphere
+shot 12-live
+tree 12-live
+
+# Every tab and a detail page of each, through deep links.
+link() {
+  adb shell am start -a android.intent.action.VIEW -d "$2" "$PKG" > /dev/null
+  sleep 4
+  shot "$1"
+}
+adb shell input keyevent KEYCODE_BACK
+sleep 2
+link 13-gestures "sigil://gestures"
+link 14-gesture-detail "sigil://gestures/volume-knob"
+link 15-apps "sigil://apps"
+link 16-app-detail "sigil://apps/youtube"
+link 17-voice "sigil://voice"
+link 18-settings "sigil://settings"
+link 19-permissions "sigil://settings/permissions"
+link 20-command "sigil://command?text=open%20YouTube"
+tree 20-command
 
 adb shell dumpsys activity services "$PKG" > "$OUT/services.txt" 2>&1
 adb shell settings get secure enabled_accessibility_services > "$OUT/accessibility.txt" 2>&1
