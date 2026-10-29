@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Defs, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { color } from './theme';
 
@@ -78,6 +78,28 @@ export function Glow({
           </RadialGradient>
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#r${id})`} />
+      </Svg>
+    </View>
+  );
+}
+
+/**
+ * A vertical fade to the canvas, so content dims as it scrolls under the
+ * floating chrome instead of showing at full strength around the pill.
+ */
+export function Fade({ to = color.canvas, strength = 0.92, style }: { to?: string; strength?: number; style?: StyleProp<ViewStyle> }) {
+  const id = svgId(useId());
+  return (
+    <View pointerEvents="none" style={style}>
+      <Svg width="100%" height="100%" preserveAspectRatio="none">
+        <Defs>
+          <LinearGradient id={`f${id}`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={to} stopOpacity={0} />
+            <Stop offset="0.55" stopColor={to} stopOpacity={strength * 0.72} />
+            <Stop offset="1" stopColor={to} stopOpacity={strength} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill={`url(#f${id})`} />
       </Svg>
     </View>
   );

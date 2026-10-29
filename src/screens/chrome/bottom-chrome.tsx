@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useI18n } from '../../i18n';
+import { Fade } from '../../ui/backdrop';
 import { Glass } from '../../ui/glass';
 import { Glyph, type GlyphName } from '../../ui/glyph';
 import { PressableScale } from '../../ui/press';
@@ -31,6 +32,7 @@ export function BottomChrome({ state, emitter, navigateToTab, insets }: BottomTa
   const { messages: m } = useI18n();
   return (
     <View style={styles.root} pointerEvents="box-none">
+      <Fade style={styles.fade} />
       <CommandPill style={styles.pill} />
       <Glass style={[styles.bar, { paddingBottom: insets.bottom }]}>
         <View style={styles.hairline} />
@@ -67,9 +69,13 @@ export function BottomChrome({ state, emitter, navigateToTab, insets }: BottomTa
   );
 }
 
+const FADE_ABOVE = 28;
+
 const styles = StyleSheet.create({
   root: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   pill: { marginHorizontal: chrome.pillSide, marginBottom: chrome.pillGap },
+  // From a little above the pill down to the tab bar.
+  fade: { position: 'absolute', left: 0, right: 0, top: -FADE_ABOVE, height: FADE_ABOVE + chrome.pill + chrome.pillGap },
   bar: {},
   hairline: { position: 'absolute', top: 0, left: 0, right: 0, height: StyleSheet.hairlineWidth, backgroundColor: color.hairlineStrong },
   row: { flexDirection: 'row', height: chrome.tabBar, alignItems: 'center', paddingHorizontal: 4 },
