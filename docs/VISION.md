@@ -21,7 +21,7 @@ Everything runs on the phone: hand tracking, speech recognition and the language
 
 - **Holographic cursor.** A glowing ring that follows the index finger across every app, with a pulse while idle and a press animation on pinch. The hand only needs to move inside a comfortable box in front of the camera; that box maps to the whole screen.
 - **Control Sphere.** An open palm opens a radial hub over the current app: Apps, Voice, Cursor, Profiles, Pause and Settings. Point at a segment and pinch.
-- **Voice.** A fist held like a microphone starts listening. Short requests in English or Brazilian Portuguese become a plan of visible steps: open the app, find the contact, type, then ask "Send this to Ana?" before tapping Send.
+- **Voice.** A fist held like a microphone starts listening. Short requests in English, Brazilian Portuguese, Spanish, French, German, Italian, Japanese or Simplified Chinese become a plan of visible steps: open the app, find the contact, type, then ask "Send this to Ana?" before tapping Send.
 - **Per app profiles.** Sigil knows which app is in front and loads its profile. Apps without one use the general profile.
 
 ## Milestones

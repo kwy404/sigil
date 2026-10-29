@@ -15,7 +15,7 @@ Hand landmarks in, discrete gestures out. Pure TypeScript, no React Native impor
 | `HandPoint`, `HAND_LANDMARK_COUNT`, `FINGER_CHAINS` | The 21 point layout of MediaPipe Hand Landmarker |
 | `GestureKind` | `open_palm`, `point`, `pinch`, `double_pinch`, `pinch_hold`, `fist`, `swipe_two`, `swipe_three`, `circle_cw`, `circle_ccw`, `flick` |
 | `GestureEvent` | `{ kind, t, direction?, phase?, position, confidence }`; `phase` is `start` or `end` for `pinch_hold` |
-| `GestureKey`, `GESTURE_KEYS` | The 20 keys profiles bind, directional gestures expanded (`swipe_two_left`, `flick_up`) |
+| `GestureKey`, `GESTURE_KEYS` | The 24 keys profiles bind, directional gestures expanded (`swipe_two_left`, `flick_up`) |
 | `HandPose` | `none`, `unknown`, `open_palm`, `point`, `pinch`, `fist`, `two_fingers`, `three_fingers` |
 
 ### Classifier
@@ -135,9 +135,10 @@ Intents, plans, safety and execution. No platform code.
 | `Plan` | `{ request, intent, source: 'model' or 'rules', summary, steps, needsConfirmation }` |
 | `PlanStep` | `open_app`, `wait`, `find`, `tap`, `type`, `scroll`, `navigate`, `media`, `confirm`; `StepTarget` is a profile selector, a text, a description or the focused field |
 | `describeStep`, `describeTarget` | One line labels for the step feed |
-| `INTENT_TOOLS`, `TOOL_NAMES`, `toolDefinitions()` | The ten intent tools with zod argument schemas, exported as JSON schema function tools |
+| `INTENT_TOOLS`, `TOOL_NAMES`, `toolDefinitions()` | The 17 intent tools with zod argument schemas, exported as JSON schema function tools |
 | `parseToolCall(rawCall)` | Validates a model tool call (object or JSON string arguments) into an `Intent` |
-| `parseRequest(text, appNames)`, `cleanRequest(text)` | Deterministic English and Brazilian Portuguese parser |
+| `parseRequest(text, appNames)`, `cleanRequest(text)` | Deterministic parser for English, Brazilian Portuguese, Spanish, French, German, Italian, Japanese and Simplified Chinese; the language of the request is tried first, and missing accents, number words, CJK numerals and full width digits are understood |
+| `parseAnswer(text)` | Yes, no or null for a spoken confirmation in any of the eight languages; a cancel word wins, and a yes counts only when the whole answer is yes words |
 | `expandIntent(intent, context)` | Intent to steps, from profile selectors and links |
 | `ConfirmationPolicy` | `screenRequest(text)`, `isCommit(step)`, `apply(steps)`, `check(steps)`; `maxCommitsPerPlan` defaults to 1 |
 | `isSensitiveLabel`, `namesSeveralPeople` | Helpers behind the policy |
@@ -216,6 +217,8 @@ Candidates for the runtime and the model:
 | `dispatchProfileAction(action, target, context, ui)` | Executes a profile action at the cursor, or on Sigil's interface |
 | `requestControlPermissions({ microphone })` | Camera, microphone and notification permissions on Android |
 | `getNativeControl()`, `NativeControl` | The native module or null |
+| `readLevels(native)`, `UNKNOWN_LEVELS`, `LevelsSnapshot` | Media volume, mute and screen brightness for the Control Sphere level rings |
+| `changeMediaVolume`, `changeScreenBrightness` | One step of volume or brightness, from a gesture or a quick action |
 
 ## modules/sigil-control (Android, Kotlin)
 
@@ -226,12 +229,17 @@ Local Expo module, autolinked from `modules/`. JavaScript API (`modules/sigil-co
 | `getStatus()` | `SigilControlStatus` | Accessibility service on, overlay permission, camera service running, package in front, SDK level |
 | `getScreenSize()` | `{ width, height, density }` | Full display in physical pixels, the unit of all coordinates |
 | `openAccessibilitySettings()`, `openOverlaySettings()` | boolean | System settings screens |
+| `openWriteSettings()`, `openMediaAccessSettings()` | boolean | "Modify system settings" for the brightness, notification access for seeking and speed |
+| `openPanel(panel)` | boolean | Wi-Fi, Bluetooth, Do Not Disturb or display settings |
 | `startCameraService(withMicrophone)`, `stopCameraService()` | boolean, void | Foreground service; needs the camera permission and Sigil on screen |
 | `showCursor()`, `hideCursor()`, `moveCursor(x, y, state)` | boolean, void, void | Cursor window; `state` is idle, hover, press or drag |
 | `tap`, `doubleTap`, `longPress`, `swipe` | `Promise<boolean>` | Gestures through the accessibility service |
 | `globalAction(name)`, `typeText(text, submit)`, `scroll(direction)` | `Promise<boolean>` | Navigation, typing into the focused field, scrolling |
 | `snapshotWindow(maxNodes)` | `Promise<WindowNode[]>` | Visible nodes of the active window, breadth first |
-| `mediaKey(action)`, `adjustVolume(direction)` | `Promise<boolean>` | Media session and volume |
+| `mediaKey(action)`, `adjustVolume(direction)` | `Promise<boolean>` | Media keys, and one volume step with the system panel |
+| `seekBy(seconds)`, `setPlaybackSpeed(rate)` | `Promise<ControlOutcome>` | The player in front; need notification access, speed needs Android 10 or later |
+| `changeVolume(stream, change, level)`, `getVolume(stream)` | `Promise<ControlOutcome>`, `VolumeLevel` | Up, down, set to a percent, mute |
+| `changeBrightness(change, level)`, `getBrightness()` | `Promise<ControlOutcome>`, `BrightnessLevel` | Up, down or set to a percent; needs "Modify system settings" |
 | `openApp(packageName, url, label)` | `Promise<boolean>` | By package, deep link, or launcher label |
 
 Events: `onServiceStateChanged`, `onForegroundAppChanged`, `onCameraServiceStateChanged`, `onHandFrame` (63 floats per frame), `onCursorError`.

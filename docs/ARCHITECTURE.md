@@ -46,7 +46,7 @@ The rule between layers: the core never imports React Native, Expo or native mod
 ## Voice path, from speech to a confirmed plan
 
 1. **Speech to text** produces a transcript in the spoken language (`SpeechToText` port; mock today).
-2. **Intent.** The planner asks the `LanguageModel` for exactly one call to one of ten fixed intent tools: `open_app`, `send_message`, `search`, `scroll`, `navigate`, `tap`, `type_text`, `media`, `create_post`, `clarify`. The arguments are validated with zod. If no model is loaded, the call times out (4 s), fails or is invalid, the deterministic rule parser produces the same tool call shape. Only the first call is used.
+2. **Intent.** The planner asks the `LanguageModel` for exactly one call to one of 17 fixed intent tools: `open_app`, `send_message`, `search`, `scroll`, `navigate`, `tap`, `type_text`, `media`, `seek`, `playback_speed`, `like`, `volume`, `brightness`, `settings_panel`, `control_sphere`, `create_post`, `clarify`. The arguments are validated with zod. If no model is loaded, the call times out (4 s), fails or is invalid, the deterministic rule parser produces the same tool call shape. Only the first call is used.
 3. **Steps.** `expandIntent` turns the intent into a flat list of steps: `open_app`, `wait`, `find`, `tap`, `type`, `scroll`, `navigate`, `media`, `confirm`. App knowledge (search buttons, message fields, send buttons, deep links) comes from the profile selectors and links, never from the model. The step language has no loops or branches, so every plan is finite and can be shown before it runs.
 4. **Policy.** `ConfirmationPolicy` refuses bulk requests (all contacts, everyone, repeated or scheduled actions), refuses messages to several people, marks commit steps (selectors flagged `commit`, or labels such as send, post, share, call, pay, delete, in English and Portuguese) and inserts a `confirm` step right before each one. A plan may contain at most one commit.
 5. **Execution.** `PlanExecutor` runs one visible step at a time against the `DeviceController`. It checks the policy again before starting, so a hand built plan cannot skip it; a commit runs only right after a confirmation the user accepted within 30 seconds; the user can stop the plan at any step.
@@ -88,8 +88,11 @@ Sigil keeps the per frame work off the JavaScript thread whenever Sigil itself i
 | Camera while other apps are open | `SigilCameraService` | Foreground service of type `camera`, plus `microphone` when voice is on; `FOREGROUND_SERVICE_CAMERA` and `FOREGROUND_SERVICE_MICROPHONE` (required on Android 14+); visible notification with a Stop action; the system camera indicator stays on |
 | Opening apps | `SigilControlModule.openApp` | Launcher intents and deep links; package visibility through a `<queries>` entry for launcher activities instead of `QUERY_ALL_PACKAGES`; a bound accessibility service may start activities from the background |
 | Media and volume | `AudioManager` | Media key events and stream volume; no permission |
+| Seeking and playback speed | `SigilMediaListener` | Android shares the active media session only with an enabled notification listener, so seeking and speed need notification access; Sigil never reads notifications. Play, pause, next and previous need nothing |
+| Brightness | `SystemLevels` | "Modify system settings" (`WRITE_SETTINGS`); adaptive brightness is turned off, or the system would overwrite the value. Without the permission Sigil opens the display settings |
+| Wi-Fi, Bluetooth, Do Not Disturb | Settings panels | Android 10 and later do not let apps switch them, so Sigil opens the system panel and the user flips the switch |
 
-The manifest entries live in the module (`modules/sigil-control/android/src/main/AndroidManifest.xml`) and are merged into the app at build time, together with `res/xml/sigil_accessibility_service.xml` (`canPerformGestures`, `canRetrieveWindowContent`, `flagReportViewIds`, `flagRetrieveInteractiveWindows`, `isAccessibilityTool`). No config plugin is needed; Expo autolinking picks up `modules/sigil-control`.
+The manifest entries live in the module (`modules/sigil-control/android/src/main/AndroidManifest.xml`) and are merged into the app at build time, together with `res/xml/sigil_accessibility_service.xml` (`canPerformGestures`, `canRetrieveWindowContent`, `flagReportViewIds`, `flagRetrieveInteractiveWindows`, `isAccessibilityTool`). Expo autolinking picks up `modules/sigil-control`, and its config plugin (`modules/sigil-control/app.plugin.js`) copies the translated Android strings (`values-*`) into the generated app at prebuild.
 
 Platform rules that shape the design:
 
@@ -125,7 +128,7 @@ See `docs/MODULES.md` for the candidates. Lifecycle rules for the download manag
 - A kinematic hand rig (`synthetic.ts`) produces the 21 landmarks for any hand shape, rotation, scale and frame aspect, with seeded Gaussian noise.
 - Sample recordings cover every gesture of the vocabulary, plus negative recordings for false positives (idle jitter, slow drags, a hand that appears briefly).
 - The classifier test replays every recording at 15, 30 and 60 fps with tracker noise of 0.002 and 0.004 frame widths and three seeds. A wider sweep of 3840 replays only failed at noise of 0.005 and above.
-- The planner and policy are tested on English and Portuguese requests, model outputs (valid, invalid, slow, several calls) and bulk requests; the executor runs plans against an in memory WhatsApp.
+- The planner and policy are tested on requests in all eight languages, model outputs (valid, invalid, slow, several calls) and bulk requests; the executor runs plans against an in memory WhatsApp.
 
 ## Open risks
 
