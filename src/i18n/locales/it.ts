@@ -331,6 +331,110 @@ export const it: Messages = {
     cannot_like: (app) => `Sigil non sa ancora mettere mi piace su ${app}.`,
     like_needs_app: () => 'Apri prima il post o il video, oppure di’ in quale app si trova.',
   },
+  tutorial: {
+    label: 'Tour guidato',
+    progress: (current, total) => `Passo ${current} di ${total}`,
+    back: 'Indietro',
+    next: 'Avanti',
+    skip: 'Salta questo passo',
+    notNow: 'Non ora',
+    skipAll: 'Salta il tour',
+    start: 'Inizia a usare Sigil',
+    allowed: 'Consentito. Tocca Avanti per continuare.',
+    waiting: 'Mostra la mano alla fotocamera frontale.',
+    noTracking: 'Il tracciamento della mano non è ancora attivo, quindi questa è una dimostrazione. Tocca Avanti quando vuoi.',
+    gotIt: 'Riconosciuto.',
+    notInBuild: 'Questa versione non può chiederlo qui. Puoi consentirlo più tardi nelle impostazioni di sistema.',
+    redo: 'Rifai il tour',
+    redoCaption: 'Ripassa permessi, gesti, voce e conferme.',
+    restrictedTitle: 'Prima consenti le impostazioni con limitazioni',
+    steps: {
+      welcome: {
+        title: 'Benvenuto in Sigil',
+        body: 'Sigil muove il telefono con le tue mani e la tua voce. L’immagine della fotocamera, la tua voce e ogni piano restano su questo telefono: non viene caricato nulla. Il tour dura circa tre minuti.',
+      },
+      camera: {
+        title: 'Fotocamera',
+        body: 'Sigil segue la tua mano con la fotocamera frontale per muovere un cursore e leggere i gesti. Le immagini vengono lette sul telefono e mai salvate.',
+        button: 'Consenti la fotocamera',
+      },
+      microphone: {
+        title: 'Microfono',
+        body: 'Sigil ascolta solo quando glielo chiedi, con il pugno o il pulsante di ascolto, e solo sul telefono. Niente di ciò che sente viene inviato.',
+        button: 'Consenti il microfono',
+      },
+      accessibility: {
+        title: 'Controllo a mani libere',
+        body: 'Per toccare, scorrere e tornare indietro nelle altre app, Android ti chiede di attivare «Sigil: controllo a mani libere» nelle impostazioni di accessibilità. Sigil agisce solo con i tuoi gesti e con i piani che confermi.',
+        button: 'Apri le impostazioni di accessibilità',
+      },
+      overlay: {
+        title: 'Cursore sopra le altre app',
+        body: 'Il cursore mostra dove toccherà il pizzico. Consenti a Sigil di apparire sopra le altre app per vederlo ovunque.',
+        button: 'Consenti la sovrapposizione ad altre app',
+      },
+      media_access: {
+        title: 'Accesso ai contenuti multimediali (facoltativo)',
+        body: 'Per saltare secondi e cambiare la velocità di ciò che stai ascoltando, Android chiede l’accesso alle notifiche. Sigil usa solo il lettore attivo e non legge mai le tue notifiche.',
+        button: 'Consenti l’accesso multimediale',
+      },
+      write_settings: {
+        title: 'Luminosità dello schermo (facoltativo)',
+        body: 'Per regolare la luminosità con un gesto o con la voce, Android ti chiede di lasciare che Sigil modifichi le impostazioni di sistema. Senza, Sigil apre le impostazioni dello schermo.',
+        button: 'Consenti di cambiare la luminosità',
+      },
+      practice_point: {
+        title: 'Indicare',
+        body: 'Alza l’indice verso la fotocamera. Il cursore segue la punta del dito.',
+      },
+      practice_pinch: {
+        title: 'Pizzica per toccare',
+        body: 'Indica il bersaglio, poi avvicina pollice e indice. Il pizzico tocca dove si trova il cursore.',
+        target: 'Pizzica qui',
+      },
+      practice_palm: {
+        title: 'Mano aperta',
+        body: 'Mostra la mano aperta e tienila ferma per un momento. Apre la Sfera di controllo, il centro per app, voce e impostazioni.',
+      },
+      practice_knob: {
+        title: 'Pizzica e ruota',
+        body: 'Pizzica e disegna un piccolo cerchio, come se girassi una manopola. In senso orario il volume sale, in senso antiorario scende.',
+      },
+      practice_fist: {
+        title: 'Pugno per parlare',
+        body: 'Chiudi la mano a pugno e tienila. Sigil inizia ad ascoltare la tua richiesta.',
+      },
+      voice: {
+        title: 'Prova la voce',
+        body: (example) => `Di’ ${q(example)}. Sigil mostra il piano che eseguirebbe; in questo esercizio non si apre nulla.`,
+        example: 'apri YouTube',
+        listen: 'Ascolta',
+        placeholder: 'Oppure scrivi una richiesta',
+        show: 'Mostra il piano',
+        dryRun: 'Esercizio: non è stato eseguito nulla.',
+      },
+      confirm: {
+        title: 'Conferma o annulla',
+        body: 'Prima di inviare, pubblicare o chiudere tutte le app, Sigil chiede. Un pizzico dice sì, un pugno dice no e otto secondi di silenzio annullano.',
+        sampleText: 'Sto arrivando',
+        sampleContact: 'Ana',
+        countdown: (seconds) => `Si annulla tra ${seconds} s`,
+        confirmed: 'Confermato. In questo esercizio non è stato inviato nulla.',
+        cancelled: 'Annullato. Non è stato inviato nulla.',
+        timedOut: 'Nessuna risposta, quindi annullato. Non è stato inviato nulla.',
+        again: 'Riprova',
+      },
+      profiles: {
+        title: 'Ogni app con i suoi gesti',
+        body: 'Un gesto fa ciò che serve all’app in primo piano. I profili cambiano alcuni gesti per ogni app; le altre usano il profilo generale. La schermata principale li elenca tutti.',
+      },
+      done: {
+        title: 'Tutto pronto',
+        body: 'Chiudi il pugno e di’ cosa vuoi, come «apri Instagram» o «chiudi YouTube». Rifai questo tour dalla schermata principale o dicendo «rifai il tutorial».',
+        skipped: (steps) => `Lasciato per dopo: ${steps}. Puoi consentirlo dalla schermata principale.`,
+      },
+    },
+  },
   system: {
     title: 'Controllo del sistema',
     modeLabels: {
@@ -369,6 +473,7 @@ export const it: Messages = {
       allowBrightness: 'Consenti di cambiare la luminosità',
       displaySettings: 'Apri le impostazioni dello schermo',
       allowMedia: 'Consenti l’accesso multimediale',
+      appInfo: 'Apri le informazioni dell’app',
     },
     access: {
       brightness:
@@ -377,7 +482,7 @@ export const it: Messages = {
         'Per andare avanti di qualche secondo e cambiare la velocità del lettore in primo piano, Android chiede l’accesso alle notifiche. Sigil lo usa solo per raggiungere la sessione multimediale attiva e non legge mai le tue notifiche.',
     },
     restricted:
-      'Da Android 13, una build installata fuori dal Play Store deve prima consentire le impostazioni con limitazioni in Info app prima di poter attivare il suo servizio di accessibilità.',
+      'Questa copia di Sigil non è stata installata dal Play Store, quindi Android 13 e versioni successive bloccano il suo servizio di accessibilità finché non consenti le impostazioni con limitazioni: apri Impostazioni, poi App, poi Sigil, tocca il menu in alto a destra e scegli «Consenti impostazioni con limitazioni». Poi attiva Sigil: controllo a mani libere.',
     iosOnly:
       'Su iOS, Sigil legge gesti e voce nelle sue schermate, apre le app tramite link ed esegue Comandi rapidi. Non può toccare né disegnare dentro altre app.',
     devClient: 'Crea un development client con EAS per includere il modulo di controllo Android. Expo Go contiene solo la parte JavaScript.',

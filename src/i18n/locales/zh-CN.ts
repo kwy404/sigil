@@ -319,6 +319,110 @@ export const zhCN: Messages = {
     cannot_like: (app) => `Sigil 暂时还不能在${app}点赞。`,
     like_needs_app: () => '请先打开帖子或视频，或者说出它在哪个应用里。',
   },
+  tutorial: {
+    label: '新手引导',
+    progress: (current, total) => `第 ${current} 步，共 ${total} 步`,
+    back: '上一步',
+    next: '下一步',
+    skip: '跳过这一步',
+    notNow: '暂不',
+    skipAll: '跳过引导',
+    start: '开始使用 Sigil',
+    allowed: '已允许。点按“下一步”继续。',
+    waiting: '请把手对着前置摄像头。',
+    noTracking: '手部追踪还没有运行，所以这里是演示。准备好后点按“下一步”。',
+    gotIt: '已识别。',
+    notInBuild: '这个版本无法在这里请求。你可以稍后在系统设置中允许。',
+    redo: '重新进行引导',
+    redoCaption: '再走一遍权限、手势、语音和确认。',
+    restrictedTitle: '先允许受限制的设置',
+    steps: {
+      welcome: {
+        title: '欢迎使用 Sigil',
+        body: 'Sigil 用你的手和声音操作手机。摄像头画面、你的声音和每个计划都留在这部手机上，不会上传任何内容。这个引导大约需要三分钟。',
+      },
+      camera: {
+        title: '摄像头',
+        body: 'Sigil 通过前置摄像头跟踪你的手，移动光标并识别手势。画面只在手机上处理，从不保存。',
+        button: '允许使用摄像头',
+      },
+      microphone: {
+        title: '麦克风',
+        body: '只有在你用握拳或聆听按钮要求时，Sigil 才会聆听，而且只在手机上处理。听到的内容不会发送到任何地方。',
+        button: '允许使用麦克风',
+      },
+      accessibility: {
+        title: '隔空操控',
+        body: '要在其他应用中点按、滚动和返回，Android 需要你在无障碍设置中开启“Sigil 隔空操控”。Sigil 只会根据你的手势和你确认的计划操作。',
+        button: '打开无障碍设置',
+      },
+      overlay: {
+        title: '在其他应用上显示光标',
+        body: '光标显示捏合会点按的位置。允许 Sigil 显示在其他应用上层，才能随处看到它。',
+        button: '允许显示在其他应用上层',
+      },
+      media_access: {
+        title: '媒体访问（可选）',
+        body: '要快进几秒或更改正在播放内容的速度，Android 需要通知使用权。Sigil 只使用正在播放的播放器，从不读取你的通知。',
+        button: '允许媒体访问',
+      },
+      write_settings: {
+        title: '屏幕亮度（可选）',
+        body: '要用手势或语音调节亮度，Android 需要你允许 Sigil 修改系统设置。不允许时，Sigil 会改为打开显示设置。',
+        button: '允许调节亮度',
+      },
+      practice_point: {
+        title: '指向',
+        body: '朝摄像头竖起食指。光标会跟随你的指尖。',
+      },
+      practice_pinch: {
+        title: '捏合点按',
+        body: '指向目标，然后让拇指和食指碰在一起。捏合会点按光标所在的位置。',
+        target: '在这里捏合',
+      },
+      practice_palm: {
+        title: '张开手掌',
+        body: '张开手掌并保持片刻。它会打开控制球，也就是应用、语音和设置的入口。',
+      },
+      practice_knob: {
+        title: '捏合并转动',
+        body: '捏合后画一个小圆，就像转动旋钮。顺时针调高音量，逆时针调低音量。',
+      },
+      practice_fist: {
+        title: '握拳说话',
+        body: '把手握成拳头并保持。Sigil 就会开始聆听你的请求。',
+      },
+      voice: {
+        title: '试试语音',
+        body: (example) => `说${q(example)}。Sigil 会显示它将执行的计划；在这个练习中不会打开任何东西。`,
+        example: '打开YouTube',
+        listen: '聆听',
+        placeholder: '或者输入请求',
+        show: '显示计划',
+        dryRun: '练习：没有执行任何操作。',
+      },
+      confirm: {
+        title: '确认或取消',
+        body: '在发送、发布或关闭所有应用之前，Sigil 会先询问。捏合表示是，握拳表示否，沉默八秒就会取消。',
+        sampleText: '我在路上',
+        sampleContact: '小王',
+        countdown: (seconds) => `${seconds} 秒后取消`,
+        confirmed: '已确认。这个练习没有发送任何内容。',
+        cancelled: '已取消。没有发送任何内容。',
+        timedOut: '没有回应，所以已取消。没有发送任何内容。',
+        again: '再试一次',
+      },
+      profiles: {
+        title: '每个应用都有自己的手势',
+        body: '手势会按照前台应用的需要执行。应用配置文件会为每个应用调整部分手势，其他应用使用通用配置。主界面列出了全部配置。',
+      },
+      done: {
+        title: '准备就绪',
+        body: '握拳并说出你想做的事，比如“打开 Instagram”或“关闭 YouTube”。可以在主界面重新进行这个引导，也可以说“重新打开教程”。',
+        skipped: (steps) => `稍后再设置：${steps}。可以在主界面中允许。`,
+      },
+    },
+  },
   system: {
     title: '系统控制',
     modeLabels: {
@@ -357,6 +461,7 @@ export const zhCN: Messages = {
       allowBrightness: '允许调节亮度',
       displaySettings: '打开显示设置',
       allowMedia: '允许媒体访问',
+      appInfo: '打开 Sigil 的应用信息',
     },
     access: {
       brightness:
@@ -364,7 +469,8 @@ export const zhCN: Messages = {
       media:
         '要在前台播放器中快进几秒或调整播放速度，Android 需要通知使用权。Sigil 只用它来连接当前的媒体会话，绝不会读取你的通知。',
     },
-    restricted: '在 Android 13 及以上版本，不是从 Play 商店安装的版本需要先在应用信息中允许受限设置，才能开启它的无障碍服务。',
+    restricted:
+      '这个 Sigil 不是从 Play 商店安装的，所以在 Android 13 及以上版本中，它的无障碍服务会被锁定，直到你允许受限制的设置：依次打开设置、应用、Sigil，点按右上角的菜单，选择“允许受限制的设置”。然后开启“Sigil 隔空操控”。',
     iosOnly: '在 iOS 上，Sigil 在自己的界面中读取手势和语音，通过链接打开应用并运行快捷指令。它无法在其他应用中点按或绘制。',
     devClient: '请用 EAS 构建 development client 以包含 Android 控制模块。Expo Go 只包含 JavaScript 部分。',
     errors: {

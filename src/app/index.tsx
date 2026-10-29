@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,8 +13,10 @@ import { SphereStage } from '@/features/sphere-stage';
 import { SystemPanel } from '@/features/system-panel';
 import { sampleRecordings } from '@/gesture-engine';
 import { useI18n } from '@/i18n';
+import { readSettings } from '@/settings/store';
 import type { SigilInterface } from '@/sigil-core';
-import { Card } from '@/ui/primitives';
+import { needsTutorial } from '@/tutorial/machine';
+import { Button, Card } from '@/ui/primitives';
 import { tokens } from '@/ui/tokens';
 
 const SIDE = tokens.space.xl;
@@ -28,6 +30,8 @@ export default function HomeScreen() {
   const samples = useMemo(() => sampleRecordings(), []);
   const [sampleId, setSampleId] = useState<string | null>('circle-cw');
   const [segment, setSegment] = useState<string | null>(null);
+  // The guided tour comes first on the first launch, in the language already detected.
+  const [firstRun] = useState(() => needsTutorial(readSettings().tutorial));
 
   const ui = useMemo<SigilInterface>(
     () => ({
@@ -36,6 +40,10 @@ export default function HomeScreen() {
     }),
     [router],
   );
+
+  if (firstRun) {
+    return <Redirect href="/tutorial" />;
+  }
 
   const stageSize = Math.min(width - 2 * SIDE - 2 * tokens.space.lg, 340);
   const recording = samples.find((sample) => sample.id === sampleId) ?? null;
@@ -63,6 +71,9 @@ export default function HomeScreen() {
       <GestureLab selectedId={sampleId} onSelect={setSampleId} />
       <ProfilesPanel registry={registry} />
       <SystemPanel />
+      <Card title={m.tutorial.label} caption={m.tutorial.redoCaption}>
+        <Button label={m.tutorial.redo} onPress={ui.tutorial} />
+      </Card>
       <LanguagePanel />
     </ScrollView>
   );

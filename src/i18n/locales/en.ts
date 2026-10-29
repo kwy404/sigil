@@ -341,6 +341,110 @@ export const en = {
     cannot_like: (app: string) => `Sigil cannot like in ${app} yet.`,
     like_needs_app: () => 'Open the post or video first, or say which app it is in.',
   } satisfies Record<Exclude<NoticeCode, 'question' | 'android_only'>, (...args: never[]) => string>,
+  tutorial: {
+    label: 'Guided tour',
+    progress: (current: number, total: number) => `Step ${current} of ${total}`,
+    back: 'Back',
+    next: 'Next',
+    skip: 'Skip this step',
+    notNow: 'Not now',
+    skipAll: 'Skip the tour',
+    start: 'Start using Sigil',
+    allowed: 'Allowed. Tap Next to go on.',
+    waiting: 'Show your hand to the front camera.',
+    noTracking: 'Hand tracking is not running yet, so this is a demo. Tap Next when you are ready.',
+    gotIt: 'Recognized.',
+    notInBuild: 'This build cannot ask for this here. You can allow it later in the system settings.',
+    redo: 'Redo the tour',
+    redoCaption: 'Walk through permissions, gestures, voice and confirmations again.',
+    restrictedTitle: 'Allow restricted settings first',
+    steps: {
+      welcome: {
+        title: 'Welcome to Sigil',
+        body: 'Sigil moves your phone with your hands and your voice. The camera image, your voice and every plan stay on this phone: nothing is uploaded. This tour takes about three minutes.',
+      },
+      camera: {
+        title: 'Camera',
+        body: 'Sigil follows your hand through the front camera to move a cursor and read gestures. Frames are read on the phone and never saved.',
+        button: 'Allow the camera',
+      },
+      microphone: {
+        title: 'Microphone',
+        body: 'Sigil listens only when you ask, with a fist or the listen button, and only on the phone. Nothing it hears is sent anywhere.',
+        button: 'Allow the microphone',
+      },
+      accessibility: {
+        title: 'Hands free control',
+        body: 'To tap, scroll and go back in other apps, Android asks you to turn on "Sigil hands free control" in the accessibility settings. Sigil acts only on your gestures and on plans you confirm.',
+        button: 'Open accessibility settings',
+      },
+      overlay: {
+        title: 'Cursor over other apps',
+        body: 'The cursor shows where a pinch will land. Allow Sigil to display over other apps to see it everywhere.',
+        button: 'Allow display over other apps',
+      },
+      media_access: {
+        title: 'Media access (optional)',
+        body: 'To skip seconds and change the speed of what is playing, Android asks for notification access. Sigil only reaches the active player and never reads your notifications.',
+        button: 'Allow media access',
+      },
+      write_settings: {
+        title: 'Screen brightness (optional)',
+        body: 'To set the brightness with a gesture or your voice, Android asks you to let Sigil modify system settings. Without it, Sigil opens the display settings instead.',
+        button: 'Allow brightness changes',
+      },
+      practice_point: {
+        title: 'Point',
+        body: 'Raise your index finger toward the camera. The cursor follows your fingertip.',
+      },
+      practice_pinch: {
+        title: 'Pinch to tap',
+        body: 'Point at the target, then touch your thumb and index finger together. A pinch taps where the cursor is.',
+        target: 'Pinch here',
+      },
+      practice_palm: {
+        title: 'Open palm',
+        body: 'Show your open hand and hold it still for a moment. It opens the Control Sphere, your hub for apps, voice and settings.',
+      },
+      practice_knob: {
+        title: 'Pinch and turn',
+        body: 'Pinch and draw a small circle, like turning a knob. Clockwise turns the volume up, counterclockwise turns it down.',
+      },
+      practice_fist: {
+        title: 'Fist to talk',
+        body: 'Close your hand into a fist and hold it. Sigil starts listening for a request.',
+      },
+      voice: {
+        title: 'Try your voice',
+        body: (example: string) => `Say ${q(example)}. Sigil shows the plan it would run; in this practice nothing is opened.`,
+        example: 'open YouTube',
+        listen: 'Listen',
+        placeholder: 'Or type a request',
+        show: 'Show the plan',
+        dryRun: 'Practice: nothing was run.',
+      },
+      confirm: {
+        title: 'Confirm or cancel',
+        body: 'Before Sigil sends, posts or closes all apps, it asks. A pinch says yes, a fist says no, and eight seconds of silence cancel.',
+        sampleText: 'On my way',
+        sampleContact: 'Ana',
+        countdown: (seconds: number) => `Cancels in ${seconds} s`,
+        confirmed: 'Confirmed. In this practice nothing was sent.',
+        cancelled: 'Cancelled. Nothing was sent.',
+        timedOut: 'No answer, so it was cancelled. Nothing was sent.',
+        again: 'Try again',
+      },
+      profiles: {
+        title: 'Every app its own gestures',
+        body: 'A gesture means what the app in front needs. App profiles change a few bindings per app; every other app uses the general profile. The main screen lists them all.',
+      },
+      done: {
+        title: 'You are ready',
+        body: 'Make a fist and say what you want, like "open Instagram" or "close YouTube". Redo this tour from the main screen or by saying "redo the tutorial".',
+        skipped: (steps: string) => `Left for later: ${steps}. You can allow them on the main screen.`,
+      },
+    },
+  },
   system: {
     title: 'System control',
     modeLabels: {
@@ -379,6 +483,7 @@ export const en = {
       allowBrightness: 'Allow brightness changes',
       displaySettings: 'Open display settings',
       allowMedia: 'Allow media access',
+      appInfo: 'Open Sigil app info',
     },
     access: {
       brightness:
@@ -387,7 +492,7 @@ export const en = {
         'To skip seconds and change the playback speed of the player in front, Android asks for notification access. Sigil uses it only to reach the active media session and never reads your notifications.',
     },
     restricted:
-      'On Android 13 and later, a build installed outside the Play Store must first allow restricted settings in App info before its accessibility service can be turned on.',
+      'This copy of Sigil was not installed from the Play Store, so Android 13 and later keep its accessibility service locked until you allow restricted settings: open Settings, then Apps, then Sigil, tap the menu at the top right and choose "Allow restricted settings". Then turn on Sigil hands free control.',
     iosOnly:
       'On iOS, Sigil reads gestures and voice inside its own screens, opens apps through links and runs Shortcuts. It cannot tap or draw inside other apps.',
     devClient: 'Build a development client with EAS to include the Android control module. Expo Go only has the JavaScript side.',

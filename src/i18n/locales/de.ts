@@ -332,6 +332,110 @@ export const de: Messages = {
     cannot_like: (app) => `Sigil kann in ${app} noch nicht liken.`,
     like_needs_app: () => 'Öffne zuerst den Beitrag oder das Video, oder sag, in welcher App er ist.',
   },
+  tutorial: {
+    label: 'Geführte Tour',
+    progress: (current, total) => `Schritt ${current} von ${total}`,
+    back: 'Zurück',
+    next: 'Weiter',
+    skip: 'Schritt überspringen',
+    notNow: 'Jetzt nicht',
+    skipAll: 'Tour überspringen',
+    start: 'Sigil verwenden',
+    allowed: 'Erlaubt. Tippe auf Weiter.',
+    waiting: 'Zeig deine Hand der Frontkamera.',
+    noTracking: 'Die Handerkennung läuft noch nicht, daher siehst du eine Vorführung. Tippe auf Weiter, wenn du so weit bist.',
+    gotIt: 'Erkannt.',
+    notInBuild: 'Diese Version kann das hier nicht anfragen. Du kannst es später in den Systemeinstellungen erlauben.',
+    redo: 'Tour wiederholen',
+    redoCaption: 'Berechtigungen, Gesten, Sprache und Bestätigungen noch einmal durchgehen.',
+    restrictedTitle: 'Zuerst eingeschränkte Einstellungen zulassen',
+    steps: {
+      welcome: {
+        title: 'Willkommen bei Sigil',
+        body: 'Sigil steuert dein Telefon mit deinen Händen und deiner Stimme. Das Kamerabild, deine Stimme und jeder Plan bleiben auf diesem Telefon: Nichts wird hochgeladen. Die Tour dauert etwa drei Minuten.',
+      },
+      camera: {
+        title: 'Kamera',
+        body: 'Sigil verfolgt deine Hand mit der Frontkamera, um einen Cursor zu bewegen und Gesten zu lesen. Die Bilder werden auf dem Telefon gelesen und nie gespeichert.',
+        button: 'Kamera erlauben',
+      },
+      microphone: {
+        title: 'Mikrofon',
+        body: 'Sigil hört nur zu, wenn du es willst, mit der Faust oder der Hören-Taste, und nur auf dem Telefon. Nichts, was es hört, wird gesendet.',
+        button: 'Mikrofon erlauben',
+      },
+      accessibility: {
+        title: 'Freihändige Steuerung',
+        body: 'Damit Sigil in anderen Apps tippen, scrollen und zurückgehen kann, musst du „Sigil: freihändige Steuerung“ in den Bedienungshilfen einschalten. Sigil handelt nur auf deine Gesten und auf Pläne, die du bestätigst.',
+        button: 'Bedienungshilfen öffnen',
+      },
+      overlay: {
+        title: 'Cursor über anderen Apps',
+        body: 'Der Cursor zeigt, wo ein Pinch tippt. Erlaube Sigil, über anderen Apps einzublenden, damit du ihn überall siehst.',
+        button: 'Über anderen Apps einblenden erlauben',
+      },
+      media_access: {
+        title: 'Medienzugriff (optional)',
+        body: 'Zum Springen um Sekunden und zum Ändern der Wiedergabegeschwindigkeit fragt Android nach Benachrichtigungszugriff. Sigil nutzt nur den aktiven Player und liest nie deine Benachrichtigungen.',
+        button: 'Medienzugriff erlauben',
+      },
+      write_settings: {
+        title: 'Bildschirmhelligkeit (optional)',
+        body: 'Damit Sigil die Helligkeit per Geste oder Stimme setzen kann, fragt Android, ob Sigil Systemeinstellungen ändern darf. Ohne das öffnet Sigil die Anzeigeeinstellungen.',
+        button: 'Helligkeit ändern erlauben',
+      },
+      practice_point: {
+        title: 'Zeigen',
+        body: 'Heb den Zeigefinger zur Kamera. Der Cursor folgt deiner Fingerspitze.',
+      },
+      practice_pinch: {
+        title: 'Pinch zum Tippen',
+        body: 'Zeig auf das Ziel und berühre dann Daumen und Zeigefinger. Ein Pinch tippt dort, wo der Cursor ist.',
+        target: 'Hier pinchen',
+      },
+      practice_palm: {
+        title: 'Offene Hand',
+        body: 'Zeig die offene Hand und halte sie kurz still. Sie öffnet die Kontrollkugel, deine Zentrale für Apps, Sprache und Einstellungen.',
+      },
+      practice_knob: {
+        title: 'Pinchen und drehen',
+        body: 'Pinche und zeichne einen kleinen Kreis, wie an einem Drehknopf. Im Uhrzeigersinn wird es lauter, gegen den Uhrzeigersinn leiser.',
+      },
+      practice_fist: {
+        title: 'Faust zum Sprechen',
+        body: 'Schließ die Hand zur Faust und halte sie. Sigil hört dann deine Anfrage.',
+      },
+      voice: {
+        title: 'Probier deine Stimme',
+        body: (example) => `Sag ${q(example)}. Sigil zeigt den Plan, den es ausführen würde; in dieser Übung wird nichts geöffnet.`,
+        example: 'öffne YouTube',
+        listen: 'Zuhören',
+        placeholder: 'Oder tippe eine Anfrage',
+        show: 'Plan zeigen',
+        dryRun: 'Übung: Nichts wurde ausgeführt.',
+      },
+      confirm: {
+        title: 'Bestätigen oder abbrechen',
+        body: 'Bevor Sigil sendet, postet oder alle Apps schließt, fragt es nach. Ein Pinch sagt ja, eine Faust sagt nein, und acht Sekunden Stille brechen ab.',
+        sampleText: 'Bin unterwegs',
+        sampleContact: 'Ana',
+        countdown: (seconds) => `Abbruch in ${seconds} s`,
+        confirmed: 'Bestätigt. In dieser Übung wurde nichts gesendet.',
+        cancelled: 'Abgebrochen. Nichts wurde gesendet.',
+        timedOut: 'Keine Antwort, daher abgebrochen. Nichts wurde gesendet.',
+        again: 'Noch einmal',
+      },
+      profiles: {
+        title: 'Jede App mit eigenen Gesten',
+        body: 'Eine Geste tut, was die App im Vordergrund braucht. App-Profile ändern pro App einige Gesten; alle anderen Apps nutzen das allgemeine Profil. Der Hauptbildschirm listet sie alle.',
+      },
+      done: {
+        title: 'Alles bereit',
+        body: 'Mach eine Faust und sag, was du willst, etwa „öffne Instagram“ oder „schließe YouTube“. Wiederhole diese Tour über den Hauptbildschirm oder mit „Tutorial wiederholen“.',
+        skipped: (steps) => `Für später: ${steps}. Du kannst es auf dem Hauptbildschirm erlauben.`,
+      },
+    },
+  },
   system: {
     title: 'Systemsteuerung',
     modeLabels: {
@@ -370,6 +474,7 @@ export const de: Messages = {
       allowBrightness: 'Helligkeitsänderungen erlauben',
       displaySettings: 'Display-Einstellungen öffnen',
       allowMedia: 'Medienzugriff erlauben',
+      appInfo: 'App-Info von Sigil öffnen',
     },
     access: {
       brightness:
@@ -378,7 +483,7 @@ export const de: Messages = {
         'Um Sekunden zu überspringen und die Geschwindigkeit des Players im Vordergrund zu ändern, verlangt Android Zugriff auf Benachrichtigungen. Sigil nutzt ihn nur, um die aktive Mediensitzung zu erreichen, und liest deine Benachrichtigungen nie.',
     },
     restricted:
-      'Ab Android 13 muss ein Build, der nicht aus dem Play Store installiert wurde, zuerst in den App-Infos eingeschränkte Einstellungen erlauben, bevor sein Bedienungshilfe-Dienst eingeschaltet werden kann.',
+      'Diese Kopie von Sigil stammt nicht aus dem Play Store, daher sperrt Android 13 und neuer ihren Bedienungshilfendienst, bis du eingeschränkte Einstellungen zulässt: Öffne Einstellungen, dann Apps, dann Sigil, tippe oben rechts auf das Menü und wähle „Eingeschränkte Einstellungen zulassen“. Schalte danach Sigil: freihändige Steuerung ein.',
     iosOnly:
       'Auf iOS liest Sigil Gesten und Stimme in seinen eigenen Bildschirmen, öffnet Apps über Links und führt Kurzbefehle aus. In anderen Apps kann es weder tippen noch zeichnen.',
     devClient: 'Erstelle mit EAS einen Development Client, um das Android-Steuerungsmodul einzubinden. Expo Go enthält nur den JavaScript-Teil.',
