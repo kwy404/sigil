@@ -12,7 +12,10 @@ export type GestureKind =
   | 'swipe_three'
   | 'circle_cw'
   | 'circle_ccw'
-  | 'flick';
+  | 'flick'
+  | 'pinch_circle_cw'
+  | 'pinch_circle_ccw'
+  | 'pinch_drag';
 
 export type Direction = 'left' | 'right' | 'up' | 'down';
 
@@ -22,7 +25,7 @@ export interface GestureEvent {
   kind: GestureKind;
   /** Timestamp of the frame that completed the gesture, in milliseconds. */
   t: number;
-  /** Set for swipes and flicks. Directions are in screen space as the user sees it. */
+  /** Set for swipes, flicks and pinch drags. Directions are in screen space as the user sees it. */
   direction?: Direction;
   /** Set for pinch_hold: start when the hold is recognized, end when the fingers open. */
   phase?: 'start' | 'end';
@@ -42,6 +45,10 @@ export const GESTURE_KEYS = [
   'pinch',
   'double_pinch',
   'pinch_hold',
+  'pinch_circle_cw',
+  'pinch_circle_ccw',
+  'pinch_drag_up',
+  'pinch_drag_down',
   'fist',
   'swipe_two_left',
   'swipe_two_right',
@@ -67,7 +74,7 @@ export function isGestureKey(value: string): value is GestureKey {
 
 export function gestureKey(event: Pick<GestureEvent, 'kind' | 'direction'>): GestureKey {
   'worklet';
-  if (event.kind === 'swipe_two' || event.kind === 'swipe_three' || event.kind === 'flick') {
+  if (event.kind === 'swipe_two' || event.kind === 'swipe_three' || event.kind === 'flick' || event.kind === 'pinch_drag') {
     return `${event.kind}_${event.direction ?? 'up'}` as GestureKey;
   }
   return event.kind as GestureKey;
@@ -85,11 +92,14 @@ const BASE_LABELS: Record<string, string> = {
   circle_cw: 'Circle clockwise',
   circle_ccw: 'Circle counterclockwise',
   flick: 'Flick',
+  pinch_circle_cw: 'Pinch and turn clockwise',
+  pinch_circle_ccw: 'Pinch and turn counterclockwise',
+  pinch_drag: 'Pinch and drag',
 };
 
 /** Human readable label, for example "Two finger swipe left". */
 export function describeGesture(key: GestureKey): string {
-  for (const prefix of ['swipe_two', 'swipe_three', 'flick']) {
+  for (const prefix of ['swipe_two', 'swipe_three', 'flick', 'pinch_drag']) {
     if (key.startsWith(`${prefix}_`)) {
       return `${BASE_LABELS[prefix]} ${key.slice(prefix.length + 1)}`;
     }

@@ -7,6 +7,7 @@ import {
   renderPerformance,
   replayRecording,
   rigPose,
+  SAMPLE_IDS,
   sampleRecordings,
   traceRecording,
   type GestureEvent,
@@ -44,9 +45,16 @@ describe('sample recordings', () => {
       'circle_cw',
       'circle_ccw',
       'flick',
+      'pinch_circle_cw',
+      'pinch_circle_ccw',
+      'pinch_drag',
     ]) {
       expect(covered).toContain(gesture);
     }
+  });
+
+  it('list every recording id in SAMPLE_IDS, in order', () => {
+    expect(sampleRecordings().map((r) => r.id)).toEqual([...SAMPLE_IDS]);
   });
 
   it.each(sampleRecordings().map((r) => [r.id, r] as const))('recognizes %s', (_id, recording) => {
@@ -175,6 +183,40 @@ describe('GestureClassifier', () => {
     }
     expect(classifier.snapshot.holding).toBe(true);
     expect(classifier.snapshot.cursor!.x).toBeGreaterThan(frozen!.x + 0.1);
+  });
+
+  it('turns a moving pinch into knob or slider steps that never tap or hold', () => {
+    for (const id of ['pinch-circle-cw', 'pinch-drag-up']) {
+      const recording = sampleRecordings().find((r) => r.id === id)!;
+      const kinds = replayRecording(recording).events.map((e) => e.kind);
+      expect(kinds).not.toContain('pinch');
+      expect(kinds).not.toContain('pinch_hold');
+    }
+  });
+
+  it('moves the slider back when the pinched hand comes back', () => {
+    const frames = renderPerformance(rigPose('point', { x: 0.5, y: 0.5 }), [
+      { hold: 400 },
+      { to: { shape: 'pinch' }, over: 70 },
+      { hold: 100 },
+      { to: { wrist: { x: 0.5, y: 0.64 } }, over: 350 },
+      { to: { wrist: { x: 0.5, y: 0.5 } }, over: 350 },
+      { hold: 150 },
+      { to: { shape: 'point' }, over: 70 },
+      { hold: 300 },
+    ]);
+    expect(keys(run(frames))).toEqual(['point', 'pinch_drag_down', 'pinch_drag_down', 'pinch_drag_up', 'pinch_drag_up']);
+  });
+
+  it('keeps a pinch that only drifts sideways as a tap', () => {
+    const frames = renderPerformance(rigPose('point', { x: 0.45, y: 0.6 }), [
+      { hold: 400 },
+      { to: { shape: 'pinch' }, over: 70 },
+      { to: { wrist: { x: 0.53, y: 0.6 } }, over: 150 },
+      { to: { shape: 'point' }, over: 70 },
+      { hold: 500 },
+    ]);
+    expect(keys(run(frames))).toEqual(['point', 'pinch']);
   });
 
   it('ignores frames that arrive out of order', () => {

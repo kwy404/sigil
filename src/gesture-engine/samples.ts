@@ -38,6 +38,10 @@ export const SAMPLE_IDS = [
   'circle-cw',
   'circle-ccw',
   'flick-up',
+  'pinch-circle-cw',
+  'pinch-circle-ccw',
+  'pinch-drag-up',
+  'pinch-drag-down',
 ] as const;
 
 export type SampleId = (typeof SAMPLE_IDS)[number];
@@ -47,6 +51,17 @@ export function isSampleId(id: string): id is SampleId {
 }
 
 const CENTER = { x: 0.5, y: 0.62 };
+
+/** Point, then pinch and start moving soon, before the pinch would become a hold. */
+const pinchIn: RigSegment[] = [{ hold: 400 }, { to: { shape: 'pinch' }, over: 70 }, { hold: 100 }];
+/** Stop, then open the fingers again. */
+const pinchOut: RigSegment[] = [{ hold: 200 }, { to: { shape: 'point' }, over: 70 }, { hold: 400 }];
+/**
+ * Turns of the knob samples. The direction of travel turns 280 degrees, which
+ * after the first segment leaves about 270: four knob steps of 60 degrees,
+ * half a step away from both three and five.
+ */
+const KNOB_TURNS = 0.78;
 
 const SCRIPTS: (SampleScript & { id: SampleId })[] = [
   {
@@ -169,6 +184,42 @@ const SCRIPTS: (SampleScript & { id: SampleId })[] = [
     shape: 'point',
     wrist: { x: 0.5, y: 0.66 },
     segments: [{ hold: 450 }, { to: { wrist: { x: 0.5, y: 0.44 } }, over: 110, easing: 'linear' }, { hold: 400 }],
+  },
+  {
+    id: 'pinch-circle-cw',
+    label: 'Pinch and turn clockwise',
+    description: 'A pinch turned clockwise like a volume knob.',
+    expected: ['point', 'pinch_circle_cw', 'pinch_circle_cw', 'pinch_circle_cw', 'pinch_circle_cw'],
+    shape: 'point',
+    wrist: { x: 0.6, y: 0.62 },
+    segments: [...pinchIn, { path: circlePath(0.1, true, KNOB_TURNS), over: 900 }, ...pinchOut],
+  },
+  {
+    id: 'pinch-circle-ccw',
+    label: 'Pinch and turn counterclockwise',
+    description: 'A pinch turned counterclockwise like a volume knob.',
+    expected: ['point', 'pinch_circle_ccw', 'pinch_circle_ccw', 'pinch_circle_ccw', 'pinch_circle_ccw'],
+    shape: 'point',
+    wrist: { x: 0.6, y: 0.62 },
+    segments: [...pinchIn, { path: circlePath(0.1, false, KNOB_TURNS), over: 900 }, ...pinchOut],
+  },
+  {
+    id: 'pinch-drag-up',
+    label: 'Pinch and drag up',
+    description: 'A pinch dragged upward like a brightness slider.',
+    expected: ['point', 'pinch_drag_up', 'pinch_drag_up', 'pinch_drag_up'],
+    shape: 'point',
+    wrist: { x: 0.5, y: 0.75 },
+    segments: [...pinchIn, { to: { wrist: { x: 0.5, y: 0.54 } }, over: 500 }, ...pinchOut],
+  },
+  {
+    id: 'pinch-drag-down',
+    label: 'Pinch and drag down',
+    description: 'A pinch dragged downward like a brightness slider.',
+    expected: ['point', 'pinch_drag_down', 'pinch_drag_down', 'pinch_drag_down'],
+    shape: 'point',
+    wrist: { x: 0.5, y: 0.5 },
+    segments: [...pinchIn, { to: { wrist: { x: 0.5, y: 0.71 } }, over: 500 }, ...pinchOut],
   },
 ];
 

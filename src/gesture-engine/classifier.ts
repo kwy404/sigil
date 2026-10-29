@@ -5,7 +5,7 @@ import {
   type FeatureThresholds,
   type FingerStates,
 } from './features';
-import { distance3 } from './geometry';
+import { distance3, wrapAngle } from './geometry';
 import type { GestureEvent, GestureKind } from './gestures';
 import { HandPoint, isValidLandmarks, type HandFrame, type Landmark, type Vec2 } from './landmarks';
 import {
@@ -58,6 +58,32 @@ export interface PoseHoldTiming {
   pointMs: number;
 }
 
+/**
+ * A pinch that moves becomes a control instead of a tap: drawing a circle
+ * with the pinched hand turns a knob (pinch_circle_cw and pinch_circle_ccw,
+ * one event per step), and moving it straight up or down drags a slider
+ * (pinch_drag_up and pinch_drag_down). The turn is the rotation of the palm's
+ * direction of travel, so it needs no circle center. Until one of the two is
+ * decided, a pinch still taps or holds as usual.
+ */
+export interface PinchMotionConfig {
+  /** Palm travel, in frame widths, over which the direction of travel is measured. */
+  segment: number;
+  /** Rotation of the direction of travel per knob step, in radians. */
+  turnStep: number;
+  /** Vertical palm travel per slider step, in frame widths. */
+  dragStep: number;
+  /**
+   * Vertical travel before a straight motion counts as a slider drag, in frame
+   * widths. Longer than a step, so the start of a circle is not taken for one.
+   */
+  dragDecide: number;
+  /** A slider drag must be this many times more vertical than horizontal. */
+  dragAxisRatio: number;
+  /** Most rotation of the direction of travel a slider drag may show, in radians. */
+  dragMaxTurn: number;
+}
+
 export interface ClassifierConfig {
   /** Camera frame width divided by height. */
   frameAspect: number;
@@ -71,6 +97,7 @@ export interface ClassifierConfig {
   swipe: SwipeConfig;
   circle: CircleConfig;
   flick: FlickConfig;
+  pinchMotion: PinchMotionConfig;
   /** Pause after a motion gesture before the next one can fire, in milliseconds. */
   cooldownMs: number;
   /** Longest motion history kept, in milliseconds. */
@@ -88,6 +115,7 @@ export const DEFAULT_CLASSIFIER_CONFIG: ClassifierConfig = {
   swipe: DEFAULT_SWIPE,
   circle: DEFAULT_CIRCLE,
   flick: DEFAULT_FLICK,
+  pinchMotion: { segment: 0.02, turnStep: Math.PI / 3, dragStep: 0.06, dragDecide: 0.09, dragAxisRatio: 1.8, dragMaxTurn: 0.35 },
   cooldownMs: 450,
   historyMs: 1800,
 };
@@ -103,6 +131,7 @@ export interface ClassifierOverrides {
   swipe?: Partial<SwipeConfig>;
   circle?: Partial<CircleConfig>;
   flick?: Partial<FlickConfig>;
+  pinchMotion?: Partial<PinchMotionConfig>;
   cooldownMs?: number;
   historyMs?: number;
 }
@@ -121,6 +150,7 @@ export function resolveClassifierConfig(overrides: ClassifierOverrides = {}): Cl
     swipe: { ...d.swipe, ...overrides.swipe },
     circle: { ...d.circle, ...overrides.circle },
     flick: { ...d.flick, ...overrides.flick },
+    pinchMotion: { ...d.pinchMotion, ...overrides.pinchMotion },
     cooldownMs: overrides.cooldownMs ?? d.cooldownMs,
     historyMs: overrides.historyMs ?? d.historyMs,
   };
@@ -154,6 +184,18 @@ export interface ClassifierState {
   palmTrack: TrackPoint[];
   tipTrack: TrackPoint[];
   cooldownUntil: number;
+  /** Palm path while pinching, in isotropic units, for the knob and the slider. */
+  pinchTrack: TrackPoint[];
+  /** What the moving pinch turned out to be. Once decided it neither taps nor holds. */
+  pinchMode: 'none' | 'turn' | 'drag';
+  /** Last direction of travel of the pinched palm, in radians, or NaN before the first one. */
+  pinchHeading: number;
+  /** Rotation of the direction of travel not yet spent on knob steps. */
+  pinchTurn: number;
+  /** Rotation of the direction of travel since the pinch started. */
+  pinchTurnTotal: number;
+  /** Slider steps sent so far, positive downward. */
+  pinchDragSteps: number;
 }
 
 export interface ClassifierSnapshot {
@@ -186,6 +228,12 @@ export function createClassifierState(overrides: ClassifierOverrides = {}): Clas
     palmTrack: [],
     tipTrack: [],
     cooldownUntil: -Infinity,
+    pinchTrack: [],
+    pinchMode: 'none',
+    pinchHeading: NaN,
+    pinchTurn: 0,
+    pinchTurnTotal: 0,
+    pinchDragSteps: 0,
   };
 }
 
@@ -207,10 +255,110 @@ function emitPendingTap(state: ClassifierState, t: number, events: GestureEvent[
   }
 }
 
+function clearMotion(state: ClassifierState): void {
+  'worklet';
+  state.palmTrack.length = 0;
+  state.tipTrack.length = 0;
+}
+
+function resetPinchMotion(state: ClassifierState, t: number, palm: Vec2 | null): void {
+  'worklet';
+  state.pinchTrack.length = 0;
+  if (palm !== null) {
+    state.pinchTrack.push({ t, x: palm.x, y: palm.y, pose: 'pinch' });
+  }
+  state.pinchMode = 'none';
+  state.pinchHeading = NaN;
+  state.pinchTurn = 0;
+  state.pinchTurnTotal = 0;
+  state.pinchDragSteps = 0;
+}
+
+/** Follows the pinched palm and sends knob or slider steps once the motion is clearly a turn or a vertical drag. */
+function trackPinchMotion(state: ClassifierState, t: number, palm: Vec2, events: GestureEvent[]): void {
+  'worklet';
+  const config = state.config.pinchMotion;
+  const track = state.pinchTrack;
+  if (track.length === 0) {
+    resetPinchMotion(state, t, palm);
+    return;
+  }
+  track.push({ t, x: palm.x, y: palm.y, pose: 'pinch' });
+  const start = track[0];
+  const dx = palm.x - start.x;
+  const dy = palm.y - start.y;
+
+  let back = -1;
+  for (let i = track.length - 2; i >= 0; i--) {
+    const bx = palm.x - track[i].x;
+    const by = palm.y - track[i].y;
+    if (bx * bx + by * by >= config.segment * config.segment) {
+      back = i;
+      break;
+    }
+  }
+  if (back >= 0) {
+    const heading = Math.atan2(palm.y - track[back].y, palm.x - track[back].x);
+    if (!Number.isNaN(state.pinchHeading)) {
+      const delta = wrapAngle(heading - state.pinchHeading);
+      state.pinchTurn += delta;
+      state.pinchTurnTotal += delta;
+    }
+    state.pinchHeading = heading;
+  }
+
+  if (state.pinchMode === 'none') {
+    if (Math.abs(state.pinchTurn) >= config.turnStep) {
+      state.pinchMode = 'turn';
+    } else if (
+      Math.abs(dy) >= config.dragDecide &&
+      Math.abs(dy) >= config.dragAxisRatio * Math.abs(dx) &&
+      Math.abs(state.pinchTurnTotal) <= config.dragMaxTurn
+    ) {
+      state.pinchMode = 'drag';
+    }
+    if (state.pinchMode !== 'none') {
+      // A single pinch waiting for the double pinch window is still a tap.
+      emitPendingTap(state, t, events, true);
+    }
+  }
+
+  if (state.pinchMode === 'turn') {
+    while (Math.abs(state.pinchTurn) >= config.turnStep) {
+      // In screen space (y down) a positive rotation is clockwise.
+      const clockwise = state.pinchTurn > 0;
+      events.push(makeEvent(clockwise ? 'pinch_circle_cw' : 'pinch_circle_ccw', t, state.pinchPosition, 0.85));
+      state.pinchTurn -= clockwise ? config.turnStep : -config.turnStep;
+    }
+  } else if (state.pinchMode === 'drag') {
+    // The slider follows the hand both ways: coming back up sends up steps.
+    const target = Math.trunc(dy / config.dragStep);
+    while (state.pinchDragSteps !== target) {
+      const down = target > state.pinchDragSteps;
+      state.pinchDragSteps += down ? 1 : -1;
+      const step = makeEvent('pinch_drag', t, state.pinchPosition, 0.85);
+      step.direction = down ? 'down' : 'up';
+      events.push(step);
+    }
+  }
+
+  // A knob can turn for a while; keep the start and the recent path only.
+  if (track.length > 240) {
+    track.splice(1, track.length - 120);
+  }
+}
+
 function releasePinch(state: ClassifierState, releaseT: number, position: Vec2, events: GestureEvent[]): void {
   'worklet';
   const timing = state.config.pinch;
   state.pinchActive = false;
+  if (state.pinchMode !== 'none') {
+    // A knob turn or a slider drag ends here; it is not a tap.
+    resetPinchMotion(state, releaseT, null);
+    state.cooldownUntil = releaseT + state.config.cooldownMs;
+    clearMotion(state);
+    return;
+  }
   if (state.holdSent) {
     state.holdSent = false;
     const end = makeEvent('pinch_hold', releaseT, position, 0.9);
@@ -232,12 +380,6 @@ function releasePinch(state: ClassifierState, releaseT: number, position: Vec2, 
     return;
   }
   events.push(makeEvent('pinch', releaseT, state.pinchPosition, 0.9));
-}
-
-function clearMotion(state: ClassifierState): void {
-  'worklet';
-  state.palmTrack.length = 0;
-  state.tipTrack.length = 0;
 }
 
 function handleHandLost(state: ClassifierState, t: number, events: GestureEvent[]): void {
@@ -334,8 +476,12 @@ export function stepClassifier(state: ClassifierState, frame: HandFrame): Gestur
     state.pinchStart = state.pose.currentSince;
     state.pinchPosition = pinchPoint;
     state.holdSent = false;
+    resetPinchMotion(state, t, features.palmCenter);
   } else if (state.pinchActive && current === 'pinch') {
-    if (!state.holdSent && t - state.pinchStart >= config.pinch.holdMs) {
+    if (!state.holdSent) {
+      trackPinchMotion(state, t, features.palmCenter, events);
+    }
+    if (!state.holdSent && state.pinchMode === 'none' && t - state.pinchStart >= config.pinch.holdMs) {
       emitPendingTap(state, t, events, true);
       state.holdSent = true;
       const start = makeEvent('pinch_hold', t, state.pinchPosition, 0.9);
