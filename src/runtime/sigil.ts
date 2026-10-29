@@ -1,4 +1,4 @@
-import { AppState, PermissionsAndroid, Platform } from 'react-native';
+import { AppRegistry, AppState, PermissionsAndroid, Platform } from 'react-native';
 
 import type { ControlAction } from '../../modules/sigil-control';
 import { MockSpeechToText, NativeSpeechToText, SpeechUnavailableError, type SpeechToText } from '../adapters/voice';
@@ -102,6 +102,23 @@ const FRAME_MS = 33;
  * Everything that keeps working while other apps are in front: live hand
  * control, the floating bubble, the cursor and voice requests. One instance
  * lives for the whole app; screens read its state and call its actions.
+/**
+ * React Native pauses JavaScript timers while Sigil's screen is in the
+ * background, unless a headless task runs. Plan steps, voice questions and
+ * the demo hand wait on timers, so the native module keeps this task while the
+ * camera service runs. It does no work of its own and ends when Sigil stops.
+ */
+const KEEP_ALIVE_TASK = 'SigilKeepAlive';
+let releaseKeepAlive: (() => void) | null = null;
+if (Platform.OS === 'android') {
+  AppRegistry.registerHeadlessTask(KEEP_ALIVE_TASK, () => () =>
+    new Promise<void>((resolve) => {
+      releaseKeepAlive?.();
+      releaseKeepAlive = resolve;
+    }),
+  );
+}
+
  */
 export class Sigil {
   readonly profiles = ProfileRegistry.withBuiltins();
@@ -155,6 +172,7 @@ export class Sigil {
         // A request ended: remember what it was and how it went.
         const busy = this.voice.busy;
         if (wasBusy && !busy) {
+    if (this.state.running) this.keepAlive(true);
           const command = commandOutcome(voice, false);
           if (command) this.set({ lastCommand: command });
         }
@@ -181,10 +199,22 @@ export class Sigil {
     const ui: SigilUi = {
       sphere: (action) => {
         if (action === 'close') return;
+    const wasRunning = this.state.running;
         if (AppState.currentState === 'active') this.host.openSphere();
+    if (this.state.running !== wasRunning) this.keepAlive(this.state.running);
         else void native.openApp(native.getStatus().packageName, 'sigil://control/sphere', null);
       },
       listen: () => void this.voice.start(),
+  /** Keeps JavaScript timers alive in the background while the camera service runs (see KEEP_ALIVE_TASK). */
+  private keepAlive(on: boolean): void {
+    if (!this.native || Platform.OS !== 'android') return;
+    this.native.setKeepAlive(on);
+    if (!on) {
+      releaseKeepAlive?.();
+      releaseKeepAlive = null;
+    }
+  }
+
       cursor: (action) => {
         if (action === 'toggle') native.hideCursor();
       },

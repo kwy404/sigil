@@ -14,6 +14,7 @@ import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.KeyEvent
+import com.facebook.react.bridge.ReactContext
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -118,6 +119,13 @@ class SigilControlModule : Module() {
     Function("setBubbleState") { state: String ->
       val service = SigilCameraService.instance ?: return@Function false
       Handler(Looper.getMainLooper()).post { service.setBubbleState(BubbleState.from(state)) }
+      true
+    }
+
+    /** Keeps JavaScript timers running while Sigil is in the background; see JsKeepAlive. */
+    Function("setKeepAlive") { on: Boolean ->
+      val reactContext = appContext.reactContext as? ReactContext ?: return@Function false
+      JsKeepAlive.set(reactContext, on)
       true
     }
 

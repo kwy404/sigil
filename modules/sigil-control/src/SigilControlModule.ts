@@ -45,6 +45,12 @@ declare class SigilControlNativeModule extends NativeModule<SigilControlEvents> 
   setTrackingPaused(paused: boolean): boolean;
   /** What the floating bubble shows. False when the camera service is not running. */
   setBubbleState(state: BubbleStateName): boolean;
+  /**
+   * Starts or finishes the SigilKeepAlive headless task, which keeps JavaScript
+   * timers running while Sigil is in the background. JavaScript must register
+   * the task first.
+   */
+  setKeepAlive(on: boolean): boolean;
   showCursor(): boolean;
   hideCursor(): void;
   /** Screen pixel coordinates. Cheap enough to call on every camera frame. */
