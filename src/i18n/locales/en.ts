@@ -34,6 +34,19 @@ export const en = {
     },
     pickSample: 'Pick a sample in the gesture lab to replay it here.',
   },
+  quick: {
+    volume: 'Volume',
+    brightness: 'Brightness',
+    volumeUp: 'Volume up',
+    volumeDown: 'Volume down',
+    mute: 'Mute',
+    unmute: 'Unmute',
+    brightnessUp: 'Brightness up',
+    brightnessDown: 'Brightness down',
+    unavailable: 'Not available here',
+    volumeUnsupported: 'Sigil cannot change the volume here. Use the phone buttons or its control panel.',
+    brightnessUnsupported: 'Sigil cannot change the brightness here.',
+  },
   lab: {
     title: 'Gesture lab',
     caption: (count: number) =>

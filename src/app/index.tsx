@@ -7,6 +7,7 @@ import { GestureLab } from '@/features/gesture-lab';
 import { LanguagePanel } from '@/features/language-panel';
 import { PlannerPanel } from '@/features/planner-panel';
 import { ProfilesPanel } from '@/features/profiles-panel';
+import { SphereQuickActions } from '@/features/sphere-quick-actions';
 import { SphereStage } from '@/features/sphere-stage';
 import { SystemPanel } from '@/features/system-panel';
 import { sampleRecordings } from '@/gesture-engine';
@@ -44,6 +45,7 @@ export default function HomeScreen() {
 
       <Card title={m.home.sphereTitle} caption={m.home.sphereCaption}>
         <SphereStage size={stageSize} recording={recording} activeSegment={segment} onSelectSegment={setSegment} />
+        <SphereQuickActions />
       </Card>
 
       <GestureLab selectedId={sampleId} onSelect={setSampleId} />

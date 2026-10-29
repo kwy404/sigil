@@ -18,6 +18,13 @@ export {
   type GestureTarget,
   type SigilUi,
 } from './dispatch';
+export {
+  changeMediaVolume,
+  changeScreenBrightness,
+  readLevels,
+  UNKNOWN_LEVELS,
+  type LevelsSnapshot,
+} from './levels';
 export { getNativeControl, type NativeControl } from './native';
 
 /**

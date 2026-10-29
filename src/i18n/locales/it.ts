@@ -27,6 +27,19 @@ export const it: Messages = {
     },
     pickSample: 'Scegli un campione nel laboratorio dei gesti per riprodurlo qui.',
   },
+  quick: {
+    volume: 'Volume',
+    brightness: 'Luminosità',
+    volumeUp: 'Alza il volume',
+    volumeDown: 'Abbassa il volume',
+    mute: 'Muto',
+    unmute: 'Riattiva audio',
+    brightnessUp: 'Alza la luminosità',
+    brightnessDown: 'Abbassa la luminosità',
+    unavailable: 'Non disponibile qui',
+    volumeUnsupported: 'Qui Sigil non può cambiare il volume. Usa i tasti del telefono o il centro di controllo.',
+    brightnessUnsupported: 'Qui Sigil non può cambiare la luminosità.',
+  },
   lab: {
     title: 'Laboratorio dei gesti',
     caption: (count) =>

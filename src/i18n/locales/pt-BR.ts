@@ -27,6 +27,19 @@ export const ptBR: Messages = {
     },
     pickSample: 'Escolha uma amostra no laboratório de gestos para repetir aqui.',
   },
+  quick: {
+    volume: 'Volume',
+    brightness: 'Brilho',
+    volumeUp: 'Aumentar o volume',
+    volumeDown: 'Diminuir o volume',
+    mute: 'Mudo',
+    unmute: 'Tirar do mudo',
+    brightnessUp: 'Aumentar o brilho',
+    brightnessDown: 'Diminuir o brilho',
+    unavailable: 'Indisponível aqui',
+    volumeUnsupported: 'Aqui o Sigil não consegue mudar o volume. Use os botões do celular ou o painel de controle.',
+    brightnessUnsupported: 'Aqui o Sigil não consegue mudar o brilho.',
+  },
   lab: {
     title: 'Laboratório de gestos',
     caption: (count) =>

@@ -29,6 +29,19 @@ export const fr: Messages = {
     },
     pickSample: 'Choisissez un exemple dans le labo de gestes pour le rejouer ici.',
   },
+  quick: {
+    volume: 'Volume',
+    brightness: 'Luminosité',
+    volumeUp: 'Monter le volume',
+    volumeDown: 'Baisser le volume',
+    mute: 'Muet',
+    unmute: 'Remettre le son',
+    brightnessUp: 'Augmenter la luminosité',
+    brightnessDown: 'Baisser la luminosité',
+    unavailable: 'Indisponible ici',
+    volumeUnsupported: 'Ici, Sigil ne peut pas changer le volume. Utilisez les boutons du téléphone ou son centre de contrôle.',
+    brightnessUnsupported: 'Ici, Sigil ne peut pas changer la luminosité.',
+  },
   lab: {
     title: 'Labo de gestes',
     caption: (count) =>

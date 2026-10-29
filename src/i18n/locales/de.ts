@@ -27,6 +27,19 @@ export const de: Messages = {
     },
     pickSample: 'Wähle im Gestenlabor eine Aufnahme, um sie hier abzuspielen.',
   },
+  quick: {
+    volume: 'Lautstärke',
+    brightness: 'Helligkeit',
+    volumeUp: 'Lauter',
+    volumeDown: 'Leiser',
+    mute: 'Stumm',
+    unmute: 'Ton an',
+    brightnessUp: 'Heller',
+    brightnessDown: 'Dunkler',
+    unavailable: 'Hier nicht verfügbar',
+    volumeUnsupported: 'Hier kann Sigil die Lautstärke nicht ändern. Nutze die Tasten des Telefons oder sein Kontrollzentrum.',
+    brightnessUnsupported: 'Hier kann Sigil die Helligkeit nicht ändern.',
+  },
   lab: {
     title: 'Gestenlabor',
     caption: (count) =>

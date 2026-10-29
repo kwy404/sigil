@@ -27,6 +27,19 @@ export const ja: Messages = {
     },
     pickSample: 'ジェスチャーラボでサンプルを選ぶと、ここで再生されます。',
   },
+  quick: {
+    volume: '音量',
+    brightness: '明るさ',
+    volumeUp: '音量を上げる',
+    volumeDown: '音量を下げる',
+    mute: 'ミュート',
+    unmute: 'ミュート解除',
+    brightnessUp: '明るくする',
+    brightnessDown: '暗くする',
+    unavailable: 'ここでは使えません',
+    volumeUnsupported: 'ここでは Sigil は音量を変更できません。本体のボタンかコントロールセンターを使ってください。',
+    brightnessUnsupported: 'ここでは Sigil は明るさを変更できません。',
+  },
   lab: {
     title: 'ジェスチャーラボ',
     caption: (count) =>

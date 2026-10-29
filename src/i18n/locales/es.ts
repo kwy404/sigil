@@ -27,6 +27,19 @@ export const es: Messages = {
     },
     pickSample: 'Elige una muestra en el laboratorio de gestos para repetirla aquí.',
   },
+  quick: {
+    volume: 'Volumen',
+    brightness: 'Brillo',
+    volumeUp: 'Subir el volumen',
+    volumeDown: 'Bajar el volumen',
+    mute: 'Silenciar',
+    unmute: 'Activar sonido',
+    brightnessUp: 'Subir el brillo',
+    brightnessDown: 'Bajar el brillo',
+    unavailable: 'No disponible aquí',
+    volumeUnsupported: 'Aquí Sigil no puede cambiar el volumen. Usa los botones del teléfono o su panel de control.',
+    brightnessUnsupported: 'Aquí Sigil no puede cambiar el brillo.',
+  },
   lab: {
     title: 'Laboratorio de gestos',
     caption: (count) =>

@@ -5,3 +5,4 @@ export {
   type DefaultSegmentId,
   type SphereSegment,
 } from './control-sphere';
+export { LevelRing, type LevelRingProps } from './level-ring';
