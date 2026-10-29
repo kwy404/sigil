@@ -18,10 +18,10 @@ import kotlin.math.sqrt
  */
 object SystemLevels {
   // Constants of the curve Android's own brightness slider uses since Android 9.
-  private const val R = 0.5f
-  private const val A = 0.17883277f
-  private const val B = 0.28466892f
-  private const val C = 0.55991073f
+  private const val CURVE_R = 0.5f
+  private const val CURVE_A = 0.17883277f
+  private const val CURVE_B = 0.28466892f
+  private const val CURVE_C = 0.55991073f
 
   private fun audio(context: Context) = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -86,13 +86,13 @@ object SystemLevels {
   /** Slider position from 0 to 1 to the linear brightness setting, as Android's slider maps it. */
   private fun sliderToLinear(position: Float): Float {
     val p = position.coerceIn(0f, 1f)
-    val value = if (p <= R) (p / R) * (p / R) else exp((p - C) / A) + B
+    val value = if (p <= CURVE_R) (p / CURVE_R) * (p / CURVE_R) else exp((p - CURVE_C) / CURVE_A) + CURVE_B
     return (value / 12f).coerceIn(0f, 1f)
   }
 
   private fun linearToSlider(linear: Float): Float {
     val n = linear.coerceIn(0f, 1f) * 12f
-    val value = if (n <= 1f) sqrt(n) * R else A * ln(n - B) + C
+    val value = if (n <= 1f) sqrt(n) * CURVE_R else CURVE_A * ln(n - CURVE_B) + CURVE_C
     return value.coerceIn(0f, 1f)
   }
 

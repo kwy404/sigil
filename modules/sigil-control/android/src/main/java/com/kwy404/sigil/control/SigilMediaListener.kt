@@ -52,7 +52,7 @@ class SigilMediaListener : NotificationListenerService() {
       if (!isEnabled(context)) return "media_access"
       val controller = activeController(context) ?: return "failed"
       val state = controller.playbackState ?: return "failed"
-      if (state.actions and PlaybackState.ACTION_SEEK_TO == 0L) return "unsupported"
+      if ((state.actions and PlaybackState.ACTION_SEEK_TO) == 0L) return "unsupported"
       val elapsed = if (state.state == PlaybackState.STATE_PLAYING) {
         ((SystemClock.elapsedRealtime() - state.lastPositionUpdateTime) * state.playbackSpeed).toLong()
       } else {
