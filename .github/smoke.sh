@@ -11,10 +11,31 @@ mkdir -p "$OUT"
 
 shot() { adb exec-out screencap -p > "$OUT/$1.png"; }
 
-# Taps the first view whose text or content description is exactly $1.
-tap_text() {
+dump_ui() {
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
   adb pull /sdcard/ui.xml "$OUT/last-ui.xml" > /dev/null 2>&1
+}
+
+# The emulator's launcher sometimes hangs at boot, and its "isn't responding"
+# dialog hides the app from the dump. Answer Wait and look again.
+dismiss_not_responding() {
+  local tries=0 wait
+  while [ "$tries" -lt 3 ]; do
+    wait=$(grep -oE 'resource-id="android:id/aerr_wait"[^>]*bounds="[^"]*"' "$OUT/last-ui.xml" | head -1 | grep -oE 'bounds="[^"]*"')
+    [ -z "$wait" ] && return 0
+    read -r x1 y1 x2 y2 <<< "$(echo "$wait" | tr -c '0-9' ' ')"
+    echo "answer Wait on a not responding dialog" | tee -a "$OUT/taps.txt"
+    adb shell input tap $(((x1 + x2) / 2)) $(((y1 + y2) / 2))
+    sleep 2
+    dump_ui
+    tries=$((tries + 1))
+  done
+}
+
+# Taps the first view whose text or content description is exactly $1.
+tap_text() {
+  dump_ui
+  dismiss_not_responding
   local bounds
   bounds=$(grep -oE "(text|content-desc)=\"$1\"[^>]*bounds=\"[^\"]*\"" "$OUT/last-ui.xml" | head -1 | grep -oE 'bounds="[^"]*"')
   if [ -z "$bounds" ]; then
@@ -35,6 +56,8 @@ adb logcat -c
 
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 > /dev/null
 sleep 20
+dump_ui
+dismiss_not_responding
 shot 01-open
 tree 01-open
 
