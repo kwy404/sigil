@@ -20,7 +20,11 @@ export interface SelectionConfig {
   minScore: number;
   /** Wrist to middle finger base, in frame widths: smaller hands are people in the background. */
   minPalm: number;
-  /** Wrist, thumb tip, index tip and middle finger base must lie inside the frame by this margin. */
+  /**
+   * How far outside the frame a key point may lie. The index tip must stay
+   * inside, and at most one other key point (wrist, thumb tip, middle finger
+   * base) may leave: pointing low pushes the wrist out of a selfie frame.
+   */
   edgeMargin: number;
 }
 
@@ -52,16 +56,20 @@ export function handQuality(landmarks: readonly number[], aspect: number, edgeMa
   const wrist = point(landmarks, WRIST);
   const base = point(landmarks, MIDDLE_BASE);
   const palm = Math.hypot(base.x - wrist.x, (base.y - wrist.y) / aspect);
-  let inside = true;
+  let outside = 0;
+  let tipOutside = false;
   let cx = 0;
   let cy = 0;
   for (const index of KEY_POINTS) {
     const p = point(landmarks, index);
     cx += p.x / KEY_POINTS.length;
     cy += p.y / KEY_POINTS.length;
-    if (p.x < -edgeMargin || p.x > 1 + edgeMargin || p.y < -edgeMargin || p.y > 1 + edgeMargin) inside = false;
+    if (p.x < -edgeMargin || p.x > 1 + edgeMargin || p.y < -edgeMargin || p.y > 1 + edgeMargin) {
+      outside++;
+      if (index === INDEX_TIP) tipOutside = true;
+    }
   }
-  return { palm, wrist, center: { x: cx, y: cy }, inside };
+  return { palm, wrist, center: { x: cx, y: cy }, inside: !tipOutside && outside <= 1 };
 }
 
 /** Why a hand cannot be the user's, or null when it can. */

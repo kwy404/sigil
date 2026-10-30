@@ -34,6 +34,10 @@ describe('which hand is the user', () => {
     expect(rejectHand(far, handQuality(far.landmarks, ASPECT))).toBe('too_small');
     const cut = hand('point', 1.04, 0.7);
     expect(rejectHand(cut, handQuality(cut.landmarks, ASPECT))).toBe('cut_off');
+    // Pointing low pushes the wrist out of a selfie frame; that hand still counts.
+    const low = hand('point', 0.5, 0.7);
+    const wristOut = low.landmarks.map((value, index) => (index === 1 ? 1.05 : value));
+    expect(rejectHand({ ...low, landmarks: wristOut }, handQuality(wristOut, ASPECT))).toBeNull();
     const unsure = hand('open_palm', 0.5, 0.7, 0.16, 'right', 0.3);
     expect(rejectHand(unsure, handQuality(unsure.landmarks, ASPECT))).toBe('low_score');
   });
