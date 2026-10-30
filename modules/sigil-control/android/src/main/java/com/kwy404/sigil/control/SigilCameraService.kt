@@ -118,7 +118,10 @@ class SigilCameraService : Service(), LifecycleOwner {
       paused = false
       registry.currentState = Lifecycle.State.RESUMED
       startPipeline()
-      bubble = FloatingBubble(this, bubbleActions).also { it.show() }
+      bubble = FloatingBubble(this, bubbleActions).also {
+        it.setSuppressed(ownScreenInFront)
+        it.show()
+      }
     }
     publish()
     return START_NOT_STICKY
@@ -274,6 +277,17 @@ class SigilCameraService : Service(), LifecycleOwner {
     /** The running service, for the module to reach the bubble and the pause switch. */
     val instance: SigilCameraService?
       get() = current?.get()
+
+    /** Sigil's own activity is in front, as React Native reports it; the bubble stays out of the way meanwhile. */
+    @Volatile
+    var ownScreenInFront = false
+      private set
+
+    /** Hides the bubble while Sigil's screen is in front and shows it again over other apps. The cursor is not affected. */
+    fun setOwnScreenInFront(value: Boolean) {
+      ownScreenInFront = value
+      current?.get()?.bubble?.setSuppressed(value)
+    }
 
     fun hasPermission(context: Context, permission: String): Boolean =
       context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED

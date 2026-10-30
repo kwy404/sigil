@@ -66,46 +66,79 @@ class FloatingBubble(private val context: Context, private val actions: Actions)
   private var state = BubbleState.TRACKING
   private val dim = Runnable { bubble?.animate()?.alpha(IDLE_ALPHA)?.setDuration(400)?.start() }
 
+  /** Sigil runs, so the bubble belongs on screen whenever Sigil's own screen is not in front. */
+  private var wanted = false
+
+  /** Sigil's own screen is in front: the bubble would only cover Sigil's controls. */
+  private var suppressed = false
+
+  /** Where the user left the bubble, so it comes back there after Sigil's screen. */
+  private var lastX: Int? = null
+  private var lastY: Int? = null
+
   fun canShow(): Boolean = Build.VERSION.SDK_INT >= 26 && Settings.canDrawOverlays(context)
 
   fun show() {
     if (!canShow()) return
     handler.post {
-      if (bubble != null) return@post
-      val layout = WindowManager.LayoutParams(
-        size,
-        size,
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-        PixelFormat.TRANSLUCENT,
-      )
-      layout.gravity = Gravity.TOP or Gravity.START
-      val screen = context.resources.displayMetrics
-      layout.x = screen.widthPixels - size - (8 * density).toInt()
-      layout.y = (screen.heightPixels * 0.35f).toInt()
-      val view = BubbleView(context)
-      view.setState(state)
-      view.setOnTouchListener(DragListener())
-      try {
-        windowManager.addView(view, layout)
-        bubble = view
-        params = layout
-        wake()
-      } catch (error: RuntimeException) {
-        // Without the overlay permission the bubble stays hidden.
-      }
+      wanted = true
+      if (!suppressed) attach()
     }
   }
 
   fun hide() {
     handler.post {
-      closeMenu()
-      handler.removeCallbacks(dim)
-      val view = bubble ?: return@post
-      bubble = null
-      params = null
-      runCatching { windowManager.removeView(view) }
+      wanted = false
+      detach()
     }
+  }
+
+  /** Hides the bubble while Sigil's own activity is in front and brings it back, in the same place, over other apps. */
+  fun setSuppressed(value: Boolean) {
+    handler.post {
+      if (suppressed == value) return@post
+      suppressed = value
+      if (value) detach() else if (wanted && canShow()) attach()
+    }
+  }
+
+  private fun attach() {
+    if (bubble != null) return
+    val layout = WindowManager.LayoutParams(
+      size,
+      size,
+      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+      PixelFormat.TRANSLUCENT,
+    )
+    layout.gravity = Gravity.TOP or Gravity.START
+    val screen = context.resources.displayMetrics
+    layout.x = lastX ?: (screen.widthPixels - size - (8 * density).toInt())
+    layout.y = lastY ?: (screen.heightPixels * 0.35f).toInt()
+    val view = BubbleView(context)
+    view.setState(state)
+    view.setOnTouchListener(DragListener())
+    try {
+      windowManager.addView(view, layout)
+      bubble = view
+      params = layout
+      wake()
+    } catch (error: RuntimeException) {
+      // Without the overlay permission the bubble stays hidden.
+    }
+  }
+
+  private fun detach() {
+    closeMenu()
+    handler.removeCallbacks(dim)
+    val view = bubble ?: return
+    params?.let { layout ->
+      lastX = layout.x
+      lastY = layout.y
+    }
+    bubble = null
+    params = null
+    runCatching { windowManager.removeView(view) }
   }
 
   fun setState(next: BubbleState) {

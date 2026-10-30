@@ -14,7 +14,9 @@ import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.KeyEvent
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.common.LifecycleState
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -38,6 +40,15 @@ class SigilControlModule : Module() {
   @Volatile
   private var speech: SpeechSession? = null
 
+  /** Sigil's activity coming to the front or leaving it hides and shows the floating bubble. */
+  private val screenListener = object : LifecycleEventListener {
+    override fun onHostResume() = SigilCameraService.setOwnScreenInFront(true)
+
+    override fun onHostPause() = SigilCameraService.setOwnScreenInFront(false)
+
+    override fun onHostDestroy() = SigilCameraService.setOwnScreenInFront(false)
+  }
+
   override fun definition() = ModuleDefinition {
     Name("SigilControl")
 
@@ -58,6 +69,10 @@ class SigilControlModule : Module() {
 
     OnCreate {
       SigilRuntime.eventSink = { name, body -> this@SigilControlModule.sendEvent(name, body) }
+      (appContext.reactContext as? ReactContext)?.let { react ->
+        SigilCameraService.setOwnScreenInFront(react.lifecycleState == LifecycleState.RESUMED)
+        react.addLifecycleEventListener(screenListener)
+      }
       appContext.reactContext?.let { ctx ->
         LaunchableApps.watch(ctx) { SigilRuntime.emit("onAppsChanged", emptyMap()) }
       }
@@ -65,6 +80,8 @@ class SigilControlModule : Module() {
 
     OnDestroy {
       SigilRuntime.eventSink = null
+      (appContext.reactContext as? ReactContext)?.removeLifecycleEventListener(screenListener)
+      SigilCameraService.setOwnScreenInFront(false)
       appContext.reactContext?.let { LaunchableApps.unwatch(it) }
       appCursor?.hide()
       appCursor = null
