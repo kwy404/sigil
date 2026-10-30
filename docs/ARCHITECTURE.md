@@ -135,7 +135,7 @@ Platform rules that shape the design:
 
 ### Release builds and R8
 
-Expo turns R8 on for release builds (`android.enableMinifyInReleaseBuilds=true` in the generated `gradle.properties`). R8 renamed the fields of MediaPipe's protobuf lite messages, which MediaPipe reads by name, so creating the hand landmarker failed with "Field platform_ for ... not found" and the camera never started: up to 0.3.2, no release build tracked a hand. The module now ships keep rules for MediaPipe and protobuf (`modules/sigil-control/android/proguard-rules.pro`, applied through `consumerProguardFiles`). The x86 tracker test below runs the minified release build, so it catches this class of failure.
+Expo turns R8 on for release builds (`android.enableMinifyInReleaseBuilds=true` in the generated `gradle.properties`). R8 renamed the fields of MediaPipe's protobuf lite messages, which MediaPipe reads by name, so creating the hand landmarker failed with "Field platform_ for ... not found" and the camera never started: up to 0.3.2, no release build tracked a hand. R8 had also removed the Flogger backend MediaPipe finds by class name, which broke the static initializer of MediaPipe's Graph next. The module now ships keep rules for MediaPipe, protobuf and Flogger (`modules/sigil-control/android/proguard-rules.pro`, applied through `consumerProguardFiles`). The x86 tracker test below runs the minified release build, so it catches this class of failure.
 
 ### Proving the tracker without a hand
 
