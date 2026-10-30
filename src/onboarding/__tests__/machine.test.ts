@@ -153,12 +153,40 @@ describe('permissions', () => {
     expect(state.success).toBeNull();
   });
 
-  it('records permissions granted elsewhere without moving the current page', () => {
+  it('leaves out a later permission page that is already granted, without moving the current page', () => {
     let state = goTo(startTour({ androidAccess: true, checklist: NOTHING }), 'camera');
     state = tourReducer(state, { type: 'checklist', checklist: { ...NOTHING, overlay: true } });
-    expect(state.status.overlay).toBe('done');
+    expect(state.steps).not.toContain('overlay');
     expect(state.success).toBeNull();
     expect(currentStep(state)).toBe('camera');
+  });
+
+  it('skips the pages a late checklist shows as allowed, so none of them only says Allowed', () => {
+    // The tour opens before the session has read the permissions.
+    let state = startTour({ androidAccess: true, checklist: NOTHING });
+    state = tourReducer(state, { type: 'checklist', checklist: { ...NOTHING, camera: true, microphone: true, accessibility: true } });
+    state = tourReducer(state, { type: 'checklist', checklist: { ...NOTHING, camera: true, microphone: true, accessibility: true } });
+    expect(currentStep(state)).toBe('welcome');
+    expect(state.steps).not.toContain('camera');
+    expect(state.steps).not.toContain('microphone');
+    expect(state.steps).not.toContain('accessibility');
+    state = run(state, { type: 'next' }, { type: 'next' });
+    expect(currentStep(state)).toBe('overlay');
+    expect(state.success).toBeNull();
+  });
+
+  it('records a permission granted for a page already passed', () => {
+    let state = run(goTo(startTour({ androidAccess: true, checklist: NOTHING }), 'camera'), { type: 'skip' });
+    state = tourReducer(state, { type: 'checklist', checklist: { ...NOTHING, camera: true } });
+    expect(state.status.camera).toBe('done');
+    expect(state.success).toBeNull();
+    expect(currentStep(state)).toBe('microphone');
+  });
+
+  it('leaves out a special access granted before its page', () => {
+    const state = tourReducer(startTour({ androidAccess: true, checklist: NOTHING }), { type: 'access', step: 'writeSettings' });
+    expect(state.steps).not.toContain('writeSettings');
+    expect(currentStep(state)).toBe('welcome');
   });
 
   it('celebrates a special access the phone reports while its page is open', () => {

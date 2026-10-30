@@ -190,6 +190,23 @@ function succeed(state: TourState, step: TourStep): TourState {
   return currentStep(state) === step ? { ...marked, success: step } : marked;
 }
 
+/**
+ * A permission the phone reports as granted. Its page is celebrated when it is
+ * open, recorded when it was already passed, and left out when it is still
+ * ahead: the session checklist arrives a moment after the tour opens, and a
+ * page that could only say "Allowed" is not worth a stop.
+ */
+function grant(state: TourState, step: TourStep): TourState {
+  const at = state.steps.indexOf(step);
+  if (at < 0 || state.status[step] === 'done') {
+    return state;
+  }
+  if (at > state.index) {
+    return { ...state, steps: state.steps.filter((candidate) => candidate !== step) };
+  }
+  return succeed(state, step);
+}
+
 export function tourReducer(state: TourState, event: TourEvent): TourState {
   if (state.finished) {
     return state;
@@ -228,14 +245,14 @@ export function tourReducer(state: TourState, event: TourEvent): TourState {
       for (const candidate of state.steps) {
         if (!isPermissionStep(candidate)) continue;
         const item = PERMISSION_ITEMS[candidate];
-        if (item !== null && event.checklist[item] && next.status[candidate] !== 'done') {
-          next = succeed(next, candidate);
+        if (item !== null && event.checklist[item]) {
+          next = grant(next, candidate);
         }
       }
       return next;
     }
     case 'access':
-      return state.steps.includes(event.step) && state.status[event.step] !== 'done' ? succeed(state, event.step) : state;
+      return grant(state, event.step);
     case 'practiced':
       return step === 'voice' && state.success !== step ? succeed(state, step) : state;
     case 'advance':
