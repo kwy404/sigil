@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">Apri Sigil</string>
   <string name="sigil_bubble_stop">Ferma Sigil</string>
   <string name="sigil_camera_notification_paused">In pausa. La fotocamera resta spenta finché non riprendi.</string>
+  <string name="sigil_bubble_state_dark">Troppo buio per la fotocamera. I gesti aspettano più luce.</string>
+  <string name="sigil_bubble_state_camera">La fotocamera è occupata o non disponibile. Sigil riprova da solo.</string>
+  <string name="sigil_bubble_state_hot">Il telefono è caldo. Il tracciamento rallenta.</string>
 </resources>

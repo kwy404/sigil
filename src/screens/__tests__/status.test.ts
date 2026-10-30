@@ -25,6 +25,7 @@ function session(patch: Partial<SessionState>): SessionState {
     checklist: ALL,
     levels: { volume: null, brightness: null },
     error: null,
+    condition: 'ok',
     ...patch,
   };
 }

@@ -96,11 +96,17 @@ export function LiveSheet() {
                   </View>
                 ) : null}
               </View>
-              {!tracking || session.hand === 'none' ? (
+              {!tracking || session.hand === 'none' || session.condition !== 'ok' ? (
                 <View style={styles.overlayCenter} pointerEvents="none">
                   <View style={styles.messagePill}>
                     <Txt variant="subhead" tone="secondary" align="center">
-                      {session.phase === 'paused' ? t.paused : tracking ? t.showHand : t.off}
+                      {session.phase === 'paused'
+                        ? t.paused
+                        : tracking
+                          ? session.condition !== 'ok'
+                            ? t.conditions[session.condition]
+                            : t.showHand
+                          : t.off}
                     </Txt>
                   </View>
                 </View>

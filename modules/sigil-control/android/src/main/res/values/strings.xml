@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">Open Sigil</string>
   <string name="sigil_bubble_stop">Stop Sigil</string>
   <string name="sigil_camera_notification_paused">Paused. The camera is off until you resume.</string>
+  <string name="sigil_bubble_state_dark">Too dark for the camera. Gestures wait for more light.</string>
+  <string name="sigil_bubble_state_camera">The camera is busy or unavailable. Sigil tries again by itself.</string>
+  <string name="sigil_bubble_state_hot">The phone is hot. Tracking runs slower.</string>
 </resources>

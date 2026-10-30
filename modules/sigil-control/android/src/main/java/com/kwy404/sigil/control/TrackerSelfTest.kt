@@ -75,6 +75,7 @@ internal object TrackerSelfTest {
       val stillAt = ConcurrentHashMap<Long, Boolean>()
       var error: String? = null
       var tracker: HandLandmarker? = null
+      var brightness = -1
       var loadMs = -1L
       try {
         if (names.isEmpty()) throw IllegalStateException("no photos in assets/$FOLDER")
@@ -107,6 +108,9 @@ internal object TrackerSelfTest {
               HandFrames.side(result),
               synthetic = true,
               fixture = name,
+              hands = HandFrames.hands(result),
+              aspect = WIDTH / HEIGHT.toFloat(),
+              brightness = brightness,
             )
           },
           onError = { failure -> TrackerDiagnostics.error("selftest_error_listener", failure) },
@@ -130,6 +134,7 @@ internal object TrackerSelfTest {
             }
             // Camera frames arrive in sensor orientation; these are already upright (rotation 0).
             val upright = HandFrames.upright(frame, 0)
+            brightness = HandFrames.brightness(upright)
             HandPreview.offerFrame(upright)
             val timestamp = clock.next()
             if (i < STILL_FRAMES + MOVING_FRAMES) photoAt[timestamp] = name

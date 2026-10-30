@@ -69,6 +69,7 @@ class SigilControlModule : Module() {
       "onSpeechPartial",
       "onSpeechResult",
       "onSpeechError",
+      "onTrackerState",
     )
 
     OnCreate {

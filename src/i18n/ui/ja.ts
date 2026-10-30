@@ -265,6 +265,16 @@ export const uiJa: UiMessages = {
     source: { rules: 'ルール', model: '端末内モデル' },
   },
   live: {
+    conditions: {
+      settling: '手を止めてください。',
+      no_hand: '手を見せてください。',
+      ignored_hand: '手を近づけて、全体が映るようにしてください。',
+      too_dark: '暗すぎます。明かりをつけてください。ジェスチャーは待機します。',
+      hot: 'スマートフォンが熱くなっています。トラッキングを遅くしています。',
+      camera_busy: '別のアプリがカメラを使っています。空いたら Sigil が再開します。',
+      camera_disabled: 'このスマートフォンではカメラが無効になっています。',
+      camera_error: 'カメラが止まりました。Sigil が再試行しています。',
+    },
     tracker: (camera: number, hands: number) => `カメラ ${camera} fps · 手 ${hands}/秒`,
     title: 'ライブ',
     close: 'ライブを閉じる',

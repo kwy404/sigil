@@ -6,8 +6,10 @@ import android.graphics.Matrix
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Size
 import android.view.Display
@@ -32,8 +34,22 @@ import java.nio.ByteOrder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-/** One tracker result: 21 landmarks as x, y, z triples (empty when no hand is seen), its score and side. */
-typealias HandFrameListener = (timestampMs: Long, landmarks: FloatArray, score: Float, handedness: String?) -> Unit
+/**
+ * One tracker result: the first hand's 21 landmarks as x, y, z triples (empty
+ * when no hand is seen), its score and side, every hand found, the aspect of
+ * the upright frame (width over height) and its brightness from 0 to 255.
+ */
+class HandFrame(
+  val timestampMs: Long,
+  val landmarks: FloatArray,
+  val score: Float,
+  val handedness: String?,
+  val hands: List<Map<String, Any?>>,
+  val aspect: Float,
+  val brightness: Int,
+)
+
+typealias HandFrameListener = (frame: HandFrame) -> Unit
 
 /**
  * Produces hand landmarks from the front camera while the camera service
@@ -72,7 +88,8 @@ internal object HandFrames {
     val options = HandLandmarker.HandLandmarkerOptions.builder()
       .setBaseOptions(BaseOptions.builder().setModelAssetBuffer(model).setDelegate(Delegate.CPU).build())
       .setRunningMode(RunningMode.LIVE_STREAM)
-      .setNumHands(1)
+      // Two, so JavaScript can pick the user's hand when someone else's is in view too.
+      .setNumHands(2)
       .setMinHandDetectionConfidence(MIN_CONFIDENCE)
       .setMinHandPresenceConfidence(MIN_CONFIDENCE)
       .setMinTrackingConfidence(MIN_CONFIDENCE)
@@ -122,6 +139,34 @@ internal object HandFrames {
   fun score(result: HandLandmarkerResult): Float = result.handedness().firstOrNull()?.firstOrNull()?.score() ?: 1f
 
   fun side(result: HandLandmarkerResult): String? = result.handedness().firstOrNull()?.firstOrNull()?.categoryName()?.lowercase()
+
+  /** Every hand of a result, for JavaScript to choose the user's: landmarks, score and side. */
+  fun hands(result: HandLandmarkerResult): List<Map<String, Any?>> = result.landmarks().mapIndexed { index, hand ->
+    val values = ArrayList<Double>(hand.size * 3)
+    for (point in hand) {
+      values.add(point.x().toDouble())
+      values.add(point.y().toDouble())
+      values.add(point.z().toDouble())
+    }
+    val category = result.handedness().getOrNull(index)?.firstOrNull()
+    mapOf("landmarks" to values, "score" to (category?.score() ?: 1f).toDouble(), "handedness" to category?.categoryName()?.lowercase())
+  }
+
+  /** Mean brightness of a frame from 0 to 255, sampled on a coarse grid: enough to tell a dark room. */
+  fun brightness(frame: Bitmap): Int {
+    val columns = 24
+    val rows = 32
+    var sum = 0L
+    for (row in 0 until rows) {
+      val y = (frame.height * (row + 0.5f) / rows).toInt().coerceIn(0, frame.height - 1)
+      for (column in 0 until columns) {
+        val x = (frame.width * (column + 0.5f) / columns).toInt().coerceIn(0, frame.width - 1)
+        val pixel = frame.getPixel(x, y)
+        sum += (299 * ((pixel shr 16) and 0xff) + 587 * ((pixel shr 8) and 0xff) + 114 * (pixel and 0xff)) / 1000
+      }
+    }
+    return (sum / (columns * rows)).toInt()
+  }
 }
 
 /**
@@ -140,6 +185,16 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
   private var analysis: ImageAnalysis? = null
   private var lastEmptyAt = 0L
   private var bindAttempts = 0
+  private var lastSentAt = 0L
+
+  @Volatile private var lastAspect = 0.75f
+
+  @Volatile private var lastBrightness = -1
+
+  @Volatile private var thermal = 0
+
+  private var thermalListener: Any? = null
+  private var displayListener: DisplayManager.DisplayListener? = null
 
   @Volatile
   private var running = false
@@ -149,6 +204,8 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     running = true
     TrackerDiagnostics.begin("mediapipe")
     TrackerDiagnostics.cameraId = frontCameraId()
+    watchThermal()
+    watchRotation()
     val executor = Executors.newSingleThreadExecutor().also { analyzer = it }
     executor.execute {
       val started = SystemClock.uptimeMillis()
@@ -188,7 +245,7 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
       val now = SystemClock.uptimeMillis()
       if (now - lastEmptyAt >= EMPTY_EVERY_MS) {
         lastEmptyAt = now
-        listener(result.timestampMs(), values, 0f, null)
+        listener(HandFrame(result.timestampMs(), values, 0f, null, emptyList(), lastAspect, lastBrightness))
         HandPreview.offerLandmarks(values)
       }
       return
@@ -196,7 +253,17 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     TrackerDiagnostics.handsFound.hit()
     TrackerDiagnostics.lastHandAt = System.currentTimeMillis()
     HandPreview.offerLandmarks(values)
-    listener(result.timestampMs(), values, HandFrames.score(result), HandFrames.side(result))
+    listener(
+      HandFrame(
+        result.timestampMs(),
+        values,
+        HandFrames.score(result),
+        HandFrames.side(result),
+        HandFrames.hands(result),
+        lastAspect,
+        lastBrightness,
+      ),
+    )
   }
 
   /** The display rotation, so the frames come upright for the way the phone is held. */
@@ -244,16 +311,72 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
       try {
         cameras.unbindAll()
         val camera = cameras.bindToLifecycle(owner, CameraSelector.DEFAULT_FRONT_CAMERA, useCase)
-        camera.cameraInfo.cameraState.observe(owner) { state ->
-          TrackerDiagnostics.cameraState = state.type.name
-          state.error?.let { failure -> TrackerDiagnostics.error("camera_state", cameraErrorName(failure.code)) }
-        }
+        camera.cameraInfo.cameraState.observe(owner) { state -> onCameraState(state, executor) }
       } catch (error: Exception) {
         TrackerDiagnostics.error("camera_bind", error)
         reportError(error.message ?: "camera")
         retryBind(executor)
       }
     }, { command -> main.post(command) })
+  }
+
+  /**
+   * The camera's condition for the user: busy while another app (a video call,
+   * the camera app) holds it, which CameraX waits out and reopens by itself;
+   * disabled by the system; or failed, which binds again after a pause.
+   */
+  private fun onCameraState(state: CameraState, executor: ExecutorService) {
+    TrackerDiagnostics.cameraState = state.type.name
+    val failure = state.error
+    if (failure != null) TrackerDiagnostics.error("camera_state", cameraErrorName(failure.code))
+    val condition = when {
+      state.type == CameraState.Type.OPEN -> "ok"
+      failure == null -> if (state.type == CameraState.Type.CLOSED) "error" else "starting"
+      failure.code == CameraState.ERROR_CAMERA_IN_USE || failure.code == CameraState.ERROR_MAX_CAMERAS_IN_USE -> "busy"
+      failure.code == CameraState.ERROR_CAMERA_DISABLED || failure.code == CameraState.ERROR_DO_NOT_DISTURB_MODE_ENABLED -> "disabled"
+      else -> "error"
+    }
+    if (condition == "ok") bindAttempts = 0
+    TrackerDiagnostics.setCamera(condition)
+    if (state.type == CameraState.Type.CLOSED && running && failure?.type == CameraState.ErrorType.CRITICAL) {
+      bindAttempts = 0
+      retryBind(executor)
+    }
+  }
+
+  /** Frames slow down when the phone runs hot, instead of stuttering. */
+  private fun watchThermal() {
+    if (Build.VERSION.SDK_INT < 29) return
+    val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+    thermal = power.currentThermalStatus
+    TrackerDiagnostics.setThermal(thermal)
+    val listener = PowerManager.OnThermalStatusChangedListener { status ->
+      thermal = status
+      TrackerDiagnostics.setThermal(status)
+    }
+    runCatching { power.addThermalStatusListener(listener) }
+    thermalListener = listener
+  }
+
+  /** A rotated phone turns the frames too, and JavaScript maps the cursor to the new screen. */
+  private fun watchRotation() {
+    val displays = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return
+    val listener = object : DisplayManager.DisplayListener {
+      override fun onDisplayAdded(displayId: Int) = Unit
+
+      override fun onDisplayRemoved(displayId: Int) = Unit
+
+      override fun onDisplayChanged(displayId: Int) {
+        if (displayId != Display.DEFAULT_DISPLAY) return
+        val rotation = displayRotation()
+        if (rotation * 90 == TrackerDiagnostics.targetRotation) return
+        TrackerDiagnostics.targetRotation = rotation * 90
+        analysis?.targetRotation = rotation
+        TrackerDiagnostics.publish()
+      }
+    }
+    displays.registerDisplayListener(listener, main)
+    displayListener = listener
   }
 
   /** The camera may be busy for a moment (another app closing it); try again a few times. */
@@ -270,6 +393,27 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
       image.close()
       return
     }
+    // Full rate while a hand is around; fewer frames after a while without one, or when the phone runs hot.
+    val now = SystemClock.uptimeMillis()
+    val idle = System.currentTimeMillis() - maxOf(TrackerDiagnostics.lastHandAt, TrackerDiagnostics.startedAt) > IDLE_AFTER_MS
+    val gap = when {
+      thermal >= PowerManager.THERMAL_STATUS_SEVERE -> HOT_GAP_MS
+      thermal >= PowerManager.THERMAL_STATUS_MODERATE -> WARM_GAP_MS
+      idle -> IDLE_GAP_MS
+      else -> 0L
+    }
+    TrackerDiagnostics.setRate(
+      when {
+        thermal >= PowerManager.THERMAL_STATUS_MODERATE -> "hot"
+        idle -> "idle"
+        else -> "full"
+      },
+    )
+    if (now - lastSentAt < gap) {
+      image.close()
+      return
+    }
+    lastSentAt = now
     val rotation = image.imageInfo.rotationDegrees
     val frame: Bitmap = try {
       HandFrames.upright(image.toBitmap(), rotation)
@@ -283,6 +427,9 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     TrackerDiagnostics.rotationDegrees = rotation
     TrackerDiagnostics.frameWidth = frame.width
     TrackerDiagnostics.frameHeight = frame.height
+    lastAspect = frame.width / frame.height.toFloat()
+    lastBrightness = HandFrames.brightness(frame)
+    TrackerDiagnostics.brightness = lastBrightness
     HandPreview.offerFrame(frame)
     try {
       tracker.detectAsync(BitmapImageBuilder(frame).build(), clock.next())
@@ -296,6 +443,16 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
   override fun stop() {
     if (!running) return
     running = false
+    if (Build.VERSION.SDK_INT >= 29) {
+      val listener = thermalListener as? PowerManager.OnThermalStatusChangedListener
+      val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+      if (listener != null && power != null) runCatching { power.removeThermalStatusListener(listener) }
+    }
+    thermalListener = null
+    displayListener?.let { listener ->
+      (context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager)?.unregisterDisplayListener(listener)
+    }
+    displayListener = null
     main.post {
       runCatching { provider?.unbindAll() }
       provider = null
@@ -316,6 +473,10 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     private const val EMPTY_EVERY_MS = 100L
     private const val MAX_BIND_ATTEMPTS = 4
     private const val BIND_RETRY_MS = 2000L
+    private const val IDLE_AFTER_MS = 3000L
+    private const val IDLE_GAP_MS = 125L
+    private const val WARM_GAP_MS = 66L
+    private const val HOT_GAP_MS = 100L
 
     fun cameraErrorName(code: Int): String = when (code) {
       CameraState.ERROR_MAX_CAMERAS_IN_USE -> "max_cameras_in_use"

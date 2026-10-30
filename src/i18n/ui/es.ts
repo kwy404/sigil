@@ -277,6 +277,16 @@ export const uiEs: UiMessages = {
     source: { rules: 'Reglas', model: 'Modelo en el dispositivo' },
   },
   live: {
+    conditions: {
+      settling: 'Mantén la mano quieta.',
+      no_hand: 'Muéstrame tu mano.',
+      ignored_hand: 'Acerca la mano y que se vea entera.',
+      too_dark: 'Demasiado oscuro. Enciende una luz, los gestos esperan.',
+      hot: 'El teléfono está caliente. El seguimiento va más lento.',
+      camera_busy: 'Otra app está usando la cámara. Sigil sigue cuando quede libre.',
+      camera_disabled: 'La cámara está desactivada en este teléfono.',
+      camera_error: 'La cámara se detuvo. Sigil lo está intentando de nuevo.',
+    },
     tracker: (camera: number, hands: number) => `Cámara ${camera} fps · manos ${hands}/s`,
     title: 'En vivo',
     close: 'Cerrar En vivo',

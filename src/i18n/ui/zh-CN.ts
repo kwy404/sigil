@@ -265,6 +265,16 @@ export const uiZhCN: UiMessages = {
     source: { rules: '规则解析', model: '设备端模型' },
   },
   live: {
+    conditions: {
+      settling: '请保持手不动。',
+      no_hand: '请把手伸到镜头前。',
+      ignored_hand: '请把手靠近一些，并让整只手都在画面里。',
+      too_dark: '光线太暗。请开灯，手势会等待。',
+      hot: '手机发热，追踪会变慢。',
+      camera_busy: '其他应用正在使用摄像头。摄像头空闲后 Sigil 会继续。',
+      camera_disabled: '这台手机的摄像头已被停用。',
+      camera_error: '摄像头停止了，Sigil 正在重试。',
+    },
     tracker: (camera: number, hands: number) => `摄像头 ${camera} 帧/秒 · 手 ${hands}/秒`,
     title: '实时',
     close: '关闭实时',

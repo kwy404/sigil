@@ -29,13 +29,25 @@ enum class BubbleState {
   TRACKING,
   HAND,
   LISTENING,
-  PAUSED;
+  PAUSED,
+
+  /** Too dark for the camera: gestures wait for more light. */
+  DARK,
+
+  /** The camera is busy with another app, disabled, or failed. */
+  CAMERA,
+
+  /** The phone is hot: tracking runs slower. */
+  HOT;
 
   companion object {
     fun from(name: String): BubbleState = when (name) {
       "hand" -> HAND
       "listening" -> LISTENING
       "paused" -> PAUSED
+      "dark" -> DARK
+      "camera" -> CAMERA
+      "hot" -> HOT
       else -> TRACKING
     }
   }
@@ -328,6 +340,12 @@ private class BubbleView(context: Context) : View(context) {
 
   fun setState(next: BubbleState) {
     state = next
+    contentDescription = when (next) {
+      BubbleState.DARK -> context.getString(R.string.sigil_bubble_state_dark)
+      BubbleState.CAMERA -> context.getString(R.string.sigil_bubble_state_camera)
+      BubbleState.HOT -> context.getString(R.string.sigil_bubble_state_hot)
+      else -> "Sigil"
+    }
     invalidate()
   }
 
@@ -340,6 +358,8 @@ private class BubbleView(context: Context) : View(context) {
       BubbleState.HAND -> Color.rgb(94, 242, 223)
       BubbleState.LISTENING -> Color.rgb(255, 196, 107)
       BubbleState.PAUSED -> Color.rgb(167, 179, 198)
+      BubbleState.DARK, BubbleState.HOT -> Color.rgb(255, 196, 107)
+      BubbleState.CAMERA -> Color.rgb(255, 122, 134)
     }
     ring.color = color
     glyph.color = color
@@ -362,6 +382,27 @@ private class BubbleView(context: Context) : View(context) {
         canvas.drawRect(cx - density, cy + h / 2, cx + density, cy + h / 2 + 5 * density, glyph)
       }
       BubbleState.HAND -> canvas.drawCircle(cx, cy, 8 * density, glyph)
+      BubbleState.DARK -> {
+        // A crescent moon.
+        canvas.drawCircle(cx, cy, 8 * density, glyph)
+        canvas.drawCircle(cx + 4 * density, cy - 3 * density, 7 * density, disc)
+      }
+      BubbleState.CAMERA -> {
+        // A camera body crossed out.
+        glyph.style = Paint.Style.STROKE
+        glyph.strokeWidth = 2 * density
+        bar.set(cx - 9 * density, cy - 6 * density, cx + 9 * density, cy + 6 * density)
+        canvas.drawRoundRect(bar, 3 * density, 3 * density, glyph)
+        canvas.drawLine(cx - 10 * density, cy + 9 * density, cx + 10 * density, cy - 9 * density, glyph)
+        glyph.style = Paint.Style.FILL
+      }
+      BubbleState.HOT -> {
+        // A thermometer.
+        val w = 5 * density
+        bar.set(cx - w / 2, cy - 10 * density, cx + w / 2, cy + 4 * density)
+        canvas.drawRoundRect(bar, w / 2, w / 2, glyph)
+        canvas.drawCircle(cx, cy + 6 * density, 5 * density, glyph)
+      }
       BubbleState.TRACKING -> {
         glyph.style = Paint.Style.STROKE
         glyph.strokeWidth = 2 * density

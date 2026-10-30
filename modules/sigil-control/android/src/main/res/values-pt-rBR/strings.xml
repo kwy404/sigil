@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">Abrir o Sigil</string>
   <string name="sigil_bubble_stop">Parar o Sigil</string>
   <string name="sigil_camera_notification_paused">Pausado. A câmera fica desligada até você retomar.</string>
+  <string name="sigil_bubble_state_dark">Escuro demais para a câmera. Os gestos esperam mais luz.</string>
+  <string name="sigil_bubble_state_camera">A câmera está ocupada ou indisponível. O Sigil tenta de novo sozinho.</string>
+  <string name="sigil_bubble_state_hot">O celular está quente. O rastreamento fica mais lento.</string>
 </resources>

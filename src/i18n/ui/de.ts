@@ -277,6 +277,16 @@ export const uiDe: UiMessages = {
     source: { rules: 'Regeln', model: 'Modell auf dem Gerät' },
   },
   live: {
+    conditions: {
+      settling: 'Halte die Hand ruhig.',
+      no_hand: 'Zeig mir deine Hand.',
+      ignored_hand: 'Halte die Hand näher und ganz im Bild.',
+      too_dark: 'Zu dunkel. Mach Licht an, die Gesten warten.',
+      hot: 'Das Handy ist heiß. Die Erkennung läuft langsamer.',
+      camera_busy: 'Eine andere App nutzt die Kamera. Sigil macht weiter, sobald sie frei ist.',
+      camera_disabled: 'Die Kamera ist auf diesem Handy deaktiviert.',
+      camera_error: 'Die Kamera hat gestoppt. Sigil versucht es erneut.',
+    },
     tracker: (camera: number, hands: number) => `Kamera ${camera} B/s · Hände ${hands}/s`,
     title: 'Live',
     close: 'Live schließen',

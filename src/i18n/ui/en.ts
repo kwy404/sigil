@@ -273,6 +273,16 @@ export const uiEn = {
     source: { rules: 'Rule parser', model: 'On device model' } as Record<string, string>,
   },
   live: {
+    conditions: {
+      settling: 'Hold your hand steady.',
+      no_hand: 'Show me your hand.',
+      ignored_hand: 'Bring your hand closer and keep it whole in view.',
+      too_dark: 'Too dark. Turn on a light, the gestures wait.',
+      hot: 'The phone is hot. Tracking runs slower.',
+      camera_busy: 'Another app is using the camera. Sigil goes on when it is free.',
+      camera_disabled: 'The camera is turned off on this phone.',
+      camera_error: 'The camera stopped. Sigil is trying again.',
+    },
     tracker: (camera: number, hands: number) => `Camera ${camera} fps · hands ${hands}/s`,
     title: 'Live',
     close: 'Close Live',

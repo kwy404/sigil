@@ -8,6 +8,7 @@ import { gestureKey } from '../gesture-engine/gestures';
 import { sampleRecordings, type HandRecording } from '../gesture-engine/samples';
 import { flattenLandmarks } from '../gesture-engine/landmarks';
 import { HandControl, type NativeHandFrame } from '../hand-control/controller';
+import { trackerCondition, type TrackerCondition } from '../hand-control/robustness';
 import { appNameResolver, MESSAGES, numberFormatter, type AppLanguage, type DescribeContext } from '../i18n';
 import { readSettings, updateSettings } from '../settings/store';
 import { ActionPlanner } from '../sigil-core/planner';
@@ -41,6 +42,8 @@ export interface SigilState {
   needsAccess: 'write_settings' | 'media_access' | null;
   /** The last self test of the hand tracker and the gesture engine, or null. */
   selfTest: SelfTestVerdict | null;
+  /** Why the hand does or does not act right now: the camera, heat, light and the hand itself. */
+  condition: TrackerCondition;
   error: string | null;
 }
 
@@ -146,6 +149,8 @@ export class Sigil {
   private readonly listeners = new Set<(state: SigilState) => void>();
   private readonly subscriptions: { remove(): void }[] = [];
   private demoTimer: ReturnType<typeof setInterval> | null = null;
+  /** The camera service's view of the camera, heat and rotation, from onTrackerState. */
+  private tracker = { camera: 'starting', thermal: 0, rotation: -1 };
   /** Collects what the gesture engine makes of the self test photos while the test runs. */
   private probe: SelfTestProbe | null = null;
   /** What the voice panel over other apps shows, and the timer that hides it after a request. */
@@ -168,6 +173,7 @@ export class Sigil {
       microphone: readSettings().voice?.microphone !== false,
       needsAccess: null,
       selfTest: null,
+      condition: 'ok',
       error: null,
     };
     const ui: SigilInterface = {
@@ -269,6 +275,13 @@ export class Sigil {
         if (!event.running) this.stopDemoTimer();
       }),
       native.addListener('onControlAction', (event) => this.onControlAction(event.action)),
+      native.addListener('onTrackerState', (event) => {
+        const rotated = event.rotation !== this.tracker.rotation;
+        this.tracker = { camera: event.camera, thermal: event.thermal, rotation: event.rotation };
+        // A rotated phone has a rotated screen: the cursor maps to the new one.
+        if (rotated) this.hands?.setScreen(native.getScreenSize());
+        this.updateCondition();
+      }),
       // Sigil's screen shows the voice state; the panel takes over when another app comes in front.
       AppState.addEventListener('change', () => this.syncPanel(this.voice.current)),
     );
@@ -276,6 +289,7 @@ export class Sigil {
 
   private push(frame: NativeHandFrame): void {
     const events = this.hands?.push(frame) ?? [];
+    this.updateCondition();
     if (frame.fixture && this.probe && this.hands) {
       const snapshot = this.hands.snapshot;
       this.probe.record(frame.fixture, snapshot.pose, snapshot.handVisible, snapshot.screenCursor, events);
@@ -328,10 +342,37 @@ export class Sigil {
     }
   }
 
+  /** The condition from the camera service and the hand control; the bubble follows it. */
+  private updateCondition(): void {
+    const hands = this.hands?.condition;
+    const condition =
+      this.state.running && hands ? trackerCondition(this.tracker.camera, this.tracker.thermal, hands.dark, hands.hand) : 'ok';
+    if (condition !== this.state.condition) {
+      this.set({ condition });
+      this.syncBubble(this.voice.current);
+    }
+  }
+
   private syncBubble(voice: VoiceState): void {
     if (!this.native || !this.state.running) return;
     const listening = voice.phase === 'listening' || voice.phase === 'confirm' || voice.phase === 'choose';
-    this.native.setBubbleState(this.state.paused ? 'paused' : listening ? 'listening' : this.state.handVisible ? 'hand' : 'tracking');
+    const condition = this.state.condition;
+    // Every reason the hand does not act shows on the bubble, so the user never sees a fake success.
+    this.native.setBubbleState(
+      this.state.paused
+        ? 'paused'
+        : listening
+          ? 'listening'
+          : condition.startsWith('camera')
+            ? 'camera'
+            : condition === 'hot'
+              ? 'hot'
+              : condition === 'too_dark'
+                ? 'dark'
+                : this.state.handVisible
+                  ? 'hand'
+                  : 'tracking',
+    );
   }
 
   private onControlAction(action: ControlAction): void {

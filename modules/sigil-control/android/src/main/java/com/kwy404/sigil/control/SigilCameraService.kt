@@ -142,8 +142,16 @@ class SigilCameraService : Service(), LifecycleOwner {
 
   private fun startPipeline() {
     pipeline = HandLandmarkPipelines.create(this, this).also { tracker ->
-      tracker.start { timestampMs, landmarks, score, handedness ->
-        SigilRuntime.reportHandFrame(timestampMs, landmarks, score, handedness)
+      tracker.start { frame ->
+        SigilRuntime.reportHandFrame(
+          frame.timestampMs,
+          frame.landmarks,
+          frame.score,
+          frame.handedness,
+          hands = frame.hands,
+          aspect = frame.aspect,
+          brightness = frame.brightness,
+        )
       }
     }
   }

@@ -269,6 +269,16 @@ export const uiFr: UiMessages = {
     source: { rules: 'Règles', model: 'Modèle sur l’appareil' },
   },
   live: {
+    conditions: {
+      settling: 'Gardez la main immobile.',
+      no_hand: 'Montrez-moi votre main.',
+      ignored_hand: 'Approchez la main et gardez-la entière dans l\'image.',
+      too_dark: 'Trop sombre. Allumez une lumière, les gestes attendent.',
+      hot: 'Le téléphone chauffe. Le suivi ralentit.',
+      camera_busy: 'Une autre appli utilise la caméra. Sigil reprend quand elle est libre.',
+      camera_disabled: 'La caméra est désactivée sur ce téléphone.',
+      camera_error: 'La caméra s\'est arrêtée. Sigil réessaie.',
+    },
     tracker: (camera: number, hands: number) => `Caméra ${camera} i/s · mains ${hands}/s`,
     title: 'En direct',
     close: 'Fermer En direct',

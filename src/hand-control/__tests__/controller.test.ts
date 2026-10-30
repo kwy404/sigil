@@ -140,3 +140,57 @@ describe('HandControl', () => {
     expect(log.some((entry) => entry.startsWith('tap'))).toBe(false);
   });
 });
+
+describe('HandControl in a real room', () => {
+  /** A second, small hand far behind the user, in every frame. */
+  function withBackground(frames: NativeHandFrame[]): NativeHandFrame[] {
+    const small = flattenLandmarks(recording('open-palm').frames.find((frame) => frame.landmarks)?.landmarks ?? []).map((value, index) =>
+      index % 3 === 2 ? value : 0.85 + (value - 0.5) * 0.15,
+    );
+    return frames.map((frame) => ({
+      ...frame,
+      hands: frame.landmarks.length > 0 ? [{ landmarks: small, score: 0.9, handedness: 'left' }, { landmarks: frame.landmarks, score: 1, handedness: 'right' }] : [],
+    }));
+  }
+
+  it('follows the user and still taps when someone else is in the background', () => {
+    const log: string[] = [];
+    const hands = control(log);
+    withBackground(nativeFrames(recording('pinch'))).forEach((frame) => hands.push(frame));
+    expect(log.filter((entry) => entry.startsWith('tap'))).toHaveLength(1);
+  });
+
+  it('moves the cursor but does not act while it is too dark, and says so', () => {
+    const log: string[] = [];
+    const hands = control(log);
+    const frames = nativeFrames(recording('pinch'));
+    frames.forEach((frame) => hands.push({ ...frame, brightness: 12 }));
+    expect(hands.condition.dark).toBe(true);
+    expect(log.some((entry) => entry.startsWith('tap'))).toBe(false);
+  });
+
+  it('fades the cursor where the hand was lost, then hides it', () => {
+    const states: string[] = [];
+    const log: string[] = [];
+    const hands = control(log);
+    const native = (hands as unknown as { options: { native: HandControlNative } }).options.native;
+    native.moveCursor = (_x, _y, state) => states.push(state);
+    const frames = nativeFrames(recording('pinch'));
+    frames.forEach((frame) => hands.push(frame));
+    const end = frames[frames.length - 1].t;
+    hands.push({ t: end + 50, landmarks: [], score: 0, handedness: null });
+    expect(states[states.length - 1]).toBe('lost');
+    hands.push({ t: end + 2000, landmarks: [], score: 0, handedness: null });
+    expect(log[log.length - 1]).toBe('hideCursor');
+  });
+
+  it('reports a hand cut off by the edge as ignored', () => {
+    const log: string[] = [];
+    const hands = control(log);
+    const frame = nativeFrames(recording('open-palm')).find((candidate) => candidate.landmarks.length > 0) as NativeHandFrame;
+    const shifted = frame.landmarks.map((value, index) => (index % 3 === 0 ? value + 0.6 : value));
+    hands.push({ ...frame, landmarks: shifted });
+    expect(hands.condition.hand).toBe('ignored');
+    expect(hands.condition.ignored).toBe('cut_off');
+  });
+});

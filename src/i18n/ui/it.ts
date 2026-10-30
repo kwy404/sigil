@@ -269,6 +269,16 @@ export const uiIt: UiMessages = {
     source: { rules: 'Regole', model: 'Modello sul dispositivo' },
   },
   live: {
+    conditions: {
+      settling: 'Tieni la mano ferma.',
+      no_hand: 'Mostrami la mano.',
+      ignored_hand: 'Avvicina la mano e tienila tutta nell\'inquadratura.',
+      too_dark: 'Troppo buio. Accendi una luce, i gesti aspettano.',
+      hot: 'Il telefono è caldo. Il tracciamento rallenta.',
+      camera_busy: 'Un\'altra app sta usando la fotocamera. Sigil riprende quando è libera.',
+      camera_disabled: 'La fotocamera è disattivata su questo telefono.',
+      camera_error: 'La fotocamera si è fermata. Sigil sta riprovando.',
+    },
     tracker: (camera: number, hands: number) => `Fotocamera ${camera} fps · mani ${hands}/s`,
     title: 'Live',
     close: 'Chiudi Live',

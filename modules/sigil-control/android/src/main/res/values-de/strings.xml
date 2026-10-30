@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">Sigil öffnen</string>
   <string name="sigil_bubble_stop">Sigil beenden</string>
   <string name="sigil_camera_notification_paused">Pausiert. Die Kamera bleibt aus, bis du fortsetzt.</string>
+  <string name="sigil_bubble_state_dark">Zu dunkel für die Kamera. Gesten warten auf mehr Licht.</string>
+  <string name="sigil_bubble_state_camera">Die Kamera ist belegt oder nicht verfügbar. Sigil versucht es selbst erneut.</string>
+  <string name="sigil_bubble_state_hot">Das Handy ist heiß. Die Erkennung läuft langsamer.</string>
 </resources>

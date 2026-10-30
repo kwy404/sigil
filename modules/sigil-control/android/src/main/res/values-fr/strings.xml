@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">Ouvrir Sigil</string>
   <string name="sigil_bubble_stop">Arrêter Sigil</string>
   <string name="sigil_camera_notification_paused">En pause. La caméra reste éteinte jusqu\u2019à la reprise.</string>
+  <string name="sigil_bubble_state_dark">Trop sombre pour la caméra. Les gestes attendent plus de lumière.</string>
+  <string name="sigil_bubble_state_camera">La caméra est occupée ou indisponible. Sigil réessaie tout seul.</string>
+  <string name="sigil_bubble_state_hot">Le téléphone chauffe. Le suivi ralentit.</string>
 </resources>

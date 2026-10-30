@@ -54,6 +54,9 @@ object SigilRuntime {
     handedness: String?,
     synthetic: Boolean = false,
     fixture: String? = null,
+    hands: List<Map<String, Any?>>? = null,
+    aspect: Float = 0.75f,
+    brightness: Int = -1,
   ) {
     emit(
       "onHandFrame",
@@ -64,6 +67,9 @@ object SigilRuntime {
         "handedness" to handedness,
         "synthetic" to synthetic,
         "fixture" to fixture,
+        "hands" to hands,
+        "aspect" to aspect.toDouble(),
+        "brightness" to brightness,
       ),
     )
   }

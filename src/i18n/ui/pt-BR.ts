@@ -273,6 +273,16 @@ export const uiPtBR: UiMessages = {
     source: { rules: 'Regras', model: 'Modelo no aparelho' },
   },
   live: {
+    conditions: {
+      settling: 'Segure a mão parada.',
+      no_hand: 'Mostre a sua mão.',
+      ignored_hand: 'Aproxime a mão e deixe ela inteira na imagem.',
+      too_dark: 'Escuro demais. Acenda uma luz, os gestos esperam.',
+      hot: 'O celular está quente. O rastreamento fica mais lento.',
+      camera_busy: 'Outro app está usando a câmera. O Sigil continua quando ela ficar livre.',
+      camera_disabled: 'A câmera está desativada neste celular.',
+      camera_error: 'A câmera parou. O Sigil está tentando de novo.',
+    },
     tracker: (camera: number, hands: number) => `Câmera ${camera} quadros/s · mãos ${hands}/s`,
     title: 'Ao vivo',
     close: 'Fechar Ao vivo',

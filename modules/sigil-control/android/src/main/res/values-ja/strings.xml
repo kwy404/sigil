@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">Sigil を開く</string>
   <string name="sigil_bubble_stop">Sigil を停止</string>
   <string name="sigil_camera_notification_paused">一時停止中です。再開するまでカメラはオフです。</string>
+  <string name="sigil_bubble_state_dark">カメラには暗すぎます。明るくなるまでジェスチャーは待機します。</string>
+  <string name="sigil_bubble_state_camera">カメラが使用中か利用できません。Sigil が自動で再試行します。</string>
+  <string name="sigil_bubble_state_hot">スマートフォンが熱くなっています。トラッキングを遅くしています。</string>
 </resources>

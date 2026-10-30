@@ -28,4 +28,7 @@
   <string name="sigil_bubble_open">打开 Sigil</string>
   <string name="sigil_bubble_stop">停止 Sigil</string>
   <string name="sigil_camera_notification_paused">已暂停。继续之前摄像头保持关闭。</string>
+  <string name="sigil_bubble_state_dark">光线太暗，摄像头看不清。手势会等光线变亮。</string>
+  <string name="sigil_bubble_state_camera">摄像头正被占用或不可用。Sigil 会自动重试。</string>
+  <string name="sigil_bubble_state_hot">手机发热，追踪会变慢。</string>
 </resources>

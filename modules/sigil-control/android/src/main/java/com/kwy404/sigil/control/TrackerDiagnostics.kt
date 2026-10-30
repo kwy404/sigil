@@ -99,6 +99,44 @@ object TrackerDiagnostics {
 
   @Volatile var startedAt = 0L
 
+  /** Mean brightness of the last frame, 0 to 255, or -1 before the first. */
+  @Volatile var brightness = -1
+
+  /** The camera for the user: starting, ok, busy (another app holds it), disabled or error. */
+  @Volatile var camera = "starting"
+
+  /** PowerManager thermal status: 0 none, 1 light, 2 moderate, 3 severe and up. */
+  @Volatile var thermal = 0
+
+  /** Frames to MediaPipe: full, idle (no hand for a while) or hot (the phone is warm). */
+  @Volatile var rate = "full"
+
+  fun setCamera(value: String) {
+    if (camera == value) return
+    camera = value
+    publish()
+  }
+
+  fun setThermal(value: Int) {
+    if (thermal == value) return
+    thermal = value
+    publish()
+  }
+
+  fun setRate(value: String) {
+    if (rate == value) return
+    rate = value
+    publish()
+  }
+
+  /** Tells JavaScript the camera, heat, rate and rotation changed, for the bubble and Live. */
+  fun publish() {
+    SigilRuntime.emit(
+      "onTrackerState",
+      mapOf("camera" to camera, "thermal" to thermal, "rate" to rate, "rotation" to targetRotation),
+    )
+  }
+
   /** The last self test, as runSelfTest returned it. */
   @Volatile var selfTest: Map<String, Any?>? = null
 
@@ -137,7 +175,11 @@ object TrackerDiagnostics {
     frameWidth = 0
     frameHeight = 0
     rotationDegrees = -1
+    brightness = -1
+    camera = "starting"
+    rate = "full"
     startedAt = System.currentTimeMillis()
+    publish()
   }
 
   fun snapshot(): Map<String, Any?> = mapOf(
@@ -150,6 +192,10 @@ object TrackerDiagnostics {
     "frameHeight" to frameHeight,
     "rotationDegrees" to rotationDegrees,
     "targetRotation" to targetRotation,
+    "brightness" to brightness,
+    "camera" to camera,
+    "thermal" to thermal,
+    "rate" to rate,
     "cameraFps" to cameraFrames.rate(),
     "sentFps" to sentFrames.rate(),
     "resultFps" to results.rate(),

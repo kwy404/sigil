@@ -19,13 +19,17 @@ enum class CursorState {
   IDLE,
   HOVER,
   PRESS,
-  DRAG;
+  DRAG,
+
+  /** The hand was lost: the cursor stays where it was, faded, until the hand returns. */
+  LOST;
 
   companion object {
     fun from(name: String): CursorState = when (name) {
       "hover" -> HOVER
       "press" -> PRESS
       "drag" -> DRAG
+      "lost" -> LOST
       else -> IDLE
     }
   }
@@ -133,6 +137,7 @@ private class CursorView(context: Context) : View(context) {
     cx = x
     cy = y
     state = newState
+    alpha = if (newState == CursorState.LOST) LOST_ALPHA else 1f
     invalidate()
   }
 
@@ -143,7 +148,7 @@ private class CursorView(context: Context) : View(context) {
       CursorState.PRESS -> 0.7f
       CursorState.DRAG -> 0.85f
       CursorState.HOVER -> 1.15f
-      CursorState.IDLE -> 1f
+      CursorState.IDLE, CursorState.LOST -> 1f
     }
     val halo = radius * HALO_RADIUS_DP / RING_RADIUS_DP
     glow.shader = RadialGradient(cx, cy, halo, ACCENT_HALO, Color.TRANSPARENT, Shader.TileMode.CLAMP)
@@ -158,6 +163,7 @@ private class CursorView(context: Context) : View(context) {
     private const val RING_STROKE_DP = 1.5f
     private const val CORE_RADIUS_DP = 3f
     private const val HALO_RADIUS_DP = 26f
+    private const val LOST_ALPHA = 0.35f
     private val ACCENT = Color.rgb(94, 242, 223)
     private val ACCENT_HALO = Color.argb(89, 94, 242, 223)
     private val CORE = Color.rgb(239, 255, 252)

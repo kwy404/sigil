@@ -1,4 +1,5 @@
 import type { ExecutionResult } from '../sigil-core/executor';
+import type { TrackerCondition } from '../hand-control/robustness';
 import type { PlanOutcome } from '../sigil-core/planner';
 
 /** off: nothing runs; starting: permissions and the camera service; tracking: the hand is followed; paused: the camera is off; error: it could not start. */
@@ -20,6 +21,12 @@ export interface SessionState {
   /** Media volume and brightness from 0 to 1, or null where they cannot be read. */
   levels: { volume: number | null; brightness: number | null };
   error: string | null;
+  /**
+   * Why the hand does or does not act while tracking: ok, settling, no_hand,
+   * ignored_hand (only someone else's or a cut off hand), too_dark, hot,
+   * camera_busy, camera_disabled or camera_error. ok when Sigil is off.
+   */
+  condition: TrackerCondition;
 }
 
 export interface SessionActions {

@@ -1,4 +1,5 @@
-export type CursorState = 'idle' | 'hover' | 'press' | 'drag';
+/** lost: the hand left; the cursor stays where it was, faded, until the hand returns. */
+export type CursorState = 'idle' | 'hover' | 'press' | 'drag' | 'lost';
 
 export interface SigilControlStatus {
   /** The user enabled "Sigil hands free control" in the accessibility settings. */
@@ -137,7 +138,15 @@ export type SigilControlEvents = {
     handedness: 'left' | 'right' | null;
     synthetic?: boolean;
     fixture?: string | null;
+    /** Every hand found, up to two, for choosing the user's hand. */
+    hands?: { landmarks: number[]; score: number; handedness: 'left' | 'right' | null }[] | null;
+    /** Width over height of the upright frame. */
+    aspect?: number;
+    /** Mean brightness of the frame from 0 to 255, or -1 when unknown. */
+    brightness?: number;
   }) => void;
+  /** The camera (starting, ok, busy, disabled or error), the phone's heat, the frame rate and the display rotation. */
+  onTrackerState: (event: TrackerStateEvent) => void;
   onCursorError: (event: { message: string }) => void;
   /** An app was installed, removed or updated; read getLaunchableApps again. */
   onAppsChanged: () => void;
@@ -191,8 +200,19 @@ export interface SpeechResultEvent {
 
 export type PromptTone = 'info' | 'listening' | 'question' | 'warning';
 
-/** What the floating bubble shows. */
-export type BubbleStateName = 'tracking' | 'hand' | 'listening' | 'paused';
+/** What the floating bubble shows; dark, camera and hot say why the hand does not act. */
+export type BubbleStateName = 'tracking' | 'hand' | 'listening' | 'paused' | 'dark' | 'camera' | 'hot';
+
+export interface TrackerStateEvent {
+  /** starting, ok, busy (another app holds the camera), disabled or error. */
+  camera: string;
+  /** PowerManager thermal status: 0 none, 1 light, 2 moderate, 3 severe and up. */
+  thermal: number;
+  /** full, idle (no hand for a while) or hot (fewer frames while the phone is warm). */
+  rate: string;
+  /** Display rotation in degrees. */
+  rotation: number;
+}
 
 export type ControlAction = 'pause' | 'resume' | 'microphone' | 'stop';
 
@@ -209,6 +229,11 @@ export interface TrackerSnapshot {
   frameHeight: number;
   rotationDegrees: number;
   targetRotation: number;
+  /** Mean brightness of the last frame, 0 to 255, or -1. */
+  brightness: number;
+  camera: string;
+  thermal: number;
+  rate: string;
   /** Frames from CameraX per second. */
   cameraFps: number;
   /** Frames handed to MediaPipe per second. */

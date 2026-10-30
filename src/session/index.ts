@@ -151,6 +151,7 @@ class SessionStore {
       checklist: this.checklist,
       levels: this.levels,
       error: this.startError ?? state.error,
+      condition: state.running ? state.condition : 'ok',
     };
   }
 
