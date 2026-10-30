@@ -66,6 +66,8 @@ declare class SigilControlNativeModule extends NativeModule<SigilControlEvents> 
    * the task first.
    */
   setKeepAlive(on: boolean): boolean;
+  /** The cursor follows the tracker natively, at the display rate. Off while paused or showing the demo hand. */
+  setNativeCursor(on: boolean): void;
   showCursor(): boolean;
   hideCursor(): void;
   /** Screen pixel coordinates. Cheap enough to call on every camera frame. */

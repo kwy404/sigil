@@ -120,6 +120,8 @@ internal class PreviewCanvas(context: Context) : View(context) {
       matrix.reset()
       matrix.postScale(scale, scale)
       matrix.postTranslate(dx, dy)
+      // Frames are not mirrored in pixels any more; the preview mirrors them, like the landmarks.
+      matrix.postScale(-1f, 1f, width / 2f, height / 2f)
       canvas.drawBitmap(image, matrix, imagePaint)
     }
     val points = landmarks

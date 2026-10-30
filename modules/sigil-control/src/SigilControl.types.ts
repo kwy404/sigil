@@ -144,6 +144,10 @@ export type SigilControlEvents = {
     aspect?: number;
     /** Mean brightness of the frame from 0 to 255, or -1 when unknown. */
     brightness?: number;
+    /** The native cursor draws itself; cursorX and cursorY are where it is, for taps. */
+    nativeCursor?: boolean;
+    cursorX?: number | null;
+    cursorY?: number | null;
   }) => void;
   /** The camera (starting, ok, busy, disabled or error), the phone's heat, the frame rate and the display rotation. */
   onTrackerState: (event: TrackerStateEvent) => void;
@@ -234,6 +238,16 @@ export interface TrackerSnapshot {
   camera: string;
   thermal: number;
   rate: string;
+  /** Smoothed stage times in milliseconds. */
+  convertMs: number;
+  inferenceMs: number;
+  deliveryMs: number;
+  /** gpu or cpu, and the camera input size, chosen per phone. */
+  delegate: string;
+  inputSize: string;
+  /** Native cursor overlay updates per second, and the delay from capture to the cursor in milliseconds. */
+  cursorFps: number;
+  endToEndMs: number;
   /** Frames from CameraX per second. */
   cameraFps: number;
   /** Frames handed to MediaPipe per second. */

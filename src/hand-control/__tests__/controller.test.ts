@@ -195,3 +195,16 @@ describe('HandControl in a real room', () => {
     expect(hands.condition.ignored).toBe('cut_off');
   });
 });
+
+describe('HandControl with the native cursor', () => {
+  it('leaves the cursor to native code and taps where the native cursor is', () => {
+    const log: string[] = [];
+    const moves: number[] = [];
+    const hands = control(log);
+    const native = (hands as unknown as { options: { native: HandControlNative } }).options.native;
+    native.moveCursor = () => moves.push(1);
+    nativeFrames(recording('pinch')).forEach((frame) => hands.push({ ...frame, nativeCursor: true, cursorX: 321, cursorY: 654 }));
+    expect(moves).toHaveLength(0);
+    expect(log.filter((entry) => entry.startsWith('tap'))).toEqual(['tap 321 654']);
+  });
+});

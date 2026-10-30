@@ -68,6 +68,22 @@ class IdleHandLandmarkPipeline : HandLandmarkPipeline {
   override fun stop() = Unit
 }
 
+/** Hand frames reach JavaScript at most 20 times a second, plus every change between hand and no hand. */
+internal object JsFrames {
+  private const val EVERY_MS = 50L
+  private var lastAt = 0L
+  private var lastHand = false
+
+  @Synchronized
+  fun admit(hand: Boolean): Boolean {
+    val now = SystemClock.uptimeMillis()
+    if (hand == lastHand && now - lastAt < EVERY_MS) return false
+    lastAt = now
+    lastHand = hand
+    return true
+  }
+}
+
 /** What the camera frames and the self test share: the model, the conversion, the clock and the result format. */
 internal object HandFrames {
   const val MODEL_ASSET = "hand_landmarker.task"
@@ -79,6 +95,7 @@ internal object HandFrames {
     context: Context,
     onResult: (HandLandmarkerResult) -> Unit,
     onError: (RuntimeException) -> Unit,
+    gpu: Boolean = false,
   ): HandLandmarker {
     // Loaded into memory, so the asset may be compressed in the APK.
     val bytes = context.assets.open(MODEL_ASSET).use { it.readBytes() }
@@ -86,10 +103,11 @@ internal object HandFrames {
     model.put(bytes)
     model.rewind()
     val options = HandLandmarker.HandLandmarkerOptions.builder()
-      .setBaseOptions(BaseOptions.builder().setModelAssetBuffer(model).setDelegate(Delegate.CPU).build())
+      .setBaseOptions(BaseOptions.builder().setModelAssetBuffer(model).setDelegate(if (gpu) Delegate.GPU else Delegate.CPU).build())
       .setRunningMode(RunningMode.LIVE_STREAM)
-      // Two, so JavaScript can pick the user's hand when someone else's is in view too.
-      .setNumHands(2)
+      // One: with two, palm detection runs on every frame while one hand is in view, the slowest part.
+      // The size, edge and steadiness filters in JavaScript still keep out hands that are not the user's.
+      .setNumHands(1)
       .setMinHandDetectionConfidence(MIN_CONFIDENCE)
       .setMinHandPresenceConfidence(MIN_CONFIDENCE)
       .setMinTrackingConfidence(MIN_CONFIDENCE)
@@ -124,12 +142,16 @@ internal object HandFrames {
     }
   }
 
-  /** The first hand of a result as 63 floats, or an empty array. */
+  /**
+   * The first hand of a result as 63 floats, or an empty array. Frames are not
+   * mirrored in pixels (that cost a copy per frame); x is mirrored here, so the
+   * landmarks match what the user sees.
+   */
   fun landmarks(result: HandLandmarkerResult): FloatArray {
     val hand = result.landmarks().firstOrNull() ?: return FloatArray(0)
     val values = FloatArray(hand.size * 3)
     for ((i, point) in hand.withIndex()) {
-      values[i * 3] = point.x()
+      values[i * 3] = 1f - point.x()
       values[i * 3 + 1] = point.y()
       values[i * 3 + 2] = point.z()
     }
@@ -138,18 +160,25 @@ internal object HandFrames {
 
   fun score(result: HandLandmarkerResult): Float = result.handedness().firstOrNull()?.firstOrNull()?.score() ?: 1f
 
-  fun side(result: HandLandmarkerResult): String? = result.handedness().firstOrNull()?.firstOrNull()?.categoryName()?.lowercase()
+  /** MediaPipe names the side as if the frame were mirrored; it is not, so the side swaps. */
+  fun side(result: HandLandmarkerResult): String? = swap(result.handedness().firstOrNull()?.firstOrNull()?.categoryName()?.lowercase())
+
+  private fun swap(side: String?): String? = when (side) {
+    "left" -> "right"
+    "right" -> "left"
+    else -> side
+  }
 
   /** Every hand of a result, for JavaScript to choose the user's: landmarks, score and side. */
   fun hands(result: HandLandmarkerResult): List<Map<String, Any?>> = result.landmarks().mapIndexed { index, hand ->
     val values = ArrayList<Double>(hand.size * 3)
     for (point in hand) {
-      values.add(point.x().toDouble())
+      values.add(1.0 - point.x().toDouble())
       values.add(point.y().toDouble())
       values.add(point.z().toDouble())
     }
     val category = result.handedness().getOrNull(index)?.firstOrNull()
-    mapOf("landmarks" to values, "score" to (category?.score() ?: 1f).toDouble(), "handedness" to category?.categoryName()?.lowercase())
+    mapOf("landmarks" to values, "score" to (category?.score() ?: 1f).toDouble(), "handedness" to swap(category?.categoryName()?.lowercase()))
   }
 
   /** Mean brightness of a frame from 0 to 255, sampled on a coarse grid: enough to tell a dark room. */
@@ -189,6 +218,20 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
 
   @Volatile private var lastAspect = 0.75f
 
+  // Reused for every frame: no bitmap is allocated per frame.
+  private var rawBitmap: Bitmap? = null
+  private var packed: ByteBuffer? = null
+  private var uprightBitmap: Bitmap? = null
+  private var uprightCanvas: android.graphics.Canvas? = null
+  private val turn = Matrix()
+  private val bounds = android.graphics.RectF()
+
+  /** Frames MediaPipe is working on; a new frame waits for none, so the delay never grows on slow phones. */
+  private val inFlight = java.util.concurrent.atomic.AtomicInteger()
+
+  /** Capture and send times of each frame in flight, by timestamp, for the stage timings. */
+  private val times = java.util.concurrent.ConcurrentHashMap<Long, LongArray>()
+
   @Volatile private var lastBrightness = -1
 
   @Volatile private var thermal = 0
@@ -208,13 +251,21 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     watchRotation()
     val executor = Executors.newSingleThreadExecutor().also { analyzer = it }
     executor.execute {
+      val tuning = TrackerTuning.choose(context)
+      TrackerDiagnostics.inputSize = if (tuning.small) "480x360" else "640x480"
       val started = SystemClock.uptimeMillis()
       val tracker = try {
-        HandFrames.createLandmarker(
-          context,
-          onResult = { result -> deliver(result, listener) },
-          onError = { error -> TrackerDiagnostics.error("error_listener", error) },
-        )
+        val create = { gpu: Boolean ->
+          HandFrames.createLandmarker(
+            context,
+            onResult = { result -> deliver(result, listener) },
+            onError = { error -> TrackerDiagnostics.error("error_listener", error) },
+            gpu = gpu,
+          )
+        }
+        val created = if (tuning.gpu) runCatching { create(true) }.getOrNull() else null
+        TrackerDiagnostics.delegate = if (created != null) "gpu" else "cpu"
+        created ?: create(false)
       } catch (error: Throwable) {
         // Also UnsatisfiedLinkError: MediaPipe ships no native library for some
         // processors (x86_64 emulators). The service, the bubble and the cursor
@@ -237,22 +288,27 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
   }
 
   private fun deliver(result: HandLandmarkerResult, listener: HandFrameListener) {
+    inFlight.updateAndGet { (it - 1).coerceAtLeast(0) }
     if (!running) return
+    val received = SystemClock.uptimeMillis()
+    val time = times.remove(result.timestampMs())
+    if (time != null) TrackerDiagnostics.inferenceMs = TrackerDiagnostics.ema(TrackerDiagnostics.inferenceMs, (received - time[1]).toDouble())
     TrackerDiagnostics.results.hit()
     val values = HandFrames.landmarks(result)
+    // The cursor goes straight to the overlay, without JavaScript in its path.
+    NativeCursor.onResult(values, result.timestampMs(), time?.get(0) ?: received)
+    if (values.isNotEmpty()) {
+      TrackerDiagnostics.handsFound.hit()
+      TrackerDiagnostics.lastHandAt = System.currentTimeMillis()
+    }
+    HandPreview.offerLandmarks(values)
+    // JavaScript gets at most 20 frames a second for gestures, and every change between hand and no hand.
+    if (!JsFrames.admit(values.isNotEmpty())) return
     if (values.isEmpty()) {
-      // A lost hand is reported, at most ten times a second, so the gesture engine can reset.
-      val now = SystemClock.uptimeMillis()
-      if (now - lastEmptyAt >= EMPTY_EVERY_MS) {
-        lastEmptyAt = now
-        listener(HandFrame(result.timestampMs(), values, 0f, null, emptyList(), lastAspect, lastBrightness))
-        HandPreview.offerLandmarks(values)
-      }
+      listener(HandFrame(result.timestampMs(), values, 0f, null, emptyList(), lastAspect, lastBrightness))
+      TrackerDiagnostics.deliveryMs = TrackerDiagnostics.ema(TrackerDiagnostics.deliveryMs, (SystemClock.uptimeMillis() - received).toDouble())
       return
     }
-    TrackerDiagnostics.handsFound.hit()
-    TrackerDiagnostics.lastHandAt = System.currentTimeMillis()
-    HandPreview.offerLandmarks(values)
     listener(
       HandFrame(
         result.timestampMs(),
@@ -264,6 +320,7 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
         lastBrightness,
       ),
     )
+    TrackerDiagnostics.deliveryMs = TrackerDiagnostics.ema(TrackerDiagnostics.deliveryMs, (SystemClock.uptimeMillis() - received).toDouble())
   }
 
   /** The display rotation, so the frames come upright for the way the phone is held. */
@@ -298,7 +355,12 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
       TrackerDiagnostics.targetRotation = rotation * 90
       val selector = ResolutionSelector.Builder()
         .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
-        .setResolutionStrategy(ResolutionStrategy(Size(640, 480), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER))
+        .setResolutionStrategy(
+          ResolutionStrategy(
+            if (TrackerTuning.current?.small == true) Size(480, 360) else Size(640, 480),
+            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER,
+          ),
+        )
         .build()
       val useCase = ImageAnalysis.Builder()
         .setResolutionSelector(selector)
@@ -409,14 +471,15 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
         else -> "full"
       },
     )
-    if (now - lastSentAt < gap) {
+    if (now - lastSentAt < gap || inFlight.get() > 0) {
+      // Dropped rather than queued: on a slow phone the next frame starts fresh, so the delay stays low.
       image.close()
       return
     }
     lastSentAt = now
     val rotation = image.imageInfo.rotationDegrees
     val frame: Bitmap = try {
-      HandFrames.upright(image.toBitmap(), rotation)
+      convert(image, rotation)
     } catch (error: Throwable) {
       // A frame that cannot be converted is skipped: an error thrown on this thread would end the app.
       TrackerDiagnostics.error("frame_convert", error)
@@ -424,6 +487,7 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     } finally {
       image.close()
     }
+    TrackerDiagnostics.convertMs = TrackerDiagnostics.ema(TrackerDiagnostics.convertMs, (SystemClock.uptimeMillis() - now).toDouble())
     TrackerDiagnostics.rotationDegrees = rotation
     TrackerDiagnostics.frameWidth = frame.width
     TrackerDiagnostics.frameHeight = frame.height
@@ -432,12 +496,61 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     TrackerDiagnostics.brightness = lastBrightness
     HandPreview.offerFrame(frame)
     try {
-      tracker.detectAsync(BitmapImageBuilder(frame).build(), clock.next())
+      val timestamp = clock.next()
+      times[timestamp] = longArrayOf(now, SystemClock.uptimeMillis())
+      inFlight.incrementAndGet()
+      tracker.detectAsync(BitmapImageBuilder(frame).build(), timestamp)
       TrackerDiagnostics.sentFrames.hit()
     } catch (error: RuntimeException) {
       // Also a frame that arrived while the tracker was closing.
       if (running) TrackerDiagnostics.error("detect", error)
     }
+  }
+
+  /**
+   * The camera frame upright, in buffers reused from frame to frame: the RGBA
+   * plane is copied into one bitmap (row by row when the rows are padded), and
+   * turned into a second one when the camera is rotated. No mirroring here;
+   * the landmarks are mirrored instead.
+   */
+  private fun convert(image: ImageProxy, rotation: Int): Bitmap {
+    val width = image.width
+    val height = image.height
+    val plane = image.planes[0]
+    val raw = rawBitmap?.takeIf { it.width == width && it.height == height }
+      ?: Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { rawBitmap = it }
+    val buffer = plane.buffer
+    buffer.rewind()
+    if (plane.rowStride == width * 4) {
+      raw.copyPixelsFromBuffer(buffer)
+    } else {
+      val out = packed?.takeIf { it.capacity() == width * height * 4 }
+        ?: ByteBuffer.allocateDirect(width * height * 4).also { packed = it }
+      out.clear()
+      for (row in 0 until height) {
+        buffer.limit(row * plane.rowStride + width * 4)
+        buffer.position(row * plane.rowStride)
+        out.put(buffer)
+      }
+      buffer.clear()
+      out.rewind()
+      raw.copyPixelsFromBuffer(out)
+    }
+    if (rotation % 360 == 0) return raw
+    val turnedWidth = if (rotation % 180 == 0) width else height
+    val turnedHeight = if (rotation % 180 == 0) height else width
+    val upright = uprightBitmap?.takeIf { it.width == turnedWidth && it.height == turnedHeight }
+      ?: Bitmap.createBitmap(turnedWidth, turnedHeight, Bitmap.Config.ARGB_8888).also {
+        uprightBitmap = it
+        uprightCanvas = android.graphics.Canvas(it)
+      }
+    turn.reset()
+    turn.postRotate(rotation.toFloat())
+    bounds.set(0f, 0f, width.toFloat(), height.toFloat())
+    turn.mapRect(bounds)
+    turn.postTranslate(-bounds.left, -bounds.top)
+    uprightCanvas?.drawBitmap(raw, turn, null)
+    return upright
   }
 
   override fun stop() {

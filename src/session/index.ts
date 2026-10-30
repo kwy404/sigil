@@ -95,6 +95,8 @@ async function readChecklist(): Promise<Record<ChecklistItem, boolean>> {
 
 /** Polls the checklist and the levels only while a screen shows the session. */
 const POLL_MS = 1500;
+/** Screens hear about the session at most this often. */
+const EMIT_EVERY_MS = 250;
 
 class SessionStore {
   private snapshot: SessionState | null = null;
@@ -118,9 +120,27 @@ class SessionStore {
     };
   };
 
-  /** Recomputes the state and tells the screens. */
+  private emitTimer: ReturnType<typeof setTimeout> | null = null;
+  private emittedAt = 0;
+
+  /**
+   * Recomputes the state and tells the screens, at most four times a second
+   * and only when something changed, so hand frames never render React.
+   */
   changed = (): void => {
-    this.snapshot = this.compute();
+    const now = Date.now();
+    if (now - this.emittedAt < EMIT_EVERY_MS) {
+      this.emitTimer ??= setTimeout(() => {
+        this.emitTimer = null;
+        this.changed();
+      }, EMIT_EVERY_MS - (now - this.emittedAt));
+      return;
+    }
+    this.emittedAt = now;
+    const next = this.compute();
+    const previous = this.snapshot;
+    this.snapshot = next;
+    if (previous && JSON.stringify(previous) === JSON.stringify(next)) return;
     this.listeners.forEach((listener) => listener());
   };
 

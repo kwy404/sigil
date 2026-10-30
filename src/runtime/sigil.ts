@@ -219,10 +219,20 @@ export class Sigil {
     return () => this.listeners.delete(listener);
   }
 
+  /** Time JavaScript spends on one hand frame, smoothed, in milliseconds, and frames per second. */
+  readonly jsStats = { handleMs: 0, frames: 0, fps: 0, windowAt: 0 };
+  private nativeCursorOn = false;
+
   private set(change: Partial<SigilState>): void {
     const wasRunning = this.state.running;
     this.state = { ...this.state, ...change };
     if (this.state.running !== wasRunning) this.keepAlive(this.state.running);
+    // The native cursor runs while tracking for real; the demo hand draws through JavaScript.
+    const nativeCursor = this.state.running && !this.state.paused && !this.state.demo;
+    if (nativeCursor !== this.nativeCursorOn && this.native && Platform.OS === 'android') {
+      this.nativeCursorOn = nativeCursor;
+      this.native.setNativeCursor(nativeCursor);
+    }
     this.listeners.forEach((listener) => listener(this.state));
   }
 
@@ -288,7 +298,16 @@ export class Sigil {
   }
 
   private push(frame: NativeHandFrame): void {
+    const startedAt = Date.now();
     const events = this.hands?.push(frame) ?? [];
+    const stats = this.jsStats;
+    stats.handleMs = stats.handleMs === 0 ? Date.now() - startedAt : stats.handleMs * 0.9 + (Date.now() - startedAt) * 0.1;
+    stats.frames++;
+    if (startedAt - stats.windowAt >= 1000) {
+      stats.fps = stats.frames;
+      stats.frames = 0;
+      stats.windowAt = startedAt;
+    }
     this.updateCondition();
     if (frame.fixture && this.probe && this.hands) {
       const snapshot = this.hands.snapshot;

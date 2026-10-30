@@ -70,6 +70,10 @@ object SigilRuntime {
         "hands" to hands,
         "aspect" to aspect.toDouble(),
         "brightness" to brightness,
+        // The native cursor draws itself; JavaScript taps where it is.
+        "nativeCursor" to NativeCursor.enabled,
+        "cursorX" to NativeCursor.x.takeUnless { it.isNaN() },
+        "cursorY" to NativeCursor.y.takeUnless { it.isNaN() },
       ),
     )
   }

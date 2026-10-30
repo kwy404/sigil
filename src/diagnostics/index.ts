@@ -93,6 +93,8 @@ export function diagnosticsReport(
     `${t.sentFrames}: ${t.perSecond(tr.sentFps)} (${tr.sentFrames})`,
     `${t.results}: ${t.perSecond(tr.resultFps)} (${tr.results})`,
     `${t.hands}: ${t.perSecond(tr.handFps)} (${tr.handsFound})`,
+    `${t.convert} ${t.ms(Math.round(tr.convertMs))} · ${t.inference} ${t.ms(Math.round(tr.inferenceMs))} · ${t.delivery} ${t.ms(Math.round(tr.deliveryMs))}`,
+    `${t.cursorRate}: ${t.perSecond(tr.cursorFps)} · ${t.endToEnd} ${t.ms(Math.round(tr.endToEndMs))} · ${t.engine} ${tr.delegate} ${tr.inputSize}`,
     `${t.lastError}: ${tr.lastError ? `${stageLabel(tr.lastErrorStage, m)} [${tr.lastErrorStage}] ${tr.lastError}` : t.none}`,
   );
   if (verdict) {

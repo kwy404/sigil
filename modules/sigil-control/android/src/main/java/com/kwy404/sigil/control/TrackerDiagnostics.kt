@@ -99,6 +99,20 @@ object TrackerDiagnostics {
 
   @Volatile var startedAt = 0L
 
+  /** Smoothed stage times in milliseconds: frame conversion, MediaPipe, and handing the result over. */
+  @Volatile var convertMs = 0.0
+
+  @Volatile var inferenceMs = 0.0
+
+  @Volatile var deliveryMs = 0.0
+
+  /** gpu or cpu, chosen by TrackerTuning. */
+  @Volatile var delegate = "cpu"
+
+  @Volatile var inputSize = "640x480"
+
+  fun ema(old: Double, sample: Double): Double = if (old == 0.0) sample else old * 0.9 + sample * 0.1
+
   /** Mean brightness of the last frame, 0 to 255, or -1 before the first. */
   @Volatile var brightness = -1
 
@@ -224,6 +238,13 @@ object TrackerDiagnostics {
     "lastErrorStage" to lastErrorStage,
     "lastError" to lastError,
     "lastErrorAt" to lastErrorAt.toDouble(),
+    "convertMs" to convertMs,
+    "inferenceMs" to inferenceMs,
+    "deliveryMs" to deliveryMs,
+    "delegate" to delegate,
+    "inputSize" to inputSize,
+    "cursorFps" to NativeCursor.updates.rate(),
+    "endToEndMs" to NativeCursor.endToEndMs,
     "selfTestRunning" to selfTestRunning,
     "selfTest" to selfTest,
   )

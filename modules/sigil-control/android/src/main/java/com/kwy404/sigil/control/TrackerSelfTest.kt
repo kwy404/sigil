@@ -73,6 +73,8 @@ internal object TrackerSelfTest {
       val stats = names.associateWith { PhotoStats() }
       val photoAt = ConcurrentHashMap<Long, String>()
       val stillAt = ConcurrentHashMap<Long, Boolean>()
+      val sentAt = ConcurrentHashMap<Long, LongArray>()
+      var cursorFps = 0.0
       var error: String? = null
       var tracker: HandLandmarker? = null
       var brightness = -1
@@ -99,26 +101,37 @@ internal object TrackerSelfTest {
                 }
               }
             }
+            // The same path as camera results: timings, the native cursor, at most 20 frames a second to
+            // JavaScript, marked synthetic so nothing acts on an app.
+            val received = SystemClock.uptimeMillis()
+            val time = sentAt.remove(result.timestampMs())
+            if (time != null) TrackerDiagnostics.inferenceMs = TrackerDiagnostics.ema(TrackerDiagnostics.inferenceMs, (received - time[1]).toDouble())
+            NativeCursor.onResult(values, result.timestampMs(), time?.get(0) ?: received)
             HandPreview.offerLandmarks(values)
-            // The same path as camera results, marked synthetic so nothing acts on an app.
-            SigilRuntime.reportHandFrame(
-              result.timestampMs(),
-              values,
-              HandFrames.score(result),
-              HandFrames.side(result),
-              synthetic = true,
-              fixture = name,
-              hands = HandFrames.hands(result),
-              aspect = WIDTH / HEIGHT.toFloat(),
-              brightness = brightness,
-            )
+            if (JsFrames.admit(values.isNotEmpty())) {
+              SigilRuntime.reportHandFrame(
+                result.timestampMs(),
+                values,
+                HandFrames.score(result),
+                HandFrames.side(result),
+                synthetic = true,
+                fixture = name,
+                hands = HandFrames.hands(result),
+                aspect = WIDTH / HEIGHT.toFloat(),
+                brightness = brightness,
+              )
+              TrackerDiagnostics.deliveryMs = TrackerDiagnostics.ema(TrackerDiagnostics.deliveryMs, (SystemClock.uptimeMillis() - received).toDouble())
+            }
           },
           onError = { failure -> TrackerDiagnostics.error("selftest_error_listener", failure) },
+          gpu = TrackerDiagnostics.delegate == "gpu",
         )
         tracker = landmarker
         loadMs = SystemClock.uptimeMillis() - started
         val clock = HandFrames.Clock()
         val blank = blankFrame()
+        var cursorStart = 0L
+        var cursorStartAt = 0L
         for (name in names) {
           val photo = context.assets.open("$FOLDER/$name").use { BitmapFactory.decodeStream(it) }
             ?: throw IllegalStateException("$name could not be decoded")
@@ -132,14 +145,24 @@ internal object TrackerSelfTest {
               }
               else -> blank
             }
-            // Camera frames arrive in sensor orientation; these are already upright (rotation 0).
-            val upright = HandFrames.upright(frame, 0)
-            brightness = HandFrames.brightness(upright)
-            HandPreview.offerFrame(upright)
+            // Like camera frames after conversion: upright (rotation 0), not mirrored in pixels.
+            val ready = SystemClock.uptimeMillis()
+            brightness = HandFrames.brightness(frame)
+            HandPreview.offerFrame(frame)
             val timestamp = clock.next()
             if (i < STILL_FRAMES + MOVING_FRAMES) photoAt[timestamp] = name
             if (i < STILL_FRAMES) stillAt[timestamp] = true
-            landmarker.detectAsync(BitmapImageBuilder(upright).build(), timestamp)
+            sentAt[timestamp] = longArrayOf(ready, SystemClock.uptimeMillis())
+            // The cursor's own rate while the pointing hand slides: display frames, not tracker results.
+            if (name == ORDER[0] && i == STILL_FRAMES) {
+              cursorStart = NativeCursor.updates.total()
+              cursorStartAt = SystemClock.uptimeMillis()
+            }
+            if (name == ORDER[0] && i == STILL_FRAMES + MOVING_FRAMES - 1 && cursorStartAt > 0) {
+              val seconds = (SystemClock.uptimeMillis() - cursorStartAt) / 1000.0
+              cursorFps = if (seconds > 0) (NativeCursor.updates.total() - cursorStart) / seconds else 0.0
+            }
+            landmarker.detectAsync(BitmapImageBuilder(frame).build(), timestamp)
             Thread.sleep(FRAME_MS)
           }
         }
@@ -170,6 +193,11 @@ internal object TrackerSelfTest {
         "handsFound" to photos.sumOf { it["hands"] as Int },
         "results" to photos.sumOf { it["results"] as Int },
         "modelLoadMs" to loadMs.toDouble(),
+        "cursorFps" to cursorFps,
+        "endToEndMs" to NativeCursor.endToEndMs,
+        "inferenceMs" to TrackerDiagnostics.inferenceMs,
+        "deliveryMs" to TrackerDiagnostics.deliveryMs,
+        "delegate" to TrackerDiagnostics.delegate,
         "totalMs" to (SystemClock.uptimeMillis() - started).toDouble(),
         "error" to error,
         "at" to System.currentTimeMillis().toDouble(),

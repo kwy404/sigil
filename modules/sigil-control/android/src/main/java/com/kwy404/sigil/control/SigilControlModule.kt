@@ -74,6 +74,10 @@ class SigilControlModule : Module() {
 
     OnCreate {
       SigilRuntime.eventSink = { name, body -> this@SigilControlModule.sendEvent(name, body) }
+      appContext.reactContext?.let { NativeCursor.setScreen(it) }
+      NativeCursor.show = { activeCursor().show() }
+      NativeCursor.draw = { x, y, state -> activeCursor().move(x, y, CursorState.from(state)) }
+      NativeCursor.hide = { hideCursors() }
       (appContext.reactContext as? ReactContext)?.let { react ->
         SigilCameraService.setOwnScreenInFront(react.lifecycleState == LifecycleState.RESUMED)
         react.addLifecycleEventListener(screenListener)
@@ -165,6 +169,12 @@ class SigilControlModule : Module() {
       val service = SigilCameraService.instance ?: return@Function false
       Handler(Looper.getMainLooper()).post { service.setBubbleState(BubbleState.from(state)) }
       true
+    }
+
+    /** The cursor follows the tracker natively, at the display rate; off while paused or showing the demo hand. */
+    Function("setNativeCursor") { on: Boolean ->
+      appContext.reactContext?.let { NativeCursor.setScreen(it) }
+      NativeCursor.enabled = on
     }
 
     /** Keeps JavaScript timers running while Sigil is in the background; see JsKeepAlive. */

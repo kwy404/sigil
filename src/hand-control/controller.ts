@@ -41,6 +41,10 @@ export interface NativeHandFrame {
   synthetic?: boolean;
   /** The self test photo the frame came from. */
   fixture?: string | null;
+  /** The native cursor draws itself at the display rate; cursorX and cursorY are where it is now. */
+  nativeCursor?: boolean;
+  cursorX?: number | null;
+  cursorY?: number | null;
 }
 
 export interface HandControlOptions {
@@ -156,12 +160,18 @@ export class HandControl {
 
     const snapshot = this.classifier.snapshot;
     const box = this.options.box ?? DEFAULT_CONTROL_BOX;
-    const cursor: Vec2 | null = snapshot.cursor ? mapToScreen(snapshot.cursor, box, this.screen) : null;
+    const mapped: Vec2 | null = snapshot.cursor ? mapToScreen(snapshot.cursor, box, this.screen) : null;
+    // With the native cursor, taps land where the user sees it.
+    const native = frame.nativeCursor === true;
+    const cursor: Vec2 | null =
+      native && typeof frame.cursorX === 'number' && typeof frame.cursorY === 'number' ? { x: frame.cursorX, y: frame.cursorY } : mapped;
     this.lastCursor = cursor;
     publishFrame(Date.now(), cursor);
     const practising = inPractice();
     const shown = this.motion.update(practising || this.paused ? null : cursor, frame.t);
-    if (shown.position && !practising && !this.paused) {
+    if (native) {
+      // The native cursor moves itself at the display rate; JavaScript stays out of that path.
+    } else if (shown.position && !practising && !this.paused) {
       if (!this.cursorShown) this.cursorShown = this.options.native.showCursor();
       const look = shown.look === 'lost' ? 'lost' : snapshot.pinching ? 'press' : snapshot.holding ? 'drag' : 'hover';
       this.options.native.moveCursor(shown.position.x, shown.position.y, look);

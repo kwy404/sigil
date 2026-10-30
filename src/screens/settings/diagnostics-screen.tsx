@@ -66,6 +66,7 @@ export function DiagnosticsScreen() {
   }
 
   const tr = d.tracker;
+  const js = getSigil().jsStats;
   const running = testing || tr.selfTestRunning;
   const photos = verdict?.photos ?? [];
   const withHands = photos.filter((photo) => photo.hands > 0).length;
@@ -82,6 +83,13 @@ export function DiagnosticsScreen() {
         <ListRow title={t.sentFrames} icon="layers" value={t.perSecond(tr.sentFps)} status={flow(tr.sentFps)} />
         <ListRow title={t.results} icon="thinking" value={t.perSecond(tr.resultFps)} status={flow(tr.resultFps)} />
         <ListRow title={t.hands} icon="gesture-open-palm" value={t.perSecond(tr.handFps)} status={flow(tr.handFps)} />
+        <ListRow title={t.convert} icon="grid" value={t.ms(Math.round(tr.convertMs))} monoValue />
+        <ListRow title={t.inference} icon="on-device-model" value={t.ms(Math.round(tr.inferenceMs))} monoValue />
+        <ListRow title={t.delivery} icon="layers" value={t.ms(Math.round(tr.deliveryMs * 10) / 10)} monoValue />
+        <ListRow title={t.js} icon="code" value={t.ms(Math.round(js.handleMs * 10) / 10)} monoValue />
+        <ListRow title={t.cursorRate} icon="cursor" value={t.perSecond(tr.cursorFps)} status={flow(tr.cursorFps)} />
+        <ListRow title={t.endToEnd} icon="clock" value={t.ms(Math.round(tr.endToEndMs))} monoValue />
+        <ListRow title={t.engine} icon="sliders" value={`${tr.delegate} ${tr.inputSize}`} monoValue />
         <ListRow
           title={t.model}
           icon="on-device-model"

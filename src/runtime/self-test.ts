@@ -14,6 +14,13 @@ export interface TrackerPhoto {
 /** The native half of the self test: MediaPipe on MediaPipe's own test photos. */
 export interface TrackerSelfTest {
   passed: boolean;
+  /** Native cursor overlay updates per second while the pointing hand slides. */
+  cursorFps?: number;
+  /** Delay from frame to cursor, smoothed, in milliseconds. */
+  endToEndMs?: number;
+  inferenceMs?: number;
+  deliveryMs?: number;
+  delegate?: string;
   photos?: TrackerPhoto[];
   landmarks?: number;
   handsFound?: number;
@@ -53,6 +60,12 @@ export const MOVING_PHOTO = 'pointing_up.jpg';
 
 /** The cursor must travel at least this share of the screen width while the pointing photo slides. */
 export const MIN_CURSOR_TRAVEL = 0.12;
+
+/** The native cursor must redraw at least this often while the hand moves, whatever the tracker rate. */
+export const MIN_CURSOR_FPS = 30;
+
+/** Frame to cursor delay that still feels direct on the slowest test machine. */
+export const MAX_END_TO_END_MS = 500;
 
 /** Collects, per photo, what the gesture engine made of the self test frames. */
 export class SelfTestProbe {
@@ -108,6 +121,8 @@ export interface PhotoVerdict {
 
 export interface SelfTestVerdict {
   passed: boolean;
+  /** The cursor and stage timings the test measured. */
+  timings?: { cursorFps: number; endToEndMs: number; inferenceMs: number; deliveryMs: number; delegate: string | null };
   tracker: boolean;
   photos: PhotoVerdict[];
   problems: string[];
@@ -157,5 +172,16 @@ export function judgeSelfTest(tracker: TrackerSelfTest, traces: ReadonlyMap<stri
     }
   }
   if (!tracker.passed) problems.push(tracker.error ? `tracker: ${tracker.error}` : 'tracker: a photo without a hand');
-  return { passed: problems.length === 0, tracker: tracker.passed, photos, problems, error: tracker.error ?? null };
+  if (tracker.cursorFps !== undefined && tracker.cursorFps < MIN_CURSOR_FPS) problems.push(`cursor ${Math.round(tracker.cursorFps)} updates a second`);
+  if (tracker.endToEndMs !== undefined && (tracker.endToEndMs <= 0 || tracker.endToEndMs > MAX_END_TO_END_MS)) {
+    problems.push(`frame to cursor ${Math.round(tracker.endToEndMs)} ms`);
+  }
+  const timings = {
+    cursorFps: Math.round(tracker.cursorFps ?? 0),
+    endToEndMs: Math.round(tracker.endToEndMs ?? 0),
+    inferenceMs: Math.round(tracker.inferenceMs ?? 0),
+    deliveryMs: Math.round((tracker.deliveryMs ?? 0) * 10) / 10,
+    delegate: tracker.delegate ?? null,
+  };
+  return { passed: problems.length === 0, tracker: tracker.passed, photos, problems, error: tracker.error ?? null, timings };
 }
