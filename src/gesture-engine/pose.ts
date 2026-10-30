@@ -47,7 +47,8 @@ export function classifyPose(features: HandFeatures, wasPinching: boolean, pinch
   }
   if (!index && !middle && !ring && !pinky) {
     // A half bent index with folded fingers is the shape of a pinch in progress, not a fist.
-    const fist = f.index === 'curled' && f.middle === 'curled' && (f.ring === 'curled' || f.pinky === 'curled');
+    // A thumbs up is not a fist either: real photos showed it, and a fist starts listening.
+    const fist = f.index === 'curled' && f.middle === 'curled' && (f.ring === 'curled' || f.pinky === 'curled') && f.thumb !== 'extended';
     return fist ? 'fist' : 'unknown';
   }
   if (index && !middle && !ring && !pinky) {

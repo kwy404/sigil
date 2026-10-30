@@ -39,6 +39,13 @@ export const EXPECTED_POSES: Readonly<Record<string, HandPose>> = {
   'pointing_up.jpg': 'point',
   'fist.jpg': 'fist',
   'victory.jpg': 'two_fingers',
+  'right_hands.jpg': 'open_palm',
+  'left_hands.jpg': 'open_palm',
+};
+
+/** Poses a photo must not produce: a thumbs up taken for a fist would start listening. */
+export const FORBIDDEN_POSES: Readonly<Record<string, HandPose>> = {
+  'thumb_up.jpg': 'fist',
 };
 
 /** The photo whose sliding must move the cursor: a pointing hand drives the cursor. */
@@ -124,6 +131,7 @@ export function judgeSelfTest(tracker: TrackerSelfTest, traces: ReadonlyMap<stri
     if (photo.hands === 0 || photo.landmarks !== 21) own.push('no hand found');
     if (photo.hands > 0 && trace.handFrames === 0) own.push('no hand frame reached JavaScript');
     if (expected && pose !== expected) own.push(`pose ${pose ?? 'none'}, expected ${expected}`);
+    if (FORBIDDEN_POSES[photo.name] && pose === FORBIDDEN_POSES[photo.name]) own.push(`pose ${pose}, which it must not be`);
     if (photo.name === MOVING_PHOTO && travel < screenWidth * MIN_CURSOR_TRAVEL) own.push(`cursor moved ${Math.round(travel)} px`);
     return {
       name: photo.name,
