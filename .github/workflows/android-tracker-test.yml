@@ -1,0 +1,79 @@
+name: Android hand tracker test
+
+# Builds an x86 APK and runs the real MediaPipe hand tracker on MediaPipe's
+# own test photos of hands, on an Android 11 x86 emulator. The photos go
+# through the same path as camera frames: conversion, MediaPipe, onHandFrame,
+# the gesture engine and the cursor. The job fails when a photo shows no hand,
+# a pose is wrong or the cursor does not follow, and it keeps the screenshots,
+# the log and the landmarks MediaPipe returned (fixtures.jsonl).
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: android-tracker-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tracker:
+    name: Test the hand tracker on an x86 emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      # llama.rn has no x86 libraries; react-native.config.js leaves it out of this build.
+      SIGIL_WITHOUT_LLAMA: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/.ghcup /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/share/powershell /usr/local/julia* /opt/microsoft /opt/google/chrome /usr/lib/jvm/java-8* /usr/lib/jvm/java-11*
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          df -h /
+
+      - run: npm ci
+
+      - name: Generate the native project
+        run: npx expo prebuild --platform android --no-install
+
+      # MediaPipe ships its tracker for x86 (not x86_64), so this build runs it for real.
+      - name: Build an x86 APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --max-workers=3 -PreactNativeArchitectures=x86
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the tracker on the test photos
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86
+          target: google_apis
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-front emulated -camera-back none
+          script: bash .github/tracker-test.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tracker-test
+          path: tracker-test/
+          if-no-files-found: warn

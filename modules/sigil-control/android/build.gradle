@@ -43,6 +43,47 @@ def downloadHandModel = tasks.register('downloadHandLandmarker') {
 
 tasks.named('preBuild').configure { dependsOn downloadHandModel }
 
+// MediaPipe's own test photos of hands (Apache License 2.0), for the tracker self test.
+// They are not in MediaPipe's git; its commit bc2c5fc309a6478f07b51571a6a25e43ab530eb1
+// pins them in third_party/external_files.bzl to these bucket generations and SHA-256
+// sums, which are checked here too. See docs/ARCHITECTURE.md, Hand tracking model.
+def selfTestBucket = 'https://storage.googleapis.com/mediapipe-assets/tasks/testdata/vision/'
+def selfTestImages = [
+  'pointing_up.jpg': ['1782185079090086', 'ecf8ca2611d08fa25948a4fc10710af9120e88243a54da6356bacea17ff3e36e'],
+  'fist.jpg': ['1782184710240231', '43fa1cabf3f90d574accc9a56986e2ee48638ce59fc65af1846487f73bb2ef24'],
+  'victory.jpg': ['1782185383577587', '84cb8853e3df614e0cb5c93a25e3e2f38ea5e4f92fd428ee7d867ed3479d5764'],
+  'thumb_up.jpg': ['1782185354353621', '5d673c081ab13b8a1812269ff57047066f9c33c07db5f4178089e8cb3fdc0291'],
+  'right_hands.jpg': ['1782185275057115', '4b5134daa4cb60465535239535f9f74c2842aba3aa5fd30bf04ef5678f93d87f'],
+  'left_hands.jpg': ['1782184842333929', '240c082e80128ff1ca8a83ce645e2ba4d8bc30f0967b7991cf5fa375bab489e1'],
+]
+def selfTestFolder = file('src/main/assets/selftest')
+
+def downloadSelfTest = tasks.register('downloadSelfTestImages') {
+  description = 'Downloads the MediaPipe test photos of hands for the tracker self test and checks their SHA-256.'
+  outputs.dir(selfTestFolder)
+  doLast {
+    selfTestFolder.mkdirs()
+    def sha = { File target -> java.security.MessageDigest.getInstance('SHA-256').digest(target.bytes).encodeHex().toString() }
+    selfTestImages.each { name, pin ->
+      def target = new File(selfTestFolder, name)
+      if (!target.exists() || sha(target) != pin[1]) {
+        def partial = new File(selfTestFolder, name + '.part')
+        new URL(selfTestBucket + name + '?generation=' + pin[0]).withInputStream { input -> partial.withOutputStream { output -> output << input } }
+        target.delete()
+        partial.renameTo(target)
+      }
+      def digest = sha(target)
+      if (digest != pin[1]) {
+        target.delete()
+        throw new GradleException("selftest/${name} has SHA-256 ${digest}, expected ${pin[1]}")
+      }
+    }
+    logger.lifecycle("Self test photos: ${selfTestImages.keySet().join(', ')}")
+  }
+}
+
+tasks.named('preBuild').configure { dependsOn downloadSelfTest }
+
 dependencies {
   // Headless JS tasks keep JavaScript timers running in the background (JsKeepAlive).
   implementation 'com.facebook.react:react-android'

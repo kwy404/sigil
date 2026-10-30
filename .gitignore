@@ -43,3 +43,4 @@ example
 # generated native folders
 /ios
 /android
+modules/sigil-control/android/src/main/assets/selftest/
