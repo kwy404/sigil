@@ -71,9 +71,11 @@ class CursorOverlay(private val context: Context) {
       } else {
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
       }
+      // A small window that moves, rather than a screen sized one redrawn on every move.
+      val box = CursorView.boxPx(context)
       val params = WindowManager.LayoutParams(
-        WindowManager.LayoutParams.MATCH_PARENT,
-        WindowManager.LayoutParams.MATCH_PARENT,
+        box,
+        box,
         type,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
           WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
@@ -87,10 +89,14 @@ class CursorOverlay(private val context: Context) {
       if (Build.VERSION.SDK_INT >= 28) {
         params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
       }
+      params.gravity = android.view.Gravity.TOP or android.view.Gravity.START
+      params.x = -box
+      params.y = -box
       val cursorView = CursorView(context)
       try {
         windowManager.addView(cursorView, params)
         view = cursorView
+        layout = params
       } catch (error: RuntimeException) {
         SigilRuntime.emit("onCursorError", mapOf("message" to (error.message ?: "addView failed")))
       }
@@ -110,17 +116,26 @@ class CursorOverlay(private val context: Context) {
     }
   }
 
-  /** Moves the cursor to screen pixel coordinates. */
+  private var layout: WindowManager.LayoutParams? = null
+
+  /** Moves the cursor to screen pixel coordinates: the window moves; the drawing changes only with the state. */
   fun move(x: Float, y: Float, state: CursorState) {
-    handler.post { view?.place(x, y, state) }
+    handler.post {
+      val current = view ?: return@post
+      val params = layout ?: return@post
+      current.setState(state)
+      val half = params.width / 2
+      params.x = x.toInt() - half
+      params.y = y.toInt() - half
+      runCatching { windowManager.updateViewLayout(current, params) }
+    }
   }
 }
 
 private class CursorView(context: Context) : View(context) {
   private val density = context.resources.displayMetrics.density
-  private var cx = -1f
-  private var cy = -1f
   private var state = CursorState.IDLE
+  private var shaderRadius = -1f
 
   private val glow = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
   private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -133,9 +148,8 @@ private class CursorView(context: Context) : View(context) {
     color = CORE
   }
 
-  fun place(x: Float, y: Float, newState: CursorState) {
-    cx = x
-    cy = y
+  fun setState(newState: CursorState) {
+    if (newState == state) return
     state = newState
     alpha = if (newState == CursorState.LOST) LOST_ALPHA else 1f
     invalidate()
@@ -143,7 +157,8 @@ private class CursorView(context: Context) : View(context) {
 
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
-    if (cx < 0f || cy < 0f) return
+    val cx = width / 2f
+    val cy = height / 2f
     val radius = density * RING_RADIUS_DP * when (state) {
       CursorState.PRESS -> 0.7f
       CursorState.DRAG -> 0.85f
@@ -151,13 +166,19 @@ private class CursorView(context: Context) : View(context) {
       CursorState.IDLE, CursorState.LOST -> 1f
     }
     val halo = radius * HALO_RADIUS_DP / RING_RADIUS_DP
-    glow.shader = RadialGradient(cx, cy, halo, ACCENT_HALO, Color.TRANSPARENT, Shader.TileMode.CLAMP)
+    if (halo != shaderRadius) {
+      shaderRadius = halo
+      glow.shader = RadialGradient(cx, cy, halo, ACCENT_HALO, Color.TRANSPARENT, Shader.TileMode.CLAMP)
+    }
     canvas.drawCircle(cx, cy, halo, glow)
     canvas.drawCircle(cx, cy, radius, ring)
     canvas.drawCircle(cx, cy, CORE_RADIUS_DP * density, core)
   }
 
   companion object {
+    /** The window size: the largest halo (hover) and a margin. */
+    fun boxPx(context: Context): Int = (context.resources.displayMetrics.density * (HALO_RADIUS_DP * 1.15f * 2 + 8)).toInt()
+
     // light.cursor and lumen colors from the SIGIL design tokens, the same values as src/ui/tokens.ts.
     private const val RING_RADIUS_DP = 14f
     private const val RING_STROKE_DP = 1.5f

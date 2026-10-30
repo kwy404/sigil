@@ -222,10 +222,12 @@ internal object TrackerSelfTest {
     return frame
   }
 
+  /** One frame reused for every composition, as the camera path reuses its buffers. */
+  private val frame: Bitmap by lazy { Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888) }
+  private val canvas: Canvas by lazy { Canvas(frame) }
+
   /** The photo scaled into a camera sized frame, shifted sideways, on a dark background like a room. */
   private fun compose(photo: Bitmap, shift: Float): Bitmap {
-    val frame = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(frame)
     canvas.drawColor(Color.rgb(40, 40, 46))
     val scale = min(WIDTH * 0.8f / photo.width, HEIGHT * 0.8f / photo.height)
     val width = photo.width * scale
