@@ -69,6 +69,13 @@ sleep 2
 shot 04-result
 adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 && adb pull /sdcard/ui.xml "$OUT/04-result.xml" > /dev/null 2>&1
 
+# The live camera path: CameraX frames from the emulated front camera, sent to MediaPipe, results.
+adb shell am start -a android.intent.action.VIEW -d "sigil://settings/diagnostics" "$PKG" > /dev/null
+sleep 8
+shot 05-camera-path
+adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 && adb pull /sdcard/ui.xml "$OUT/05-camera-path.xml" > /dev/null 2>&1
+grep -oE 'text="[^"]*"' "$OUT/05-camera-path.xml" | sed 's/^text=//' | paste -sd ' ' > "$OUT/camera-path.txt" || true
+
 adb logcat -d > "$OUT/logcat.txt"
 grep -E "SigilSelfTest|SigilTracker|SigilFixture|AndroidRuntime|ReactNativeJS" "$OUT/logcat.txt" > "$OUT/sigil-log.txt" || true
 grep -oE 'SigilFixture: \{.*\}' "$OUT/logcat.txt" | sed 's/^SigilFixture: //' > "$OUT/fixtures.jsonl" || true
