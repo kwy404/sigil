@@ -509,6 +509,7 @@ export function demoFrames(recordings: readonly HandRecording[]): NativeHandFram
         landmarks: frame.landmarks ? flattenLandmarks(frame.landmarks) : [],
         score: frame.score ?? 1,
         handedness: null,
+        aspect: recording.frameAspect,
       });
     }
     const last = recording.frames[recording.frames.length - 1];

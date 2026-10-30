@@ -83,8 +83,9 @@ function isAdjustment(key: string): boolean {
  * while a voice question is open a pinch confirms and a fist cancels.
  */
 export class HandControl {
-  private classifier = new GestureClassifier();
+  // Camera frames are 480 by 640 upright: the classifier must measure in that aspect, not the default 1.
   private aspect = 3 / 4;
+  private classifier = new GestureClassifier({ frameAspect: this.aspect });
   private screen: ScreenSize;
   private readonly selector: HandSelector;
   private readonly stability = new StabilityGate();

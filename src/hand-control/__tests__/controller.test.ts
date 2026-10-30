@@ -20,6 +20,7 @@ function nativeFrames(sample: HandRecording): NativeHandFrame[] {
     landmarks: frame.landmarks ? flattenLandmarks(frame.landmarks) : [],
     score: frame.score ?? 1,
     handedness: null,
+    aspect: sample.frameAspect,
   }));
 }
 
