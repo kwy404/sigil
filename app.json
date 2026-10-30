@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sigil",
     "slug": "kaway401",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sigil",
@@ -21,7 +21,7 @@
       "predictiveBackGestureEnabled": false,
       "allowBackup": false,
       "package": "com.kwy404.sigil",
-      "versionCode": 5
+      "versionCode": 6
     },
     "web": {
       "output": "single",
