@@ -271,6 +271,9 @@ Local Expo module, autolinked from `modules/`. JavaScript API (`modules/sigil-co
 | `openPanel(panel)` | boolean | Wi-Fi, Bluetooth, Do Not Disturb or display settings |
 | `startCameraService(withMicrophone)`, `stopCameraService()` | boolean, void | Foreground service with the hand tracker, the cursor, the bubble and the notification; needs the camera permission and Sigil on screen |
 | `setTrackingPaused(paused)`, `setBubbleState(state)` | boolean | Pause or resume tracking (the service, the bubble and the notification stay); what the bubble shows: `tracking`, `hand`, `listening` or `paused` |
+| `getDiagnostics()` | `DiagnosticsSnapshot` | The phone, the accesses, battery optimization, the camera service and every stage of the tracker (`TrackerSnapshot`) |
+| `runSelfTest()` | `Promise<object>` | Runs MediaPipe on its test photos through the camera path; results arrive as synthetic `onHandFrame` events named by photo |
+| `logSelfTest(line)`, `copyText(label, text)`, `requestIgnoreBatteryOptimizations()` | void, boolean, boolean | The verdict to the log, the diagnostics report to the clipboard, the battery optimization request |
 | `setKeepAlive(on)` | boolean | Starts or finishes the `SigilKeepAlive` headless task, which keeps JavaScript timers running in the background; JavaScript registers the task first |
 | `showCursor()`, `hideCursor()`, `moveCursor(x, y, state)` | boolean, void, void | Cursor window; `state` is idle, hover, press or drag |
 | `tap`, `doubleTap`, `longPress`, `swipe` | `Promise<boolean>` | Gestures through the accessibility service |
@@ -364,6 +367,8 @@ The runtime keeps the bubble in step with the state (tracking, hand, listening, 
 A transcript under `LOW_CONFIDENCE`, or one the voice gate rejected, is never planned: Sigil asks to repeat and listens once more, then gives up. When the best transcript makes no request, a confident alternative may; the confirmation then shows what was heard. A confirmation or a choice waits `ANSWER_SECONDS` for a spoken answer, a pinch (yes), a fist (cancel) or a tap; silence cancels.
 
 ## hand-control
+
+`src/hand-control/robustness.ts` holds the decisions for messy rooms, each unit tested: `HandSelector` (the user's hand among up to two), `StabilityGate`, `LightGate`, `ActionGuard`, `CursorMotion` and `trackerCondition`, the one condition the bubble and Live show (`ok`, `settling`, `no_hand`, `ignored_hand`, `too_dark`, `hot`, `camera_busy`, `camera_disabled`, `camera_error`; also `SessionState.condition`). See "Messy rooms" in `docs/ARCHITECTURE.md`.
 
 `HandControl` (`src/hand-control/controller.ts`): `new HandControl({ native, profiles, ui, screen, foreground, voiceGesture?, box? })`, then `push(frame)` for each `onHandFrame`. It runs the classifier, maps the fingertip to the screen through the control box, moves the cursor window (hover, press while pinching, drag while holding) and dispatches each gesture through the profile of the app in front. A voice question takes pinch and fist first. While a practice step of the tour is open (`beginPractice` in `feed.ts`) the gestures only go to it, and frames marked `synthetic` never act. `feed.ts` also publishes the live cursor and gestures to screens (`useLiveTracking`, `subscribeGestures`).
 

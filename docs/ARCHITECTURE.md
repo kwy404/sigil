@@ -133,6 +133,33 @@ Platform rules that shape the design:
 - The APK bundles the file, so the phone never downloads it. When the asset is missing, `HandLandmarkPipelines.create` returns an idle pipeline: the app starts, but nothing is tracked.
 - MediaPipe Tasks Vision 0.10.21 ships its native library for arm64-v8a, armeabi-v7a and x86, but not x86_64. Phones get the tracker. On an x86_64 emulator the pipeline reports the missing library and Sigil keeps running without tracking, which is why the smoke test drives the cursor with the demo hand.
 
+### Release builds and R8
+
+Expo turns R8 on for release builds (`android.enableMinifyInReleaseBuilds=true` in the generated `gradle.properties`). R8 renamed the fields of MediaPipe's protobuf lite messages, which MediaPipe reads by name, so creating the hand landmarker failed with "Field platform_ for ... not found" and the camera never started: up to 0.3.2, no release build tracked a hand. The module now ships keep rules for MediaPipe and protobuf (`modules/sigil-control/android/proguard-rules.pro`, applied through `consumerProguardFiles`). The x86 tracker test below runs the minified release build, so it catches this class of failure.
+
+### Proving the tracker without a hand
+
+- MediaPipe's own test photos of hands (`pointing_up.jpg`, `fist.jpg`, `victory.jpg`, `thumb_up.jpg`, `right_hands.jpg`, `left_hands.jpg`) are not in MediaPipe's git; its commit `bc2c5fc309a6478f07b51571a6a25e43ab530eb1` pins them in `third_party/external_files.bzl` to bucket generations and SHA-256 sums. The Gradle task `downloadSelfTestImages` fetches exactly those into `assets/selftest` (ignored by git) and checks the sums. They are part of MediaPipe, Apache License 2.0.
+- The self test (Settings, Diagnostics, or `sigil://control/selftest`) holds each photo still in a camera sized frame, slides it from left to right, then shows an empty frame. Every frame goes through the camera conversion, MediaPipe in live stream mode and `onHandFrame`, marked synthetic and named by photo, so the gesture engine and the cursor see it like a real hand but nothing acts on an app. JavaScript then judges the chain (`judgeSelfTest`): a hand in every photo, the expected pose (point, fist, two fingers), a cursor that travels with the sliding pointing hand and moves between photos. The verdict goes to the Android log.
+- `.github/workflows/android-tracker-test.yml` builds an x86 release APK (MediaPipe ships x86 libraries, not x86_64; llama.rn, which has no 32 bit libraries, is left out of that build by `react-native.config.js`), runs the self test on an Android 11 x86 emulator and fails unless the verdict is PASS. It keeps the screenshots and the landmarks MediaPipe returned for each photo, which are the Jest fixtures of the real hand tests.
+
+### Messy rooms
+
+| Problem | What Sigil does |
+| --- | --- |
+| Someone else's hand, a hand far in the background, a hand cut by the edge, an unsure detection | The tracker reports up to two hands. `HandSelector` keeps the user's hand: the closest whole one (palm at least 0.06 frame widths, wrist, thumb tip, index tip and middle finger base inside the frame, score at least 0.5), and above all the same hand as before. When only such hands are seen, the condition is `ignored_hand` |
+| A hand that just appeared | `StabilityGate`: gestures act only after 4 frames and 120 ms of the same hand |
+| Low light | The tracker measures each frame's brightness; below 35 of 255 for 0.6 s the room is too dark (`LightGate`, clears above 50): the cursor still moves but gestures wait, and the bubble shows a moon |
+| Jitter | The One Euro filter on every landmark (unchanged) |
+| A lost hand | `CursorMotion`: the cursor freezes and fades where the hand was, disappears after 1.2 s, and glides back over 160 ms when the hand returns |
+| No hand for a while | After 3 s without a hand the tracker sends a frame every 125 ms instead of every frame, and returns to full rate with the first hand |
+| Accidental or repeated gestures | The classifier's hysteresis, minimum durations and cooldowns, plus `ActionGuard`: 250 ms between actions, 700 ms before the same gesture acts again, and a 2 s pause after 4 actions in 3 s. The end of a hold always goes through; knob and slider adjustments repeat by design. Sending, posting and calling still need an explicit confirmation |
+| Camera held by a video call or the camera app, disabled, or failed | CameraX state errors become the condition `camera_busy`, `camera_disabled` or `camera_error`. CameraX reopens a busy camera by itself; a critical error binds again after 2 s |
+| Landscape | The tracker follows the display rotation; the cursor maps to the rotated screen and the classifier measures in the rotated frame's aspect |
+| Heat | From thermal status moderate the tracker sends a frame every 66 ms, from severe every 100 ms, and severe shows as `hot` |
+
+Every condition shows on the bubble (moon for too dark, crossed camera, thermometer) and in Live, in the eight languages, so the user always knows why the hand does not act. Settings, Diagnostics shows every stage live: frames from CameraX, frames sent to MediaPipe, results and hands per second, the model load, the camera id and state, the frame size and rotation, brightness, heat and rate, the last error with the stage it happened in, the accesses and battery optimization, with a plain text report to copy.
+
 ## Google Play policy
 
 - Apps that use the AccessibilityService API must complete the accessibility declaration in Play Console and describe the use in the store listing.

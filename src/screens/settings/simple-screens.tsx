@@ -173,6 +173,8 @@ const LICENSES: readonly { name: string; license: string }[] = [
   { name: 'React Native SVG', license: 'MIT' },
   { name: 'React Native Screens and Safe Area Context', license: 'MIT' },
   { name: 'Zod', license: 'MIT' },
+  { name: 'MediaPipe Tasks, hand model and test photos', license: 'Apache 2.0' },
+  { name: 'CameraX', license: 'Apache 2.0' },
   { name: 'Sora typeface', license: 'OFL 1.1' },
   { name: 'Inter typeface', license: 'OFL 1.1' },
   { name: 'DM Mono typeface', license: 'OFL 1.1' },
