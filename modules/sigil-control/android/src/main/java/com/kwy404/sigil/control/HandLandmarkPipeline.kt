@@ -220,7 +220,7 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
         // processors (x86_64 emulators). The service, the bubble and the cursor
         // keep working without tracking instead of the whole app ending.
         TrackerDiagnostics.error("landmarker_create", error)
-        reportError(error.message ?: error.javaClass.simpleName)
+        reportError(TrackerDiagnostics.describe(error))
         null
       }
       if (tracker != null) {

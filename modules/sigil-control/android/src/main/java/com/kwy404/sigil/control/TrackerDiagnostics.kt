@@ -143,7 +143,22 @@ object TrackerDiagnostics {
   /** The self test feeds its own frames; camera frames wait meanwhile. */
   @Volatile var selfTestRunning = false
 
-  fun error(stage: String, error: Throwable) = error(stage, error.message ?: error.javaClass.simpleName)
+  /** An error and its causes in one line, so the root cause shows in the diagnostics and the report. */
+  fun describe(error: Throwable): String = generateSequence(error) { it.cause }.take(4).joinToString(" <- ") { failure ->
+    failure.message?.let { "${failure.javaClass.simpleName}: $it" } ?: failure.javaClass.simpleName
+  }
+
+  private var stackLogged: String? = null
+
+  fun error(stage: String, error: Throwable) {
+    val text = describe(error)
+    error(stage, text)
+    // The full stack once per distinct failure, for the log the emulator test keeps.
+    if (text != stackLogged) {
+      stackLogged = text
+      Log.w(TAG, stage, error)
+    }
+  }
 
   private var loggedAt = 0L
 

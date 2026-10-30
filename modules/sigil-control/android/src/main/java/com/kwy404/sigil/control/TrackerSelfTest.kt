@@ -145,7 +145,7 @@ internal object TrackerSelfTest {
         }
         Thread.sleep(SETTLE_MS)
       } catch (failure: Throwable) {
-        error = failure.message ?: failure.javaClass.simpleName
+        error = TrackerDiagnostics.describe(failure)
         TrackerDiagnostics.error("selftest", failure)
       } finally {
         runCatching { tracker?.close() }

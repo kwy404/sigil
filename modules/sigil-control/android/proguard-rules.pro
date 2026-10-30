@@ -7,3 +7,9 @@
 -keep class com.google.protobuf.** { *; }
 -dontwarn com.google.mediapipe.**
 -dontwarn com.google.protobuf.**
+
+# MediaPipe logs through Flogger, which finds its backend by class name
+# (DefaultPlatform and the system backend). R8 removed them as unused, so the
+# static initializer of MediaPipe's Graph failed: ExceptionInInitializerError.
+-keep class com.google.common.flogger.** { *; }
+-dontwarn com.google.common.flogger.**
