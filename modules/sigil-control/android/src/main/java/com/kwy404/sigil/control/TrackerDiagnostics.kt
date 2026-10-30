@@ -111,19 +111,19 @@ object TrackerDiagnostics {
   /** Frames to MediaPipe: full, idle (no hand for a while) or hot (the phone is warm). */
   @Volatile var rate = "full"
 
-  fun setCamera(value: String) {
+  fun updateCamera(value: String) {
     if (camera == value) return
     camera = value
     publish()
   }
 
-  fun setThermal(value: Int) {
+  fun updateThermal(value: Int) {
     if (thermal == value) return
     thermal = value
     publish()
   }
 
-  fun setRate(value: String) {
+  fun updateRate(value: String) {
     if (rate == value) return
     rate = value
     publish()

@@ -337,7 +337,7 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
       else -> "error"
     }
     if (condition == "ok") bindAttempts = 0
-    TrackerDiagnostics.setCamera(condition)
+    TrackerDiagnostics.updateCamera(condition)
     if (state.type == CameraState.Type.CLOSED && running && failure?.type == CameraState.ErrorType.CRITICAL) {
       bindAttempts = 0
       retryBind(executor)
@@ -349,10 +349,10 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
     if (Build.VERSION.SDK_INT < 29) return
     val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
     thermal = power.currentThermalStatus
-    TrackerDiagnostics.setThermal(thermal)
+    TrackerDiagnostics.updateThermal(thermal)
     val listener = PowerManager.OnThermalStatusChangedListener { status ->
       thermal = status
-      TrackerDiagnostics.setThermal(status)
+      TrackerDiagnostics.updateThermal(status)
     }
     runCatching { power.addThermalStatusListener(listener) }
     thermalListener = listener
@@ -402,7 +402,7 @@ class MediaPipeHandPipeline(private val context: Context, private val owner: Lif
       idle -> IDLE_GAP_MS
       else -> 0L
     }
-    TrackerDiagnostics.setRate(
+    TrackerDiagnostics.updateRate(
       when {
         thermal >= PowerManager.THERMAL_STATUS_MODERATE -> "hot"
         idle -> "idle"
