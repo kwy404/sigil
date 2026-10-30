@@ -278,6 +278,9 @@ class SigilCameraService : Service(), LifecycleOwner {
     val instance: SigilCameraService?
       get() = current?.get()
 
+    /** The lifecycle CameraX is bound to: RESUMED while tracking, or none when the service is not running. */
+    fun lifecycleState(): String = current?.get()?.registry?.currentState?.name ?: "none"
+
     /** Sigil's own activity is in front, as React Native reports it; the bubble stays out of the way meanwhile. */
     @Volatile
     var ownScreenInFront = false

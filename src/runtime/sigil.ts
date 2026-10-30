@@ -16,6 +16,7 @@ import { foregroundApp, getSystemControl, installedApps, planPlatform, requestCo
 import { getNativeControl, type NativeControl } from '../system-control/native';
 import type { SigilUi } from '../system-control/dispatch';
 import { VoiceSession, type VoiceState } from '../voice/session';
+import { judgeSelfTest, SelfTestProbe, type SelfTestVerdict, type TrackerSelfTest } from './self-test';
 import { endsRequest, PANEL_LINGER_MS, voicePanel, type PanelContent } from './voice-panel';
 
 export interface SigilState {
@@ -38,6 +39,8 @@ export interface SigilState {
   microphone: boolean;
   /** A special access a gesture needed and the user has not granted yet. */
   needsAccess: 'write_settings' | 'media_access' | null;
+  /** The last self test of the hand tracker and the gesture engine, or null. */
+  selfTest: SelfTestVerdict | null;
   error: string | null;
 }
 
@@ -143,6 +146,8 @@ export class Sigil {
   private readonly listeners = new Set<(state: SigilState) => void>();
   private readonly subscriptions: { remove(): void }[] = [];
   private demoTimer: ReturnType<typeof setInterval> | null = null;
+  /** Collects what the gesture engine makes of the self test photos while the test runs. */
+  private probe: SelfTestProbe | null = null;
   /** What the voice panel over other apps shows, and the timer that hides it after a request. */
   private panel: PanelContent | null = null;
   private panelTimer: ReturnType<typeof setTimeout> | null = null;
@@ -162,6 +167,7 @@ export class Sigil {
       // On unless the user turned it off: without it, voice requests over other apps hear nothing.
       microphone: readSettings().voice?.microphone !== false,
       needsAccess: null,
+      selfTest: null,
       error: null,
     };
     const ui: SigilInterface = {
@@ -270,6 +276,10 @@ export class Sigil {
 
   private push(frame: NativeHandFrame): void {
     const events = this.hands?.push(frame) ?? [];
+    if (frame.fixture && this.probe && this.hands) {
+      const snapshot = this.hands.snapshot;
+      this.probe.record(frame.fixture, snapshot.pose, snapshot.handVisible, snapshot.screenCursor, events);
+    }
     const visible = frame.landmarks.length > 0;
     const hand = visible ? (frame.handedness ?? 'right') : 'none';
     const last = events.length > 0 ? gestureKey(events[events.length - 1]) : this.state.lastGesture;
@@ -398,6 +408,34 @@ export class Sigil {
         offset += loop;
       }
     }, FRAME_MS);
+  }
+
+  /**
+   * Runs the hand tracker on MediaPipe's own test photos of hands, through the
+   * same path as camera frames, and checks what the gesture engine and the
+   * cursor made of them. Starts Sigil first when it is off. The verdict also
+   * goes to the Android log, where the emulator test reads it.
+   */
+  async runSelfTest(): Promise<SelfTestVerdict | null> {
+    const native = this.native;
+    if (!native || Platform.OS !== 'android') return null;
+    if (!this.state.running) await this.start();
+    this.stopDemoTimer();
+    this.set({ demo: false });
+    const probe = new SelfTestProbe();
+    this.probe = probe;
+    let tracker: TrackerSelfTest;
+    try {
+      tracker = (await native.runSelfTest()) as unknown as TrackerSelfTest;
+    } catch (error) {
+      tracker = { passed: false, error: error instanceof Error ? error.message : String(error) };
+    } finally {
+      this.probe = null;
+    }
+    const verdict = judgeSelfTest(tracker, probe.result, native.getScreenSize().width);
+    native.logSelfTest(`gestures ${verdict.passed ? 'PASS' : 'FAIL'} ${JSON.stringify(verdict)}`);
+    this.set({ selfTest: verdict });
+    return verdict;
   }
 
   stopDemo(): void {

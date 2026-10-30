@@ -20,6 +20,8 @@
   <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
   <!-- Timers and alarms asked for by voice, set through the clock app. -->
   <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+  <!-- Diagnostics: ask to keep the camera service out of battery optimization, which stops it on some phones. -->
+  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
   <uses-feature android:name="android.hardware.camera.front" android:required="false" />
 

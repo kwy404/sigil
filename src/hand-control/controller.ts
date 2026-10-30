@@ -1,6 +1,6 @@
 import type { ProfileRegistry } from '../app-profiles/registry';
 import { DEFAULT_CONTROL_BOX, mapToScreen, type ControlBox, type ScreenSize } from '../gesture-engine/mapping';
-import { GestureClassifier } from '../gesture-engine/classifier';
+import { GestureClassifier, type ClassifierSnapshot } from '../gesture-engine/classifier';
 import { gestureKey, type GestureEvent } from '../gesture-engine/gestures';
 import { unflattenLandmarks, type HandFrame, type Vec2 } from '../gesture-engine/landmarks';
 import { dispatchProfileAction, type GestureTarget, type SigilUi } from '../system-control/dispatch';
@@ -19,8 +19,10 @@ export interface NativeHandFrame {
   landmarks: number[];
   score: number;
   handedness: 'left' | 'right' | null;
-  /** Frames of the demo hand: they move the cursor and reach practice screens, but never act on apps. */
+  /** Frames of the demo hand and the self test: they move the cursor and reach practice screens, but never act on apps. */
   synthetic?: boolean;
+  /** The self test photo the frame came from. */
+  fixture?: string | null;
 }
 
 export interface HandControlOptions {
@@ -46,6 +48,7 @@ export class HandControl {
   private readonly classifier = new GestureClassifier();
   private cursorShown = false;
   private paused = false;
+  private lastCursor: Vec2 | null = null;
 
   constructor(private readonly options: HandControlOptions) {}
 
@@ -59,6 +62,11 @@ export class HandControl {
     return this.paused;
   }
 
+  /** The classifier's view of the last frame, and where it put the cursor on screen. */
+  get snapshot(): ClassifierSnapshot & { screenCursor: Vec2 | null } {
+    return { ...this.classifier.snapshot, screenCursor: this.lastCursor };
+  }
+
   /** Handles one frame and returns the gestures it completed. */
   push(frame: NativeHandFrame): GestureEvent[] {
     const landmarks = frame.landmarks.length > 0 ? unflattenLandmarks(frame.landmarks) : null;
@@ -67,6 +75,7 @@ export class HandControl {
     const snapshot = this.classifier.snapshot;
     const box = this.options.box ?? DEFAULT_CONTROL_BOX;
     const cursor: Vec2 | null = snapshot.cursor ? mapToScreen(snapshot.cursor, box, this.options.screen) : null;
+    this.lastCursor = cursor;
     publishFrame(Date.now(), cursor);
     const practising = inPractice();
     if (!practising && !this.paused && cursor) {

@@ -126,8 +126,18 @@ export type SigilControlEvents = {
   onCameraServiceStateChanged: (event: { running: boolean; paused?: boolean; microphone?: boolean; error?: string }) => void;
   /** The bubble menu or the notification asked for pause, resume, microphone or stop. */
   onControlAction: (event: { action: ControlAction }) => void;
-  /** 21 landmarks packed as x, y, z triples, mirrored to the user's view; empty when the hand is lost. */
-  onHandFrame: (event: { t: number; landmarks: number[]; score: number; handedness: 'left' | 'right' | null }) => void;
+  /**
+   * 21 landmarks packed as x, y, z triples, mirrored to the user's view; empty when the hand is lost.
+   * Self test frames are synthetic and name their test photo in fixture.
+   */
+  onHandFrame: (event: {
+    t: number;
+    landmarks: number[];
+    score: number;
+    handedness: 'left' | 'right' | null;
+    synthetic?: boolean;
+    fixture?: string | null;
+  }) => void;
   onCursorError: (event: { message: string }) => void;
   /** An app was installed, removed or updated; read getLaunchableApps again. */
   onAppsChanged: () => void;
@@ -185,3 +195,58 @@ export type PromptTone = 'info' | 'listening' | 'question' | 'warning';
 export type BubbleStateName = 'tracking' | 'hand' | 'listening' | 'paused';
 
 export type ControlAction = 'pause' | 'resume' | 'microphone' | 'stop';
+
+/** What the hand tracker did, stage by stage. Rates are per second, totals since the tracker started. */
+export interface TrackerSnapshot {
+  /** none, mediapipe, or idle when the build has no model. */
+  pipeline: string;
+  modelLoaded: boolean;
+  modelLoadMs: number;
+  cameraId: string | null;
+  /** CameraX state: PENDING_OPEN, OPENING, OPEN, CLOSING or CLOSED. */
+  cameraState: string | null;
+  frameWidth: number;
+  frameHeight: number;
+  rotationDegrees: number;
+  targetRotation: number;
+  /** Frames from CameraX per second. */
+  cameraFps: number;
+  /** Frames handed to MediaPipe per second. */
+  sentFps: number;
+  /** Results from MediaPipe per second. */
+  resultFps: number;
+  /** Results with a hand per second. */
+  handFps: number;
+  cameraFrames: number;
+  sentFrames: number;
+  results: number;
+  handsFound: number;
+  lastHandAt: number;
+  startedAt: number;
+  /** Where the last error happened: camera_bind, camera_state, landmarker_create, frame_convert, detect, error_listener, selftest. */
+  lastErrorStage: string | null;
+  lastError: string | null;
+  lastErrorAt: number;
+  selfTestRunning: boolean;
+  selfTest: Record<string, unknown> | null;
+}
+
+/** The phone, the accesses, the camera service and the tracker, for the diagnostics page and its report. */
+export interface DiagnosticsSnapshot {
+  manufacturer: string;
+  model: string;
+  androidVersion: string;
+  sdkInt: number;
+  abi: string;
+  appVersion: string;
+  accessibilityEnabled: boolean;
+  overlayPermission: boolean;
+  cameraPermission: boolean;
+  /** Android may stop the camera service to save battery. */
+  batteryOptimized: boolean;
+  serviceRunning: boolean;
+  servicePaused: boolean;
+  /** The lifecycle CameraX is bound to: RESUMED while tracking. */
+  lifecycle: string;
+  tracker: TrackerSnapshot;
+}

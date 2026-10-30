@@ -2,8 +2,11 @@ package com.kwy404.sigil.control
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.PowerManager
 import android.hardware.display.DisplayManager
 import android.media.AudioManager
 import android.net.Uri
@@ -12,6 +15,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Display
 import android.view.KeyEvent
 import com.facebook.react.bridge.LifecycleEventListener
@@ -95,6 +99,29 @@ class SigilControlModule : Module() {
     View(HandPreviewView::class) {}
 
     Function("getStatus") { status() }
+
+    /** The phone, the accesses, the camera service and every stage of the hand tracker, for the diagnostics page. */
+    Function("getDiagnostics") { diagnostics() }
+
+    /** Runs the hand tracker on the bundled photo of a hand; the cursor follows it. Resolves with the result. */
+    AsyncFunction("runSelfTest") { promise: Promise ->
+      TrackerSelfTest.run(context) { outcome -> promise.resolve(outcome) }
+    }
+
+    /** Asks Android to leave Sigil out of battery optimization, which stops the camera service on some phones. */
+    Function("requestIgnoreBatteryOptimizations") {
+      openActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}")))
+    }
+
+    /** The gesture engine's verdict on the self test, in the log next to the tracker's, for the emulator test. */
+    Function("logSelfTest") { line: String -> Log.i("SigilSelfTest", line) }
+
+    /** Copies plain text, such as the diagnostics report, to the clipboard. */
+    Function("copyText") { label: String, text: String ->
+      val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return@Function false
+      clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+      true
+    }
 
     Function("getScreenSize") { screenSize() }
 
@@ -318,6 +345,31 @@ class SigilControlModule : Module() {
     "sdkInt" to Build.VERSION.SDK_INT,
     "packageName" to context.packageName,
   )
+
+  private fun ignoringBatteryOptimizations(): Boolean {
+    val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return false
+    return power.isIgnoringBatteryOptimizations(context.packageName)
+  }
+
+  private fun diagnostics(): Map<String, Any?> {
+    val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+    return mapOf(
+      "manufacturer" to Build.MANUFACTURER,
+      "model" to Build.MODEL,
+      "androidVersion" to Build.VERSION.RELEASE,
+      "sdkInt" to Build.VERSION.SDK_INT,
+      "abi" to (Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown"),
+      "appVersion" to (info?.versionName ?: "unknown"),
+      "accessibilityEnabled" to (SigilRuntime.service != null),
+      "overlayPermission" to Settings.canDrawOverlays(context),
+      "cameraPermission" to SigilCameraService.hasPermission(context, Manifest.permission.CAMERA),
+      "batteryOptimized" to !ignoringBatteryOptimizations(),
+      "serviceRunning" to SigilCameraService.running,
+      "servicePaused" to SigilCameraService.paused,
+      "lifecycle" to SigilCameraService.lifecycleState(),
+      "tracker" to TrackerDiagnostics.snapshot(),
+    )
+  }
 
   @Suppress("DEPRECATION")
   private fun screenSize(): Map<String, Any?> {

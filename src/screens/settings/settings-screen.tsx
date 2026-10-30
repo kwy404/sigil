@@ -79,6 +79,7 @@ export function SettingsScreen() {
       </ListGroup>
 
       <ListGroup style={styles.group}>
+        <ListRow title={t.diagnostics} subtitle={t.diagnosticsCaption} icon="camera-tracking" chevron onPress={() => go('diagnostics')} />
         <ListRow title={t.lab} subtitle={t.labCaption} icon="flask" chevron onPress={() => go('lab')} />
         <ListRow title={t.about} icon="info" value={appVersion()} monoValue chevron onPress={() => go('about')} />
       </ListGroup>

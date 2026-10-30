@@ -42,8 +42,19 @@ object SigilRuntime {
     emit("onForegroundAppChanged", mapOf("packageName" to packageName, "className" to className))
   }
 
-  /** Forwards one hand tracker result: 21 landmarks packed as x, y, z triples, empty when the hand is lost. */
-  fun reportHandFrame(timestampMs: Long, landmarks: FloatArray, score: Float, handedness: String?) {
+  /**
+   * Forwards one hand tracker result: 21 landmarks packed as x, y, z triples,
+   * empty when the hand is lost. Synthetic frames (the self test) move the
+   * cursor but never act on an app; fixture names the test photo they came from.
+   */
+  fun reportHandFrame(
+    timestampMs: Long,
+    landmarks: FloatArray,
+    score: Float,
+    handedness: String?,
+    synthetic: Boolean = false,
+    fixture: String? = null,
+  ) {
     emit(
       "onHandFrame",
       mapOf(
@@ -51,6 +62,8 @@ object SigilRuntime {
         "landmarks" to landmarks.map { it.toDouble() },
         "score" to score.toDouble(),
         "handedness" to handedness,
+        "synthetic" to synthetic,
+        "fixture" to fixture,
       ),
     )
   }

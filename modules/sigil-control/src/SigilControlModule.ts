@@ -7,6 +7,7 @@ import type {
   BrightnessLevel,
   ControlOutcome,
   CursorState,
+  DiagnosticsSnapshot,
   GlobalActionName,
   InstallSource,
   LaunchableApp,
@@ -26,6 +27,20 @@ import type {
 
 declare class SigilControlNativeModule extends NativeModule<SigilControlEvents> {
   getStatus(): SigilControlStatus;
+  /** The phone, the accesses, the camera service and every stage of the hand tracker. */
+  getDiagnostics(): DiagnosticsSnapshot;
+  /**
+   * Runs the hand tracker on MediaPipe's test photos of hands, through the
+   * same path as camera frames; results arrive as synthetic onHandFrame events
+   * named by photo. Resolves with what the tracker found in each photo.
+   */
+  runSelfTest(): Promise<Record<string, unknown>>;
+  /** Writes the gesture engine's verdict on the self test to the Android log. */
+  logSelfTest(line: string): void;
+  /** Asks Android to leave Sigil out of battery optimization. */
+  requestIgnoreBatteryOptimizations(): boolean;
+  /** Copies plain text to the clipboard. */
+  copyText(label: string, text: string): boolean;
   getScreenSize(): ScreenSize;
   openAccessibilitySettings(): boolean;
   openOverlaySettings(): boolean;

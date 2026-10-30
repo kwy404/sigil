@@ -2,7 +2,9 @@ import { router, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { HandPreview as CameraPreview } from '../../../modules/sigil-control';
 import { albumForKey } from '../../catalog/gestures';
+import { useDiagnostics } from '../../diagnostics';
 import { isGestureKey } from '../../gesture-engine/gestures';
 import { useI18n } from '../../i18n';
 import { useSigilSession } from '../../session';
@@ -34,6 +36,9 @@ export function LiveSheet() {
   const lastName = session.lastGesture && isGestureKey(session.lastGesture) ? m.gestures[session.lastGesture] : null;
   const panel = Math.max(1, Math.min(width - GUTTER * 2, 460));
   const seesHand = tracking && session.hand !== 'none';
+  // On Android the panel shows what the camera really sees, with the landmarks the tracker found.
+  const camera = tracking && CameraPreview !== null;
+  const tracker = useDiagnostics()?.tracker ?? null;
 
   const transport = () => {
     if (session.phase === 'tracking') session.pause();
@@ -65,19 +70,30 @@ export function LiveSheet() {
             <View style={[styles.preview, continuous, { height: panel * 0.86 }]}>
               <GridBackdrop cell={22} opacity={0.09} fadeTo={color.canvasDeep} center={{ x: 0.5, y: 0.45 }} />
               <Glow x={panel / 2} y={panel * 0.43} radius={panel * 0.5} opacity={tracking ? 0.16 : 0.05} />
-              <HandPreview
-                clip={seesHand && album ? album.id : 'idle'}
-                width={panel}
-                height={panel * 0.86}
-                live={seesHand}
-                still={!tracking}
-              />
+              {camera && CameraPreview ? (
+                <CameraPreview style={[styles.camera, { width: panel, height: panel * 0.86 }]} />
+              ) : (
+                <HandPreview
+                  clip={seesHand && album ? album.id : 'idle'}
+                  width={panel}
+                  height={panel * 0.86}
+                  live={seesHand}
+                  still={!tracking}
+                />
+              )}
               <View style={styles.overlayTop}>
                 <StatusChip tone={tracking ? 'accent' : 'neutral'} label={tracking ? t.cameraOn : t.cameraOff} live={tracking} />
                 {tracking ? (
-                  <Txt variant="monoTag" tone="secondary">
-                    {m.ui.hand[session.hand]}
-                  </Txt>
+                  <View style={styles.trackerText}>
+                    <Txt variant="monoTag" tone="secondary">
+                      {m.ui.hand[session.hand]}
+                    </Txt>
+                    {tracker ? (
+                      <Txt variant="monoTag" tone="tertiary">
+                        {t.tracker(tracker.cameraFps, tracker.handFps)}
+                      </Txt>
+                    ) : null}
+                  </View>
                 ) : null}
               </View>
               {!tracking || session.hand === 'none' ? (
@@ -219,6 +235,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   overlayCenter: { position: 'absolute', left: 24, right: 24, top: '44%', alignItems: 'center' },
+  camera: { position: 'absolute', left: 0, top: 0 },
+  trackerText: { alignItems: 'flex-end', gap: 2 },
   messagePill: {
     paddingHorizontal: 16,
     paddingVertical: 10,
